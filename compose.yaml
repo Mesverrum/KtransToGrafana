@@ -12,13 +12,13 @@ services:
       - --format=otel
       - --otel.protocol=grpc
       - --otel.endpoint=http://alloy:4317/
-      - --listen=0.0.0.0:9995
       - --metalisten=0.0.0.0:9996
       - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol
       - --rollups=s_sum,pkts_by_flow,in_pkts+out_pkts,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol
       - --rollups=s_sum,bytes_by_con,in_bytes+out_bytes,device_name,custom_str.dst_connect_type
       - --rollups=s_sum,bytes_by_app,in_bytes+out_bytes,device_name,custom_str.application
       - --rollup_keep_undefined=true
+      - --nf.source=auto
     ports:
       - 9995:9995
       - 14005:9996

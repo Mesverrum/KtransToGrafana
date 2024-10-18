@@ -1,0 +1,62 @@
+services:
+  ktranslate_flow:
+    image: kentik/ktranslate:staging
+    restart: always
+    pull_policy: always
+    environment:
+      - "OTEL_SERVICE_NAME=ktranslate"
+      - "OTEL_EXPORTER_OTLP_COMPRESSION=gzip"
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --listen=0.0.0.0:9995
+      - --metalisten=0.0.0.0:9996
+      - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol
+      - --rollups=s_sum,pkts_by_flow,in_pkts+out_pkts,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol
+      - --rollups=s_sum,bytes_by_con,in_bytes+out_bytes,device_name,custom_str.dst_connect_type
+      - --rollups=s_sum,bytes_by_app,in_bytes+out_bytes,device_name,custom_str.application
+      - --rollup_keep_undefined=true
+    ports:
+      - 9995:9995
+      - 14005:9996
+  ktranslate_snmp:
+    image: kentik/ktranslate:staging
+    restart: always
+    pull_policy: always
+    environment:
+      - "OTEL_SERVICE_NAME=ktranslate"
+      - "OTEL_EXPORTER_OTLP_COMPRESSION=gzip"
+    volumes:
+      - type: bind
+        source: ./snmp.yml
+        target: /snmp.yml
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --snmp=/snmp.yml
+      - --metalisten=0.0.0.0:9996
+    ports:
+      - 14007:9996
+      - 1620:1620/udp    
+  alloy:
+    image: grafana/alloy:latest
+    restart: always
+    pull_policy: always
+    volumes:
+      - type: bind
+        source: ./config.alloy
+        target: /config.alloy
+    ports:
+      - 4317:4317
+      - 4318:4318
+    command:
+      - --server.http.listen-addr=0.0.0.0:4319
+      - --storage.path=/var/lib/alloy/data
+      - run
+      - /config.alloy

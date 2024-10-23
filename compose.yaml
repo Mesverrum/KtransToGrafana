@@ -39,6 +39,8 @@ services:
       - --otel.endpoint=http://alloy:4317/
       - --snmp=/snmp.yaml
       - --metalisten=0.0.0.0:9997
+      - --snmp_discovery_on_start=true
+      - --snmp_discovery_min=720
     ports:
       - 9997:9997
       - 1620:1620/udp
@@ -49,7 +51,7 @@ services:
     volumes:
       - type: bind
         source: ./config.alloy
-        target: /config.alloydocker logs 
+        target: /config.alloy
     ports:
       - 4317:4317
       - 12345:12345

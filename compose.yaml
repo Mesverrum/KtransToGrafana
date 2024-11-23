@@ -4,19 +4,21 @@ services:
     restart: always
     pull_policy: always
     environment:
-      - "OTEL_SERVICE_NAME=ktranslate"
-      - "OTEL_EXPORTER_OTLP_COMPRESSION=gzip"
+      - "OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}"
+      - "OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}"
     depends_on:
       - alloy
     command:
       - --format=otel
       - --otel.protocol=grpc
       - --otel.endpoint=http://alloy:4317/
-      - --nf.source=auto
+      - --nf.source=${NF_SOURCE}
       - --metalisten=0.0.0.0:9996
-      - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol
-      - --rollups=s_sum,pkts_by_flow,in_pkts+out_pkts,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol
       - --rollup_keep_undefined=true
+      - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application
+      - --rollups=s_sum,pkts_by_flow,in_pkts+out_pkts,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application
+      - --rollups=s_sum,bytes_by_src_geo,in_bytes+out_bytes,src_geo
+      - --rollups=s_sum,bytes_by_dst_geo,in_bytes+out_bytes,dst_geo
     ports:
       - 9995:9995/udp
       - 9996:9996
@@ -25,8 +27,8 @@ services:
     restart: always
     pull_policy: always
     environment:
-      - "OTEL_SERVICE_NAME=ktranslate"
-      - "OTEL_EXPORTER_OTLP_COMPRESSION=gzip"
+      - "OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}"
+      - "OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}"
     volumes:
       - type: bind
         source: ./snmp.yaml

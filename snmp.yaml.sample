@@ -1,0 +1,48 @@
+devices: {}
+trap:
+    listen: 127.0.0.1:1620
+    community: hello
+    version: ""
+    transport: ""
+    v3_config: null
+    trap_only: false
+    drop_undefined: false
+    endpoint: ""
+    endpoint_port: 0
+discovery:
+    cidrs:
+        - 10.10.0.0/24
+    ignore_list: []
+    debug: false
+    ports:
+        - 161
+    default_communities:
+        - public
+    use_snmp_v1: false
+    default_v3: null
+    add_devices: true
+    add_mibs: true
+    threads: 4
+    replace_devices: true
+    kentik: null
+    no_use_bulkwalkall: false
+global:
+    poll_time_sec: 300
+    drop_if_outside_poll: false
+    mib_profile_dir: /etc/ktranslate/profiles
+    mibs_db: ""
+    mibs_enabled:
+        - IF-MIB
+    timeout_ms: 10000
+    retries: 1
+    global_v3: null
+    response_time: true
+    purge_devices_after_num: 0
+    no_device_hardcoded_oids: false
+    user_tags: {}
+    match_attributes: {}
+    providers: {}
+    jitter_time_sec: 30
+    fast_poll: false
+    watch_profile_changes: false
+    save_mds_cache: false

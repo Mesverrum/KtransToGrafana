@@ -1,0 +1,67 @@
+services:
+  ktranslate_flow:
+    image: kentik/ktranslate:latest
+    restart: always
+    pull_policy: always
+    environment:
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --nf.source=${NF_SOURCE}
+      - --metalisten=0.0.0.0:9996
+      - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application
+      - --rollups=s_sum,pkts_by_flow,in_pkts+out_pkts,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application
+      - --rollup_keep_undefined=true
+    ports:
+      - 9995:9995/udp
+      - 9996:9996
+  ktranslate_snmp:
+    image: kentik/ktranslate:latest
+    restart: always
+    pull_policy: always
+    environment:
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
+    volumes:
+      - type: bind
+        source: ./snmp.yaml
+        target: /snmp.yaml
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --snmp=/snmp.yaml
+      - --metalisten=0.0.0.0:9997
+      - --snmp_discovery_on_start=true
+      - --snmp_discovery_min=720
+    ports:
+      - 9997:9997
+      - 1620:1620/udp
+  alloy:
+    image: grafana/alloy:latest
+    restart: always
+    pull_policy: always
+    environment:
+      - GC_OTLP_URL=${GC_OTLP_URL}
+      - GC_OTLP_ACCOUNT=${GC_OTLP_ACCOUNT}
+      - GC_OTLP_KEY=${GC_OTLP_KEY}
+    volumes:
+      - type: bind
+        source: ./config.alloy
+        target: /config.alloy
+    ports:
+      - 4317:4317
+      - 12346:12346
+    command:
+      - --server.http.listen-addr=0.0.0.0:12346
+      - --storage.path=/var/lib/alloy/data
+      - --stability.level=experimental
+      - run
+      - /config.alloy 

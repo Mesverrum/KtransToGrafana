@@ -72,6 +72,10 @@ Now you will read this file into the ENV variables for our session.
 ```
 export $(xargs < .env)
 ```
+You can spot check that the variables were set correctly by running this and making sure it shows your URL.
+```
+echo $GC_OTLP_URL
+```
 
 Keep in mind this command is specific to our session, disconnecting or rebooting will lose these variables.  There are other ways to make them permanent or available to other users as necessary.
 
@@ -91,7 +95,7 @@ Once you have your CIDR and credentials set you can press `Esc` and type in `:wq
 
 Depending which account you are currently logged into on your server there can be a situation where the docker container does not end up with the correct permission to edit the devices list in the `snmp.yaml` during discovery.  To prevent this issue run the following command to ensure that the file is accessible by the container's user:
 ```
-chown 1000:1000 snmp.yaml
+sudo chown 1000:1000 snmp.yaml
 ```
 
 ### Running it

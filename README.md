@@ -62,9 +62,13 @@ vim .env
 ```
 
 Switch to INSERT mode by pressing `i` on your keyboard and remove the placeholders and paste in the values you got from your Grafana Cloud web console to set the correct values for the below variables, you do not need quotes.
+
 GC_OTLP_URL
+
 GC_OTLP_ACCOUNT
+
 GC_OTLP_KEY
+
 
 When you have all 3 populated then press `Esc` and type `:wq` to save the changes and exit Vim.
 
@@ -103,7 +107,7 @@ With your variables set and your target CIDR subnets in place you can now run th
 ```
 docker compose up
 ```
-You will see the latest container images get downloaded and as long as we did no introduce any syntax errors you should see ktranslate importing the collection of profiles and begin discovery.  If you have a reasonable range of subnets this should only take a minute or two and then you will see devices being mapped to profiles and the relevant OIDs start getting polled.  If you don't see any major errors you can return to your terminal session by pressing `CTRL+Z`
+You will see the latest container images get downloaded and as long as we did no introduce any syntax errors you should see ktranslate importing the collection of profiles and begin discovery.  If you have a reasonable range of subnets this should only take a minute or two and then you will see devices being mapped to profiles and the relevant OIDs start getting polled.  If you don't see any major errors you can return to your terminal session by pressing `CTRL+Z` (unless you are using vscode and it is intercepting the key combo...)
 
 
 ## Data in Grafana
@@ -113,7 +117,7 @@ Within a couple minutes of seeing Ktranslate polling your devices there should b
 Because of how high volume flow data is this configuration has Ktranslate converting raw flow data into a collection of metric series using the rollups arguments in the `compose.yaml` file.  This can be much more cost effective to store and to query than raw flow log lines.  The [Sankey panel](https://grafana.com/grafana/plugins/netsage-sankey-panel/) in Grafana works well to visualize this data after applying the `Group by` transformation to sum up the total bytes.
 
 
-I am still working on coming up with a set of typical dashboards and eventually a complete mixin for Ktranslate based data.  In some cases SNMP_Exporter based dashboards will be workable as a starting point by replacing the metric names with the ktranslate equivalent, but this is not always a direct one to one process.  
+I've included the JSON for a flow dashboard you can import to your Grafana, more to come for various SNMP device use cases as I get time.
 
 # Contact me
 Feel free to reach out to me via Issues and PR's in this repo or contact me directly, marcnetterfield@gmail.com

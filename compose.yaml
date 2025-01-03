@@ -14,8 +14,14 @@ services:
       - --otel.endpoint=http://alloy:4317/
       - --nf.source=${NF_SOURCE}
       - --metalisten=0.0.0.0:9996
-      - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application
-      - --rollups=s_sum,pkts_by_flow,in_pkts+out_pkts,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application
+      - --dns=127.0.0.1:53
+      - --sinks=otel
+      - --metrics=jchf
+      - --tee_logs=true
+      - --service_name=flow
+      - --max_flows_per_message=100
+      - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application,device_name,custom_str.src_host,custom_str.dst_host,src_geo,dst_geo
+#      - --rollups=s_sum,pkts_by_flow,in_pkts+out_pkts,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application,device_name,custom_str.src_host,custom_str.dst_host,src_geo,dst_geo
       - --rollup_keep_undefined=true
     ports:
       - 9995:9995/udp
@@ -39,6 +45,12 @@ services:
       - --otel.endpoint=http://alloy:4317/
       - --snmp=/snmp.yaml
       - --metalisten=0.0.0.0:9997
+      - --dns=127.0.0.1:53
+      - --sinks=otel
+      - --metrics=jchf
+      - --tee_logs=true
+      - --service_name=snmp
+      - --max_flows_per_message=100
       - --snmp_discovery_on_start=true
       - --snmp_discovery_min=720
     ports:
@@ -64,4 +76,15 @@ services:
       - --storage.path=/var/lib/alloy/data
       - --stability.level=experimental
       - run
-      - /config.alloy 
+      - /config.alloy
+  host-sflow:
+    image: sflow/host-sflow
+    container_name: host-sflow
+    restart: unless-stopped
+    environment:
+      - COLLECTOR=127.0.0.1
+      - PORT=9995
+      - NET=ens4
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    network_mode: host

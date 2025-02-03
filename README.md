@@ -88,7 +88,7 @@ The `config.alloy` file is already configured to use those ENV variables, so the
 ### snmp.yaml
 The last piece to modify is the `snmp.yaml` file.  This file manages the config of the Ktranslate container that is used to poll SNMP devices.  The [documentation](https://github.com/kentik/ktranslate/wiki) on this in the main project Github is a little sparse right now, but more detailed documentation on the many options can be found [here](https://docs.newrelic.com/docs/network-performance-monitoring/advanced/advanced-config/).  Grafana and OTEL specific documentation will be added in the coming months.
 
-For the sake of a quick  you can open the `snmp.yaml` file in Vim and press `i` to go into `INSERT` mode to make changes.  The first section is discovery where you can set the CIDR IP ranges for SNMP enabled devices you want to run a discovery against.  For specific devices you can enter their IP with /32 at the end.  
+For the sake of a quick example you can open the `snmp.yaml` file in Vim and press `i` to go into `INSERT` mode to make changes.  The first section is discovery where you can set the CIDR IP ranges for SNMP enabled devices you want to run a discovery against.  For specific devices you can enter their IP with /32 at the end.  
 The `default_communities` section can hold a list of SNMP v2 community strings to test against the devices.  
 For SNMP v3 see the examples [here]([https://docs.newrelic.com/docs/network-performance-monitoring/advanced/advanced-config/](https://docs.newrelic.com/docs/network-performance-monitoring/advanced/advanced-config/#snmpv3-config)).
 

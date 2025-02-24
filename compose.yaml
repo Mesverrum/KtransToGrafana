@@ -56,6 +56,33 @@ services:
     ports:
       - 9997:9997
       - 1620:1620/udp
+  ktranslate_syslog:
+    image: kentik/ktranslate:latest
+    restart: always
+    pull_policy: always
+    environment:
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
+    volumes:
+      - type: bind
+        source: ./snmp.yaml
+        target: /snmp.yaml
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --syslog.source=${SYSLOG_SOURCE}
+      - --metalisten=0.0.0.0:9998
+      - --sinks=otel
+      - --metrics=jchf
+      - --tee_logs=true
+      - --service_name=syslog
+    ports:
+      - 1514:1514/udp
+      - 1514:1514/tcp
+      - 9998:9998
   alloy:
     image: grafana/alloy:latest
     restart: always

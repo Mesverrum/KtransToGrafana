@@ -105,7 +105,7 @@ sudo chown 1000:1000 snmp.yaml
 ### Running it
 With your variables set and your target CIDR subnets in place you can now run the containers, from the same working directory we have been in run
 ```
-docker compose up
+docker compose up -d
 ```
 You will see the latest container images get downloaded and as long as we did no introduce any syntax errors you should see ktranslate importing the collection of profiles and begin discovery.  If you have a reasonable range of subnets this should only take a minute or two and then you will see devices being mapped to profiles and the relevant OIDs start getting polled.  If you don't see any major errors you can return to your terminal session by pressing `CTRL+Z` (unless you are using vscode and it is intercepting the key combo...)
 

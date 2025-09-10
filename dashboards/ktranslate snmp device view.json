@@ -1,0 +1,3331 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM",
+      "label": "grafanacloud-marcnetterfield1-prom",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    },
+    {
+      "name": "DS_GRAFANACLOUD-MARCNETTERFIELD1-LOGS",
+      "label": "grafanacloud-marcnetterfield1-logs",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    },
+    {
+      "name": "VAR_PROMETHEUS_DATASOURCE",
+      "type": "constant",
+      "label": "Prometheus data source",
+      "value": "grafanacloud-marcnetterfield1-prom",
+      "description": ""
+    },
+    {
+      "name": "VAR_JOB",
+      "type": "constant",
+      "label": "Job",
+      "value": "ktranslate",
+      "description": ""
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "12.2.0-17556714384"
+    },
+    {
+      "type": "datasource",
+      "id": "loki",
+      "name": "Loki",
+      "version": "12.2.0-17556714384"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${prometheus_datasource}"
+        },
+        "enable": true,
+        "expr": "count by (job,instance,alertname) (max_over_time(ALERTS{alertstate=\"firing\", severity=\"critical\", job=~\"$job\",instance=~\"$instance\"}[$__rate_interval]))\n  * on(job,instance) group_left group by (job,instance) (sysUpTime{job=~\"$job\",instance=~\"$instance\"})\n",
+        "hide": true,
+        "iconColor": "light-purple",
+        "name": "Critical alert",
+        "tagKeys": "job,instance",
+        "textFormat": "{{alertname}}",
+        "titleFormat": "Critical alert"
+      },
+      {
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-LOGS}"
+        },
+        "enable": true,
+        "expr": "{job=\"syslog\",instance=~\"$instance\", level=~\"critical|fatal|alert|error\"}\n",
+        "hide": true,
+        "iconColor": "light-purple",
+        "name": "Critical event logged",
+        "tagKeys": "job,instance,sysname,syslog_app_name,level",
+        "titleFormat": "Critical event logged"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${prometheus_datasource}"
+        },
+        "enable": true,
+        "expr": "count by (job,instance,alertname) (max_over_time(ALERTS{alertstate=\"firing\", severity=\"warning\", job=~\"$job\",instance=~\"$instance\"}[$__rate_interval]))\n  * on(job,instance) group_left group by (job,instance) (sysUpTime{job=~\"$job\",instance=~\"$instance\"})\n",
+        "hide": true,
+        "name": "Warning alert",
+        "tagKeys": "job,instance",
+        "textFormat": "{{alertname}}",
+        "titleFormat": "Warning alert"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "keepTime": true,
+      "title": "Back to network fleet",
+      "type": "link",
+      "url": "d/mam5gpb2/fleet-overview"
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "panels": [],
+      "title": "System",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "System name.\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "System name"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "fixed",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (job,device_name, SysName) (\n  kentik_snmp_Uptime{device_name=~\"$instance\"}\n)",
+          "format": "table",
+          "instant": false,
+          "legendFormat": "{{device_name}}: Device name",
+          "refId": "System name"
+        }
+      ],
+      "title": "Device name",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "SysName": true,
+              "Time": true,
+              "Value": true,
+              "job": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "SysName": 2,
+              "Time": 0,
+              "Value": 4,
+              "device_name": 1,
+              "job": 3
+            },
+            "renameByName": {
+              "SysName": "",
+              "device_name": "Device Name"
+            }
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "Version"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 21,
+        "x": 3,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "fixed",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^SysDescr$/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (job,SysDescr) (\n  kentik_snmp_Uptime{device_name=~\"$instance\"}\n)",
+          "format": "table",
+          "instant": false,
+          "legendFormat": "{{sysDescr}}: Description",
+          "refId": "Version"
+        }
+      ],
+      "title": "System Description",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "dtdurations"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 3,
+        "y": 3
+      },
+      "id": 26,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {
+          "titleSize": 24,
+          "valueSize": 24
+        },
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum by (job,SysLocation, SysContact, instrumentation_name, src_addr) (\r\n  kentik_snmp_Uptime{device_name=~\"$instance\"}\r\n)",
+          "format": "table",
+          "instant": false,
+          "legendFormat": "{{SysLocation}}",
+          "range": true,
+          "refId": "Uptime"
+        }
+      ],
+      "title": "Location",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "job": true
+            },
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "SysContact": "",
+              "Time": "",
+              "instrumentation_name": "Profile",
+              "src_addr": "IP"
+            }
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "CPU usage.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlYlRd"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "scheme",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "CPU utilization"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 7,
+        "x": 9,
+        "y": 3
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (job,device_name) (\n  kentik_snmp_CPU{device_name=~\"$instance\"}\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{device_name}}: CPU utilization",
+          "refId": "CPU utilization"
+        }
+      ],
+      "title": "CPU usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "Memory utilization.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-BlYlRd"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "scheme",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "Memory utilization"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 3
+      },
+      "id": 6,
+      "interval": "2m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "avg by (job,device_name) (\n  kentik_snmp_MemoryUtilization{device_name=~\"$instance\"}\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{device_name}}: Memory utilization",
+          "refId": "Memory utilization"
+        }
+      ],
+      "title": "Memory utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "System name.\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "fixed"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "System name"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 0,
+        "y": 5
+      },
+      "id": 27,
+      "options": {
+        "colorMode": "fixed",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/.*/",
+          "values": false
+        },
+        "showPercentChange": false,
+        "text": {},
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (job,device_name, SysName) (\n  kentik_snmp_Uptime{device_name=~\"$instance\"}\n)",
+          "format": "table",
+          "instant": false,
+          "legendFormat": "{{device_name}}: Device name",
+          "refId": "System name"
+        }
+      ],
+      "title": "SysName",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "device_name": true,
+              "job": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "SysName": 2,
+              "Time": 0,
+              "Value": 4,
+              "device_name": 1,
+              "job": 3
+            },
+            "renameByName": {
+              "SysName": "",
+              "device_name": "Device Name"
+            }
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "The time since the network management portion of the system was last re-initialized.\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "text",
+            "mode": "thresholds"
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": 0
+              },
+              {
+                "color": "text",
+                "value": 600
+              }
+            ]
+          },
+          "unit": "dtdurations"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "Uptime"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 3,
+        "x": 0,
+        "y": 7
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "kentik_snmp_Uptime{device_name=~\"$instance\"}/100",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{instance}}: Uptime",
+          "refId": "Uptime"
+        }
+      ],
+      "title": "Uptime",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 7,
+      "panels": [],
+      "title": "Network interfaces",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "Network interfaces overview.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "footer": {
+              "reducers": []
+            },
+            "inspect": false,
+            "wrapHeaderText": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "if_OperStatus"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "dormant": {
+                        "color": "orange",
+                        "index": 4,
+                        "text": "dormant"
+                      },
+                      "down": {
+                        "color": "red",
+                        "index": 0,
+                        "text": "down"
+                      },
+                      "lowerLayerDown": {
+                        "color": "orange",
+                        "index": 6,
+                        "text": "lowerLayerDown"
+                      },
+                      "notPresent": {
+                        "color": "text",
+                        "index": 5,
+                        "text": "notPresent"
+                      },
+                      "testing": {
+                        "color": "orange",
+                        "index": 2,
+                        "text": "testing"
+                      },
+                      "unknown": {
+                        "color": "#ccccdc",
+                        "index": 3,
+                        "text": "unknown"
+                      },
+                      "up": {
+                        "color": "green",
+                        "index": 1,
+                        "text": "up"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "if_AdminStatus"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "down": {
+                        "color": "red",
+                        "index": 0,
+                        "text": "down"
+                      },
+                      "testing": {
+                        "color": "orange",
+                        "index": 2,
+                        "text": "testing"
+                      },
+                      "up": {
+                        "color": "green",
+                        "index": 1,
+                        "text": "up"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              },
+              {
+                "id": "unit",
+                "value": "short"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Speed"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Mbits"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Name"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": false,
+                    "title": "Filter Interface",
+                    "url": "/d/${__dashboard.uid}/${__dashboard}?orgId=${__org}&from=${__from}&to=${__to}&timezone=${__timezone}&var-instance=${instance}&var-adhoc=${adhoc}&var-prometheus_datasource=${prometheus_datasource}&var-loki_datasource=${loki_datasource}&var-ifName=${__value.text}"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alias"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 271
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 8,
+      "options": {
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum by (job,device_name,if_interface_name,if_Alias,if_Description,if_OperStatus,if_AdminStatus,if_Speed,if_Type) (\n  kentik_snmp_if_OperStatus{job=~\"$job\",device_name=~\"$instance\",if_interface_name=~\"$ifName\",if_AdminStatus!=\"\"}\n)",
+          "format": "table",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{if_Description}}: status",
+          "range": true,
+          "refId": "Interface operational status"
+        }
+      ],
+      "title": "Interfaces",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^(?!Time).*$"
+            }
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "device_name": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "if_AdminStatus": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "if_Alias": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "if_Description": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "if_OperStatus": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "if_Speed": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "if_Type": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "if_interface_name": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "job": {
+                "aggregations": []
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Interface operational status": true,
+              "Value": true,
+              "job": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "Interface MTU": 12,
+              "Interface connector present": 11,
+              "Interface last change": 13,
+              "Interface operational status": 6,
+              "Interface physical address": 14,
+              "Interface promiscuous mode": 10,
+              "device_name": 1,
+              "if_AdminStatus": 7,
+              "if_Alias": 2,
+              "if_Description": 3,
+              "if_OperStatus": 5,
+              "if_Speed": 8,
+              "if_Type": 9,
+              "if_interface_name": 4,
+              "job": 0
+            },
+            "renameByName": {
+              "Interface operational status": "",
+              "Value": "Interfaces",
+              "device_name": "Device",
+              "ifAlias": "IfAlias",
+              "ifDescr": "IfDescr",
+              "ifName": "IfName",
+              "if_AdminStatus": "Admin Status",
+              "if_Alias": "Alias",
+              "if_Description": "Description",
+              "if_OperStatus": "Oper Status",
+              "if_Speed": "Speed",
+              "if_Type": "Type",
+              "if_interface_name": "Name",
+              "instance": "Instance",
+              "job": "Job"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Name"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "Network interface traffic out.\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": true,
+            "axisColorMode": "text",
+            "axisLabel": "out(-) | in(+)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "No traffic",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/transmit|tx|out/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 9,
+      "interval": "2m",
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Name",
+          "sortDesc": false
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (job,device_name,if_interface_name,if_Description) (\n  rate(kentik_snmp_ifHCOutOctets{job=~\"$job\",device_name=~\"$instance\",if_interface_name=~\"$ifName\"} [$__rate_interval])\n)\n)*8\n\n# set max limit to workaround for TB-PB/sec spikes when counters are overloaded too quickly on very busy interfaces.\n<100*10^9\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: transmitted",
+          "refId": "Network interface traffic out"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  \n  (\n  sum by (job,device_name,if_interface_name,if_Description) (\n  rate(kentik_snmp_ifHCInOctets{job=~\"$job\",device_name=~\"$instance\",if_interface_name=~\"$ifName\"}[$__rate_interval])\n)\n)*8\n\n# set max limit to workaround for TB-PB/sec spikes when counters are overloaded too quickly on very busy interfaces.\n<100*10^9\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: received",
+          "refId": "Network interface traffic in"
+        }
+      ],
+      "title": "Network traffic",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus_datasource}"
+      },
+      "description": "As calculated during polling by ktranslate. Only available on interfaces that report their ifSpeed.  Maybe differ from byte calculations show due to built in behaviors of Prometheus rates.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": true,
+            "axisColorMode": "text",
+            "axisLabel": "out(-) | in(+)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 4,
+          "mappings": [],
+          "noValue": "Not able to calculate percentages",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/transmit|tx|out/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 28,
+      "interval": "2m",
+      "options": {
+        "legend": {
+          "calcs": [
+            "min",
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Mean",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0-17556714384",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\r\n  (\r\n  sum by (job,device_name,if_interface_name,if_Description) (\r\n  rate(kentik_snmp_IfOutUtilization{job=~\"$job\",device_name=~\"$instance\",if_interface_name=~\"$ifName\"} [$__rate_interval])\r\n)\r\n)\r\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_Description}}: transmitted",
+          "refId": "Network interface traffic out"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\r\n  (\r\n  sum by (job,device_name,if_interface_name,if_Description) (\r\n  rate(kentik_snmp_IfInUtilization{job=~\"$job\",device_name=~\"$instance\",if_interface_name=~\"$ifName\"} [$__rate_interval])\r\n)\r\n)\r\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_Description}}: received",
+          "refId": "Network interface traffic in"
+        }
+      ],
+      "title": "Traffic Percentages",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "Network interface errors in.\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "out(-) | in(+)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "No errors",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "pps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/transmit|tx|out/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
+      "id": 10,
+      "interval": "2m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0-16890666601.patch2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  kentik_snmp_ifInErrors{device_name=~\"$instance\"}\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: errors in",
+          "refId": "Network interface errors in"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  kentik_snmp_ifOutErrors{device_name=~\"$instance\"}\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: errors out",
+          "refId": "Network interface errors out"
+        }
+      ],
+      "title": "Network errors",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus_datasource}"
+      },
+      "description": "Network interface discards in.\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "out(-) | in(+)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "No dropped packets",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "pps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/transmit|tx|out/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "id": 11,
+      "interval": "2m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0-16890666601.patch2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  irate(kentik_snmp_ifInDiscards{device_name=~\"$instance\",if_interface_name=~\"$ifName\"}[$__rate_interval])\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: dropped in",
+          "refId": "Network interface discards in"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  irate(kentik_snmp_ifOutDiscards{device_name=~\"$instance\",if_interface_name=~\"$ifName\"}[$__rate_interval])\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: dropped out",
+          "refId": "Network interface discards out"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  irate(ifInUnknownProtos{device_name=~\"$instance\",if_interface_name=~\"$ifName\"}[$__rate_interval])\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: unknown dropped in",
+          "refId": "Network interface unknown protocol in packets dropped"
+        }
+      ],
+      "title": "Dropped packets",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus_datasource}"
+      },
+      "description": "Network interface unicast packets in.\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "out(-) | in(+)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "No unicast packets",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "pps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/transmit|tx|out/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 40
+      },
+      "id": 12,
+      "interval": "2m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0-16890666601.patch2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  kentik_snmp_ifHCInUcastPkts{device_name=~\"$instance\",if_interface_name=~\"$ifName\"}\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: unicast in",
+          "refId": "Network interface unicast packets in"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  kentik_snmp_ifHCOutUcastPkts{device_name=~\"$instance\",if_interface_name=~\"$ifName\"}\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: unicast out",
+          "refId": "Network interface unicast packets out"
+        }
+      ],
+      "title": "Unicast",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+      },
+      "description": "Network interface broadcast packets in.\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "out(-) | in(+)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "No broadcast packets",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "pps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/transmit|tx|out/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 40
+      },
+      "id": 13,
+      "interval": "2m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0-16890666601.patch2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  kentik_snmp_ifHCInBroadcastPkts{device_name=~\"$instance\",if_interface_name=~\"$ifName\"}\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: broadcast in",
+          "refId": "Network interface broadcast packets in"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  kentik_snmp_ifHCOutBroadcastPkts{device_name=~\"$instance\",if_interface_name=~\"$ifName\"}\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: broadcast out",
+          "refId": "Network interface broadcast packets out"
+        }
+      ],
+      "title": "Broadcast",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${prometheus_datasource}"
+      },
+      "description": "Network interface multicast packets in.\n",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "out(-) | in(+)",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 1,
+          "mappings": [],
+          "noValue": "No multicast packets",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "pps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/transmit|tx|out/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 40
+      },
+      "id": 14,
+      "interval": "2m",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.2.0-16890666601.patch2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  irate(kentik_snmp_ifHCInMulticastPkts{device_name=~\"$instance\",if_interface_name=~\"$ifName\"}[$__rate_interval])\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: multicast in",
+          "refId": "Network interface multicast packets in"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "editorMode": "code",
+          "expr": "topk(25,\n  (\n  sum by (device_name,if_interface_name) (\n  irate(kentik_snmp_ifHCOutMulticastPkts{device_name=~\"$instance\",if_interface_name=~\"$ifName\"}[$__rate_interval])\n)\n)>0\n)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "{{if_interface_name}}: multicast out",
+          "refId": "Network interface multicast packets out"
+        }
+      ],
+      "title": "Multicast",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 15,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "description": "Field replaceable unit status",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "filterable": false,
+                "inspect": false,
+                "wrapHeaderText": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "FRU status"
+                },
+                "properties": [
+                  {
+                    "id": "custom.hidden",
+                    "value": true
+                  },
+                  {
+                    "id": "unit",
+                    "value": "short"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "cefcFRUPowerOperStatus"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "FRU status"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 12,
+            "w": 24,
+            "x": 0,
+            "y": 49
+          },
+          "id": 16,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "EntPhysicalName"
+              }
+            ]
+          },
+          "pluginVersion": "12.2.0-16890666601.patch2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${prometheus_datasource}"
+              },
+              "expr": "(\n  sum by (job,instance,entPhysicalName,cefcFRUPowerOperStatus) (\n  cefcFRUPowerOperStatus{job=~\"$job\",instance=~\"$instance\"}\n)\n)!=0",
+              "format": "table",
+              "instant": true,
+              "legendFormat": "{{entPhysicalName}}: FRU status",
+              "refId": "FRU status"
+            }
+          ],
+          "title": "FRU status",
+          "transformations": [
+            {
+              "id": "merge"
+            },
+            {
+              "id": "renameByRegex",
+              "options": {
+                "regex": "Value #(.*)",
+                "renamePattern": "$1"
+              }
+            },
+            {
+              "id": "filterFieldsByName",
+              "options": {
+                "include": {
+                  "pattern": "^(?!Time).*$"
+                }
+              }
+            },
+            {
+              "id": "organize",
+              "options": {
+                "indexByName": {
+                  "cefcFRUPowerOperStatus": 3,
+                  "entPhysicalName": 2,
+                  "instance": 1,
+                  "job": 0
+                },
+                "renameByName": {
+                  "Value": "FRU status",
+                  "cefcFRUPowerOperStatus": "CefcFRUPowerOperStatus",
+                  "entPhysicalName": "EntPhysicalName",
+                  "instance": "Instance",
+                  "job": "Job"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        }
+      ],
+      "title": "FRU (Components)",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 49
+      },
+      "id": 17,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+          },
+          "description": "The current value of receive buffer-to-buffer credits for this port.\n",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "out(-) | in(+)",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 1,
+              "mappings": [],
+              "noValue": "No packets",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "pps"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": "/transmit|tx|out/"
+                },
+                "properties": [
+                  {
+                    "id": "custom.transform",
+                    "value": "negative-Y"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 62
+          },
+          "id": 18,
+          "interval": "2m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.2.0-16890666601.patch2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${prometheus_datasource}"
+              },
+              "expr": "topk(25,\n  sum by (job,instance,ifName,ifAlias,ifDescr) (\n  fcIfCurrRxBbCredit{job=~\"$job\",instance=~\"$instance\",ifName=~\"$ifName\"}\n)\n)",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{ifDescr}}: credit receive",
+              "refId": "FC receive credits"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "expr": "topk(25,\n  sum by (job,instance,ifName,ifAlias,ifDescr) (\n  fcIfCurrTxBbCredit{job=~\"$job\",instance=~\"$instance\",ifName=~\"$ifName\"}\n)\n)",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{ifDescr}}: credit transmit",
+              "refId": "FC transmit credits"
+            }
+          ],
+          "title": "FC buffer-to-buffer credit",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "description": "-TxWaitCount: The number of times the FC-port waited due to lack of transmit credits.\n\n-FramesDiscard: The number of frames discarded by the FC-port.\n\n-TxWtAvgBBCreditTransitionToZero: increments if the credit available is zero for 100 ms.\n\n-BBCreditTransistionFromZero: increments if the transmit b2b credit is zero.\n\n-BBCreditTransistionToZero: increments if the receive b2b credit is zero.\n\n-InvalidTxWords: The number of invalid transmission words detected by the FC-Port.\n\n-InvalidCrcs: The number of invalid CRCs detected by the FC-Port.\n",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "out(-) | in(+)",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 30,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 1,
+              "mappings": [],
+              "noValue": "No errors",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "pps"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byRegexp",
+                  "options": "/transmit|tx|out/"
+                },
+                "properties": [
+                  {
+                    "id": "custom.transform",
+                    "value": "negative-Y"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 62
+          },
+          "id": 19,
+          "interval": "2m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.2.0-16890666601.patch2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "expr": "topk(25,\n  sum by (job,instance,ifName,ifAlias,ifDescr) (\n  irate(fcIfTxWaitCount{job=~\"$job\",instance=~\"$instance\",ifName=~\"$ifName\"}[$__rate_interval])\n)\n)",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{ifDescr}}: fcIfTxWaitCount",
+              "refId": "FC wait due to lack of transmit credits."
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${prometheus_datasource}"
+              },
+              "expr": "topk(25,\n  sum by (job,instance,ifName,ifAlias,ifDescr) (\n  irate(fcIfFramesDiscard{job=~\"$job\",instance=~\"$instance\",ifName=~\"$ifName\"}[$__rate_interval])\n)\n)",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{ifDescr}}: fcIfFramesDiscard",
+              "refId": "Frames discarded"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "expr": "topk(25,\n  sum by (job,instance,ifName,ifAlias,ifDescr) (\n  irate(fcIfTxWtAvgBBCreditTransitionToZero{job=~\"$job\",instance=~\"$instance\",ifName=~\"$ifName\"}[$__rate_interval])\n)\n)",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{ifDescr}}: fcIfTxWtAvgBBCreditTransitionToZero",
+              "refId": "Zero credit available"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${prometheus_datasource}"
+              },
+              "expr": "topk(25,\n  sum by (job,instance,ifName,ifAlias,ifDescr) (\n  irate(fcHCIfBBCreditTransistionFromZero{job=~\"$job\",instance=~\"$instance\",ifName=~\"$ifName\"}[$__rate_interval])\n)\n)",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{ifDescr}}: fcHCIfBBCreditTransistionFromZero",
+              "refId": "Zero credit available (transmit)"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "expr": "topk(25,\n  sum by (job,instance,ifName,ifAlias,ifDescr) (\n  irate(fcHCIfBBCreditTransistionToZero{job=~\"$job\",instance=~\"$instance\",ifName=~\"$ifName\"}[$__rate_interval])\n)\n)",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{ifDescr}}: fcHCIfBBCreditTransistionToZero",
+              "refId": "Zero credit available (receive)"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${prometheus_datasource}"
+              },
+              "expr": "topk(25,\n  sum by (job,instance,ifName,ifAlias,ifDescr) (\n  irate(fcIfInvalidCrcs{job=~\"$job\",instance=~\"$instance\",ifName=~\"$ifName\"}[$__rate_interval])\n)\n)",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{ifDescr}}: fcIfInvalidCrcs",
+              "refId": "FC invalid CRCc detected"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "expr": "topk(25,\n  sum by (job,instance,ifName,ifAlias,ifDescr) (\n  irate(fcIfInvalidTxWords{job=~\"$job\",instance=~\"$instance\",ifName=~\"$ifName\"}[$__rate_interval])\n)\n)",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{ifDescr}}: fcIfInvalidTxWords",
+              "refId": "FC invalid TX words"
+            }
+          ],
+          "title": "Network FC errors",
+          "type": "timeseries"
+        }
+      ],
+      "title": "Fibre channel",
+      "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 50
+      },
+      "id": 20,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "description": "Temperature sensor.\n",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "continuous-BlYlRd"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMax": 100,
+                "axisSoftMin": 0,
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "scheme",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "decimals": 1,
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "celsius"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Temperature"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "celsius"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 71
+          },
+          "id": 21,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.2.0-16890666601.patch2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "editorMode": "code",
+              "expr": "(\n  avg by (device_name,entity_description) (\nkentik_snmp_sensor_value{device_name=\"$instance\",sensor_type=\"celsius\"}\n)/10\n)!=0",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{entity_description}}",
+              "refId": "Temperature"
+            }
+          ],
+          "title": "Temperature",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "description": "DC voltage sensor.\n",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "DC voltage"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "volt"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 71
+          },
+          "id": 22,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.2.0-16890666601.patch2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "editorMode": "code",
+              "expr": "(\n  avg by (device_name,entity_description) (\nkentik_snmp_sensor_value{device_name=\"$instance\",sensor_type=\"voltsDC\"}\n)/10\n)!=0",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{entity_description}}",
+              "refId": "DC voltage"
+            }
+          ],
+          "title": "DC voltage",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "description": "Power used in Watts.\n",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Power"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "watt"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 79
+          },
+          "id": 23,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.2.0-16890666601.patch2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "editorMode": "code",
+              "expr": "(\n  avg by (device_name,entity_description) (\nkentik_snmp_sensor_value{device_name=\"$instance\",sensor_type=\"watts\"}\n)/10\n)!=0",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{entity_description}}",
+              "refId": "Power"
+            }
+          ],
+          "title": "Power",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "description": "Receive/Transmit power.\n",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Receive/Transmit power"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "dBm"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 79
+          },
+          "id": 24,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.2.0-16890666601.patch2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "editorMode": "code",
+              "expr": "(\n  avg by (device_name,entity_description) (\nkentik_snmp_sensor_value{device_name=\"$instance\",sensor_type=\"dBm\"}\n)\n)!=0",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{entity_description}}",
+              "refId": "Receive/Transmit power"
+            }
+          ],
+          "title": "Receive/Transmit power",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${prometheus_datasource}"
+          },
+          "description": "Fan speed.\n",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisBorderShow": false,
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "barWidthFactor": 0.6,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "insertNulls": false,
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byFrameRefID",
+                  "options": "Fan speed"
+                },
+                "properties": [
+                  {
+                    "id": "unit",
+                    "value": "rotrpm"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 87
+          },
+          "id": 25,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": false
+            },
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "pluginVersion": "12.2.0-16890666601.patch2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+              },
+              "editorMode": "code",
+              "expr": "(\n  avg by (device_name,entity_description) (\nkentik_snmp_sensor_value{device_name=\"$instance\",sensor_type=\"rpm\"}\n)/10\n)!=0",
+              "format": "time_series",
+              "instant": false,
+              "legendFormat": "{{entity_description}}",
+              "refId": "Fan speed"
+            }
+          ],
+          "title": "Fan speed",
+          "type": "timeseries"
+        }
+      ],
+      "title": "Sensors",
+      "type": "row"
+    }
+  ],
+  "refresh": "5m",
+  "schemaVersion": 42,
+  "tags": [
+    "snmp"
+  ],
+  "templating": {
+    "list": [
+      {
+        "hide": 2,
+        "label": "Prometheus data source",
+        "name": "prometheus_datasource",
+        "query": "${VAR_PROMETHEUS_DATASOURCE}",
+        "skipUrlSync": true,
+        "type": "constant",
+        "current": {
+          "value": "${VAR_PROMETHEUS_DATASOURCE}",
+          "text": "${VAR_PROMETHEUS_DATASOURCE}",
+          "selected": false
+        },
+        "options": [
+          {
+            "value": "${VAR_PROMETHEUS_DATASOURCE}",
+            "text": "${VAR_PROMETHEUS_DATASOURCE}",
+            "selected": false
+          }
+        ]
+      },
+      {
+        "hide": 2,
+        "label": "Job",
+        "name": "job",
+        "query": "${VAR_JOB}",
+        "skipUrlSync": true,
+        "type": "constant",
+        "current": {
+          "value": "${VAR_JOB}",
+          "text": "${VAR_JOB}",
+          "selected": false
+        },
+        "options": [
+          {
+            "value": "${VAR_JOB}",
+            "text": "${VAR_JOB}",
+            "selected": false
+          }
+        ]
+      },
+      {
+        "allValue": ".+",
+        "allowCustomValue": false,
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${prometheus_datasource}"
+        },
+        "definition": "label_values(kentik_snmp_Uptime{job=~\"$job\"},device_name)",
+        "description": "",
+        "includeAll": false,
+        "label": "Device",
+        "name": "instance",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(kentik_snmp_Uptime{job=~\"$job\"},device_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_GRAFANACLOUD-MARCNETTERFIELD1-PROM}"
+        },
+        "definition": "label_values(kentik_snmp_if_OperStatus{device_name=\"$instance\", job=\"$job\"},if_interface_name)",
+        "description": "",
+        "includeAll": true,
+        "label": "Interface name",
+        "multi": true,
+        "name": "ifName",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(kentik_snmp_if_OperStatus{device_name=\"$instance\", job=\"$job\"},if_interface_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "baseFilters": [],
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${prometheus_datasource}"
+        },
+        "defaultKeys": [
+          {
+            "text": "ifAlias",
+            "value": "ifAlias"
+          },
+          {
+            "text": "ifDescr",
+            "value": "ifDescr"
+          }
+        ],
+        "description": "Add additional filters",
+        "filters": [],
+        "label": "Ad hoc filters",
+        "name": "adhoc",
+        "type": "adhoc"
+      },
+      {
+        "current": {},
+        "hide": 2,
+        "label": "Loki data source",
+        "name": "loki_datasource",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "Europe/Stockholm",
+  "title": "SNMP overview",
+  "uid": "snmp-overview",
+  "version": 1,
+  "weekStart": ""
+}

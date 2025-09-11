@@ -9,7 +9,9 @@ logging {
 
 otelcol.receiver.otlp "default" {
         // configures the default grpc endpoint "0.0.0.0:4317"
-        grpc { }
+        grpc {
+          max_recv_msg_size = "128MiB"  
+        }
         // configures the default http/protobuf endpoint "0.0.0.0:4318"
         http { }
 

@@ -52,6 +52,7 @@ otelcol.processor.transform "drop_unneeded_resource_attributes" {
                         "delete_key(attributes, \"process.runtime.description\")",
                         "delete_key(attributes, \"process.runtime.name\")",
                         "delete_key(attributes, \"process.runtime.version\")",
+                        'delete_matching_keys(attributes, "^if_\\d+")',
                 ]
         }
 

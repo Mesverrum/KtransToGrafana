@@ -40,7 +40,9 @@ cp config.alloy.sample config.alloy
 ### ENV variables
 Setting up the .env file is the first step.  Log in to your Grafana Cloud account and search for `Add new connection` then in that screen search for `otlp`, and select the `OpenTelemetry` tile.  
 Create a new token or use an existing one.  
-In this case you can skip over the instructions for installing Alloy and go straight to `Append the generated configuration to your configuration file` and scroll to the bottomr to find the pieces you will need to pass into  container.  You should grab the URL of the client endpoint from the `otelcol.exporter.otlphttp` section and the username/password from the `otelcol.auth.basic` section.
+In this case you can skip over the instructions for installing Alloy and go straight to `Append the generated configuration to your configuration file` and scroll to the bottomr to find the pieces you will need to pass into  container.  You should grab the URL of the client endpoint from the `otelcol.exporter.otlphttp` section and the username/password from the `otelcol.auth.basic` section.  
+
+**You do not need to deploy any collector at this time, we just want to copy out the credentials for our environmental variables.**
 
 ```
 otelcol.exporter.otlphttp "grafana_cloud" {

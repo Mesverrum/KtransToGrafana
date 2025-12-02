@@ -93,7 +93,7 @@ The last piece to modify is the `snmp.yaml` file.  This file manages the config 
 For the sake of a quick example you can open the `snmp.yaml` file in Vim and press `i` to go into `INSERT` mode to make changes.  The first section is discovery where you can set the CIDR IP ranges for SNMP enabled devices you want to run a discovery against.  For specific devices you can enter their IP with /32 at the end.  
 The `default_communities` section can hold a list of SNMP v2 community strings to test against the devices.  
 
-For SNMP v3 I would recommend adding a block like this into the discovery block
+For SNMP v3 I would recommend adding an "other_v3s" block like this inside the discovery block
 ```
 discovery:
   other_v3s:

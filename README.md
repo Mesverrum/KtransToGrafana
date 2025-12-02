@@ -92,7 +92,26 @@ The last piece to modify is the `snmp.yaml` file.  This file manages the config 
 
 For the sake of a quick example you can open the `snmp.yaml` file in Vim and press `i` to go into `INSERT` mode to make changes.  The first section is discovery where you can set the CIDR IP ranges for SNMP enabled devices you want to run a discovery against.  For specific devices you can enter their IP with /32 at the end.  
 The `default_communities` section can hold a list of SNMP v2 community strings to test against the devices.  
-For SNMP v3 see the examples [here]([https://docs.newrelic.com/docs/network-performance-monitoring/advanced/advanced-config/](https://docs.newrelic.com/docs/network-performance-monitoring/advanced/advanced-config/#snmpv3-config)).
+
+For SNMP v3 I would recommend adding a block like this into the discovery block
+```
+discovery:
+  other_v3s:
+  - user_name: my_user_1
+    authentication_protocol: my_auth_protocol_1
+    authentication_passphrase: my_auth_pass_1
+    privacy_protocol: my_priv_protocol_1
+    privacy_passphrase: my_priv_pass_1
+    context_engine_id: ""
+    context_name: ""
+  - user_name: my_user_2
+    authentication_protocol: my_auth_protocol_2
+    authentication_passphrase: my_auth_pass_2
+    privacy_protocol: my_priv_protocol_2
+    privacy_passphrase: my_priv_pass_2
+    context_engine_id: ""
+    context_name: ""
+```
 
 The `devices` section will be blank initially, but as the discovery runs the container will update this file with the information of devices that it has connected with.  This forms the target list that ktranslate will use after the discovery job is complete to poll the devices.  When Ktranslate discovers a device it will collect the SysObjectID and based on that it does a lookup against the library of device profiles found in this repo [https://github.com/kentik/snmp-profiles](https://github.com/kentik/snmp-profiles).
 The profile repo contains a curated list of OIDs to collect that should provide useful information. This eliminates the pain of hunting down MIBs and processing them through the generator and then cleaning up the resulting output.

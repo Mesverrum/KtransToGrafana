@@ -1,6 +1,8 @@
 # KtransToGrafana
 This repo is an example of a quick time to value deployment of [Ktranslate](https://github.com/kentik/ktranslate/) writing to a [Grafana Cloud](https://grafana.com/products/cloud/) OTLP endpoint. While there are countless approaches to accomplish this I am hoping to provide a simple, functional example without requiring too much Linux or Alloy expertise. You should be able to have SNMP data showing up in your Grafana account in about 5 minutes, 10 if you get really jammed up on Vim.
 
+If you run into problems you can check the ```troubleshooting``` folder in this repo for some more help.
+
 ## Architecture
 This example will provide you with a docker compose configuration to launch 3 containers; one running Ktranslate for receiving netflow data (supports the most common formats such as netflow 5/9/sflow/ipfix/nbar/pan/etc), another running Ktranslate to do SNMP device discovery and polling, and another running a stripped down Grafana Alloy agent to forward OTLP data from the previous containers. 
 Feel free to fork this repo or PR changes if you find that we can make this more simple or more 'production-ready' 

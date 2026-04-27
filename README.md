@@ -1,6 +1,8 @@
 # KtransToGrafana
 This repo is an example of a quick time to value deployment of [Ktranslate](https://github.com/kentik/ktranslate/) writing to a [Grafana Cloud](https://grafana.com/products/cloud/) OTLP endpoint. While there are countless approaches to accomplish this I am hoping to provide a simple, functional example without requiring too much Linux or Alloy expertise. You should be able to have SNMP data showing up in your Grafana account in about 5 minutes, 10 if you get really jammed up on Vim.
 
+This repo is not maintained by Kentik or Grafana, it is just a demonstration of how to easily connect the two tools together.  Questions about the example configs can be raised at this repo, bugs or feature requests for either tool should be directed at their respective repos.
+
 If you run into problems you can check the ```troubleshooting``` folder in this repo for some more help.
 
 ## Architecture

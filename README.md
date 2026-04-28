@@ -9,6 +9,8 @@ If you run into problems you can check the ```troubleshooting``` folder in this 
 This example will provide you with a docker compose configuration to launch 3 containers; one running Ktranslate for receiving netflow data (supports the most common formats such as netflow 5/9/sflow/ipfix/nbar/pan/etc), another running Ktranslate to do SNMP device discovery and polling, and another running a stripped down Grafana Alloy agent to forward OTLP data from the previous containers. 
 Feel free to fork this repo or PR changes if you find that we can make this more simple or more 'production-ready' 
 
+![Architecture](./ktrans_architecture.png)
+
 ## Usage Instructions
 Start with an Ubuntu Linux system (also tested under Windows WSL).
 

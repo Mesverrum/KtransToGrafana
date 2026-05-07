@@ -10,6 +10,7 @@ This example will provide you with a docker compose configuration to launch 3 co
 Feel free to fork this repo or PR changes if you find that we can make this more simple or more 'production-ready' 
 
 ![Architecture](./ktrans_architecture.png)
+![Detail](./ktrans_to_alloy.png)
 
 ## Usage Instructions
 Start with an Ubuntu Linux system (also tested under Windows WSL).

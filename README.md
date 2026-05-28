@@ -96,7 +96,7 @@ Each file in `groups/*.env` is one credential group. Open the file and fill in t
 
 When you're ready, render the configs:
 ```
-./scripts/generate-groups.sh
+make generate
 ```
 This produces:
 - `config/discovery-<group>.yaml` — the canonical discovery config the discovery script feeds to ktranslate
@@ -110,11 +110,11 @@ Adding `groups/fortinet.env` is the whole change — no compose file edits, no s
 ```
 cp groups/cisco.env.sample groups/fortinet.env
 # edit groups/fortinet.env: set GROUP=fortinet, fill creds, assign unique ports
-./scripts/generate-groups.sh
-docker compose -f compose-base.yaml -f compose-groups.generated.yaml up -d
-./scripts/run-discovery.sh fortinet
+make generate
+make up
+make discover GROUP=fortinet
 ```
-`docker compose up -d` is idempotent — it starts the new services without disturbing the existing ones. Modifying or removing a group follows the same pattern (edit or delete the env file, re-run the generator, re-run `up -d`).
+`make up` is idempotent — it starts the new services without disturbing the existing ones. Modifying or removing a group follows the same pattern (edit or delete the env file, re-run `make generate`, re-run `make up`).
 
 ### Permissions
 The discovery script writes files into `state/` that the containers need to be able to read. Set ownership once:
@@ -122,22 +122,28 @@ The discovery script writes files into `state/` that the containers need to be a
 sudo chown -R 1000:1000 config/ state/
 ```
 
-### Bootstrap the device lists
-The pollers `@-include` `state/devices-<group>.yaml`, so those files must exist before the pollers start. Either run a discovery cycle first:
+### Running it
+There's a small Makefile wrapping the common operations:
 ```
-./scripts/run-discovery.sh cisco
-./scripts/run-discovery.sh palo
+make preflight              # check that .env / groups / generated configs are ready
+make generate               # render configs and compose-groups.generated.yaml from groups/*.env
+make bootstrap              # seed empty state/devices-<group>.yaml so pollers can start
+make up                     # runs preflight + bootstrap, then docker compose up -d
+make logs                   # tail logs from all containers
+make down                   # stop and remove the stack
+make discover GROUP=cisco   # one-shot discovery for one group; populates state/devices-cisco.yaml
 ```
-Or seed empty stubs:
-```
-echo '{}' | tee state/devices-cisco.yaml state/devices-palo.yaml
-```
+`make up` is idempotent — it'll start newly-added services without disturbing running ones. The pollers begin polling whatever devices are in their respective `state/devices-<group>.yaml`; until you've run discovery, those are empty stubs (`{}`) and no SNMP traffic actually goes out. Run `make discover GROUP=cisco` (and the same for each group) to populate them.
 
-### Start everything
+If you'd rather skip the Makefile, the equivalent raw commands are:
 ```
+./scripts/preflight.sh
+./scripts/generate-groups.sh
+echo '{}' | tee state/devices-cisco.yaml state/devices-palo.yaml   # bootstrap
 docker compose -f compose-base.yaml -f compose-groups.generated.yaml up -d
+./scripts/run-discovery.sh cisco
 ```
-You'll see images get pulled, then the pollers will start and begin polling whatever devices are in their respective `state/devices-*.yaml`. The `discover_*` services are gated behind a Compose profile so `up` does not start them — they only run when invoked via the discovery script.
+The `discover_*` services are gated behind a Compose profile so `up` does not start them — they only run when invoked via `make discover` or `./scripts/run-discovery.sh`.
 
 ### Schedule ongoing discovery
 Add cron entries on the host so new devices get picked up automatically. Stagger each group a few minutes apart so they don't all run at once:
@@ -149,6 +155,13 @@ Each run scans the configured CIDRs, atomically publishes a fresh `state/devices
 
 ## Data in Grafana
 Within a couple minutes of seeing ktranslate polling your devices there should be data in your Grafana Cloud's default Prometheus data source. Metrics start with `kentik_snmp_*` and carry labels like `device_name` and `if_interface_name` based on the SNMP profile assigned during discovery. Each poller stamps its own `service.name` (`snmp-cisco`, `snmp-palo`, etc.) so you can split dashboards by credential group.
+
+### Quick verification
+Open Grafana Cloud → Explore → your default Prometheus data source, and paste this:
+```
+count by (device_name, service_name) (kentik_snmp_DeviceMetrics)
+```
+You should get one row per polled device, grouped by which credential group is polling it. If the table is empty after a couple minutes, check `make logs` for discovery activity and confirm `snmpwalk` works from the Docker host to one of your devices (see `troubleshooting/snmp.md`).
 
 Network gear cardinality is all over the place — a UPS might emit ~50 active series, a large core switch or load balancer might emit 10,000. Plan accordingly.
 

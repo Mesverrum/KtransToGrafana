@@ -1,0 +1,15 @@
+# Local copies of the sample files. These contain real credentials and the
+# snmp.yaml is mutated in place by ktranslate's discovery — never commit them.
+.env
+snmp.yaml
+config.alloy
+
+# OS and editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.vscode/
+.idea/

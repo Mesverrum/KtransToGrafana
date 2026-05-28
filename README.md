@@ -9,13 +9,13 @@ If you run into problems you can check the ```troubleshooting``` folder in this 
 This example deploys a small set of containers via Docker Compose:
 - **`ktranslate_flow`** — receives netflow data (netflow 5/9, sflow, ipfix, nbar, pan, etc.) and converts it to OTEL metrics via configurable rollups.
 - **`ktranslate_snmp_<group>`** — one long-running SNMP poller per credential group. Each reads a static config file from `config/` plus a separately-managed device list from `state/`.
-- **`discover_<group>`** — one short-lived discovery container per credential group. Runs on a schedule, writes discovered devices back to `state/`, and signals the matching poller to reload.
+- **`discover_<group>`** — one short-lived discovery container per credential group. Runs on a schedule, queries NetBox using the group's filter (tag, site, role, etc.), writes the device list back to `state/`, and signals the matching poller to reload.
 - **`ktranslate_syslog`** — collects syslog and forwards as OTEL logs.
 - **`alloy`** — a stripped-down Grafana Alloy agent that forwards all OTLP traffic from the above to Grafana Cloud.
 
 Each credential group (e.g. `cisco`, `palo`, `fortinet`) is defined by a single declarative file in `groups/<name>.env`. A generator script reads those files and renders the per-group config yamls plus a compose service fragment. Adding a new credential group is a one-file operation followed by a re-run of the generator.
 
-The split between discovery and polling lets git stay the source of truth for credentials, scan ranges, and polling rules, while letting the network itself be the source of truth for which devices currently exist. Discovery writes are atomic and reversible; polling configs are mounted read-only and never mutated.
+**NetBox is the source of truth for which devices each group polls.** ktranslate has built-in NetBox discovery — the discovery container reads a filter from each group's config, queries NetBox's REST API, and uses the returned device list (with `primary_ip` or `oob_ip` per device) as its polling targets. Git stays the source of truth for credentials, filters, and polling rules; NetBox stays the source of truth for what exists on the network; ktranslate joins the two. Discovery writes are atomic and reversible; polling configs are mounted read-only and never mutated.
 
 ![Architecture](./ktrans_architecture.png)
 ![Detail](./ktrans_to_alloy.png)
@@ -71,7 +71,9 @@ otelcol.auth.basic "grafana_cloud" {
     password = "glc_foo="
 }
 ```
-Edit `.env` and paste the URL, username, and password into `GC_OTLP_URL`, `GC_OTLP_ACCOUNT`, and `GC_OTLP_KEY`. No quotes needed. Save the file.
+Edit `.env` and paste the URL, username, and password into `GC_OTLP_URL`, `GC_OTLP_ACCOUNT`, and `GC_OTLP_KEY`. No quotes needed.
+
+In the same file, set `NETBOX_HOST` to your NetBox instance URL (e.g. `https://netbox.example.com`) and `NETBOX_TOKEN` to a NetBox API token with read access to devices. These values are passed into the discovery container's environment and consumed by ktranslate when it queries NetBox for the device list. The token is only ever read at discovery time — the long-running pollers don't need it. Save the file.
 
 You do **not** need to `export` these into your shell. Docker Compose automatically reads a file named `.env` from the directory you run it in and uses it to resolve the `${VAR}` placeholders in the compose files. The file persists across reboots and the values are picked up every time you run `docker compose`, so nothing leaks into your user environment and nothing is lost on logout. If you ever want to maintain side-by-side environments on one host (dev/staging/prod) you can keep additional files like `.env.prod` and select one at run time:
 ```
@@ -91,8 +93,12 @@ Each file in `groups/*.env` is one credential group. Open the file and fill in t
 
 - **`GROUP`** — short identifier (`cisco`, `palo`, etc.). Used in container names, file paths, and the OTEL `service.name` so dashboards can split by group.
 - **`SNMP_VERSION`** — `v2c` or `v3`. The other credential fields are only required for the matching version.
-- **`TARGETS`** — comma-separated list of CIDRs or `/32` IPs for discovery to scan.
+- **`NETBOX_TAG` / `NETBOX_SITE` / `NETBOX_LOCATION` / `NETBOX_TENANT`** — comma-separated lists. A device qualifies for this group if it matches **any** of the listed values for each populated field, and matches **all** populated fields. Blank fields are omitted from the NetBox query entirely.
+- **`NETBOX_ROLE` / `NETBOX_STATUS`** — single-value filters (`role=access-switch`, `status=active`, etc.).
+- **`NETBOX_IP_TO_PICK`** — `primary` (uses `primary_ip` on the device) or `oob` (out-of-band IP). Choose based on which interface SNMP is reachable on.
 - **`METALISTEN_PORT` / `TRAP_PORT`** — host ports for this group. Must be unique across groups and must not collide with the static services (9995, 9996, 9998, 4317, 12346, 1514). The generator will refuse to run if it finds a collision.
+
+The intended NetBox model is one tag per credential group (e.g. `snmp-cisco`, `snmp-palo`). Tag devices in NetBox accordingly and the right ones land in the right poller. You can layer in `role` / `site` / etc. for finer slicing.
 
 When you're ready, render the configs:
 ```
@@ -109,7 +115,7 @@ All three are derived artifacts: they are regenerated from `groups/*.env` and th
 Adding `groups/fortinet.env` is the whole change — no compose file edits, no script edits:
 ```
 cp groups/cisco.env.sample groups/fortinet.env
-# edit groups/fortinet.env: set GROUP=fortinet, fill creds, assign unique ports
+# edit groups/fortinet.env: GROUP=fortinet, creds, NetBox filter (e.g. NETBOX_TAG=snmp-fortinet), unique ports
 ./scripts/generate-groups.sh
 docker compose -f compose-base.yaml -f compose-groups.generated.yaml up -d
 ./scripts/run-discovery.sh fortinet
@@ -121,6 +127,13 @@ The discovery script writes files into `state/` that the containers need to be a
 ```
 sudo chown -R 1000:1000 config/ state/
 ```
+
+### Tag devices in NetBox
+Before the first discovery run, make sure your devices are tagged in NetBox so the per-group filters will return them. For the shipped samples, that means:
+- Cisco devices tagged `snmp-cisco`, status `active`, with `primary_ip` populated.
+- Palo Alto devices tagged `snmp-palo`, role `firewall`, status `active`, with `primary_ip` populated.
+
+A device missing `primary_ip` (or `oob_ip` if `NETBOX_IP_TO_PICK=oob`) won't be polled — ktranslate has nothing to send SNMP to. Fix the NetBox record and re-run discovery.
 
 ### Bootstrap the device lists
 The pollers `@-include` `state/devices-<group>.yaml`, so those files must exist before the pollers start. Either run a discovery cycle first:

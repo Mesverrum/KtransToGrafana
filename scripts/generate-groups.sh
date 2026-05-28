@@ -29,7 +29,7 @@ mkdir -p "${CONFIG_DIR}" "${STATE_DIR}"
 # Only the placeholders listed here get substituted. Everything else
 # (notably docker compose's own ${OTEL_SERVICE_NAME}, ${NF_SOURCE}, ${GC_*})
 # stays literal so docker compose can resolve it from .env at runtime.
-SUBST_VARS='$GROUP $METALISTEN_PORT $TRAP_PORT $TRAP_COMMUNITY $DISCOVERY_THREADS $POLL_INTERVAL_SEC $TARGETS_YAML $DEFAULT_COMMUNITIES_YAML $DEFAULT_V3_YAML $REPO_PATH'
+SUBST_VARS='$GROUP $METALISTEN_PORT $TRAP_PORT $TRAP_COMMUNITY $DISCOVERY_THREADS $POLL_INTERVAL_SEC $NETBOX_FILTERS_YAML $NETBOX_IP_TO_PICK $DEFAULT_COMMUNITIES_YAML $DEFAULT_V3_YAML $REPO_PATH'
 
 shopt -s nullglob
 GROUP_FILES=("${GROUPS_DIR}"/*.env)
@@ -55,12 +55,18 @@ for env_file in "${GROUP_FILES[@]}"; do
     source "${env_file}"
     set +a
 
-    for var in GROUP SNMP_VERSION TRAP_COMMUNITY TARGETS METALISTEN_PORT TRAP_PORT DISCOVERY_THREADS POLL_INTERVAL_SEC; do
+    for var in GROUP SNMP_VERSION TRAP_COMMUNITY NETBOX_IP_TO_PICK METALISTEN_PORT TRAP_PORT DISCOVERY_THREADS POLL_INTERVAL_SEC; do
       if [[ -z "${!var:-}" ]]; then
         echo "ERROR: ${env_file}: missing required variable ${var}" >&2
         exit 1
       fi
     done
+
+    # Warn (but don't fail) if no NetBox filters are populated — that would
+    # pull every device in the entire NetBox instance into this group.
+    if [[ -z "${NETBOX_TAG:-}${NETBOX_SITE:-}${NETBOX_LOCATION:-}${NETBOX_TENANT:-}${NETBOX_ROLE:-}${NETBOX_STATUS:-}" ]]; then
+      echo "WARN:  ${env_file}: no NetBox filters set; this group will pull every device from NetBox" >&2
+    fi
 
     case "${SNMP_VERSION}" in
       v2c)
@@ -121,15 +127,32 @@ for env_file in "${GROUP_FILES[@]}"; do
     source "${env_file}"
     set +a
 
-    # Indented YAML list of scan targets.
-    TARGETS_YAML=""
-    IFS=',' read -ra TGT_ARR <<< "${TARGETS}"
-    for t in "${TGT_ARR[@]}"; do
-      t="${t// /}"
-      TARGETS_YAML+="      - ${t}"$'\n'
-    done
-    TARGETS_YAML="${TARGETS_YAML%$'\n'}"
-    export TARGETS_YAML
+    # Build the NetBox filter block. Each filter is omitted entirely if its
+    # env var is empty, so an unused filter doesn't render as `tag: []` (which
+    # NetBox interprets as "match the empty tag" instead of "no constraint").
+    NETBOX_FILTERS_YAML=""
+    _append_array_filter() {
+      local key="$1" csv="$2"
+      [[ -z "${csv}" ]] && return
+      NETBOX_FILTERS_YAML+=$'\n        '"${key}"":"
+      IFS=',' read -ra _VALS <<< "${csv}"
+      for v in "${_VALS[@]}"; do
+        NETBOX_FILTERS_YAML+=$'\n          - '"${v// /}"
+      done
+    }
+    _append_scalar_filter() {
+      local key="$1" val="$2"
+      [[ -z "${val}" ]] && return
+      NETBOX_FILTERS_YAML+=$'\n        '"${key}"": ${val}"
+    }
+    _append_array_filter  tag      "${NETBOX_TAG:-}"
+    _append_array_filter  site     "${NETBOX_SITE:-}"
+    _append_array_filter  location "${NETBOX_LOCATION:-}"
+    _append_array_filter  tenant   "${NETBOX_TENANT:-}"
+    _append_scalar_filter role     "${NETBOX_ROLE:-}"
+    _append_scalar_filter status   "${NETBOX_STATUS:-}"
+    export NETBOX_FILTERS_YAML
+    export NETBOX_IP_TO_PICK
 
     # Render the credential blocks conditional on SNMP version. The exact
     # leading whitespace matters — these slot into `default_communities:`

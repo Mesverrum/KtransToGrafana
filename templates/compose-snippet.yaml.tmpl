@@ -36,6 +36,9 @@
     image: kentik/ktranslate:latest
     pull_policy: always
     profiles: ["discovery"]
+    environment:
+      - NETBOX_HOST=${NETBOX_HOST}
+      - NETBOX_TOKEN=${NETBOX_TOKEN}
     volumes:
       - type: bind
         source: ${REPO_PATH}/state/discovery-${GROUP}.runtime.yaml

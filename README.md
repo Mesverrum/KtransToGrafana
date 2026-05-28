@@ -178,10 +178,30 @@ count by (device_name) (kentik_snmp_DeviceMetrics)
 ```
 You should get one row per device ktranslate is currently polling. If the table is empty after a couple minutes, check `docker compose logs ktranslate_snmp` for discovery activity, and confirm `snmpwalk` works from the Docker host to one of your devices (see `troubleshooting/snmp.md`).
 
-Because of how high volume flow data is this configuration has Ktranslate converting raw flow data into a collection of metric series using the rollups arguments in the `compose.yaml` file.  This can be much more cost effective to store and to query than raw flow log lines.  The [Sankey panel](https://grafana.com/grafana/plugins/netsage-sankey-panel/) in Grafana works well to visualize this data after applying the `Group by` transformation to sum up the total bytes.
+Because flow data is so high-volume in its raw form, this configuration has Ktranslate aggregating it into a small set of metric series using the `--rollups` argument in `compose.yaml`. This is much cheaper to store and query than raw flow log lines. The [Sankey panel](https://grafana.com/grafana/plugins/netsage-sankey-panel/) in Grafana works well to visualize the result after applying a `Group by` transformation to sum bytes.
 
+Two flags govern the cardinality ceiling for the flow metric:
+- **`--rollup_interval=60`** — emit one batch of rolled-up series every 60 seconds.
+- **`--rollup_top_k=100`** — only emit the top 100 series (by aggregated value) in each batch.
 
-I've included the JSON for a flow dashboard you can import to your Grafana, more to come for various SNMP device use cases as I get time.
+Active-series math:
+```
+max_active_series ≤ rollup_top_k × (active_series_window / rollup_interval)
+```
+With Grafana Cloud's typical 20-minute active-series window: `100 × (1200 / 60) = 2,000 series` as the worst-case ceiling. In practice traffic patterns are sticky — the busiest src/dst/port combinations recur across consecutive intervals — so steady state is usually a fraction of the ceiling. If you raise `--rollup_top_k` the ceiling scales linearly; the staleness window in your Grafana Cloud tier might also differ (check whether it's 5, 20, or 30 minutes for your stack and recompute accordingly).
+
+### Compatibility with the official Grafana Cloud netflow integration
+The flow pipeline in this repo is aligned with the [official Grafana Cloud ktranslate-netflow integration](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-ktranslate-netflow/) — `config.alloy.sample` includes an `otelcol.processor.transform "preprocessing"` block that renames `kentik.rollup.bytes_by_flow` to `network.io.by_flow` and remaps the flow attributes (`src_addr`, `dst_addr`, `dst_port`, etc.) to OTEL semantic-convention names like `network.local.address` and `network.peer.port`. The flow container's data also gets `service.name=integrations/ktranslate-netflow` so it shows up under that name in Grafana.
+
+What this means in practice:
+- You can import the **Netflow overview** dashboard from the official integration page and it will light up against this pipeline.
+- The bundled `dashboards/Ktranslate Flow Summary.json` was authored against the old `kentik.rollup.*` names and will need its queries updated (or replaced with the official dashboard).
+- SNMP and syslog telemetry is untouched — those containers set their own `OTEL_SERVICE_NAME` (`ktranslate-snmp` / `ktranslate-syslog`) so the preprocessing transform's `service.name` rewrite skips them.
+
+The quick-verification PromQL for flow:
+```
+sum by (device_name) (rate(network_io_by_flow[5m]))
+```
 
 # Contact me
 Feel free to reach out to me via Issues and PR's in this repo or contact me directly, marcnetterfield@gmail.com

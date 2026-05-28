@@ -5,6 +5,15 @@ This repo is not maintained by Kentik or Grafana, it is just a demonstration of 
 
 If you run into problems you can check the ```troubleshooting``` folder in this repo for some more help.
 
+## Deployment models
+This repo has three branches, each demonstrating a different operational shape:
+
+- **[`main`](../../tree/main)** — single SNMP poller, single credential set, CIDR-based discovery. Fastest path to data in Grafana; best for proof-of-concept or single-vendor environments.
+- **[`multicontainer_example`](../../tree/multicontainer_example)** — one poller per credential group, declarative `groups/<name>.env` files, generator-driven configs. Use this when you have multiple SNMP credential sets (different vendors, sites, etc.) to keep separate.
+- **[`multicontainer_netbox`](../../tree/multicontainer_netbox)** — same as `multicontainer_example` but the device list comes from NetBox (filtered by tag/role/site/etc.) instead of CIDR scanning. Use this when NetBox is your source of truth for what exists on the network.
+
+**You are reading the `main` branch.**
+
 ## Architecture
 This example will provide you with a docker compose configuration to launch 3 containers; one running Ktranslate for receiving netflow data (supports the most common formats such as netflow 5/9/sflow/ipfix/nbar/pan/etc), another running Ktranslate to do SNMP device discovery and polling, and another running a stripped down Grafana Alloy agent to forward OTLP data from the previous containers. 
 Feel free to fork this repo or PR changes if you find that we can make this more simple or more 'production-ready' 

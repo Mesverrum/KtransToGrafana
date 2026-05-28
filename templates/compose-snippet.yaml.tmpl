@@ -1,10 +1,13 @@
   ktranslate_snmp_${GROUP}:
-    image: kentik/ktranslate:latest
+    image: quay.io/kentik/ktranslate:v2
     restart: always
     pull_policy: always
     environment:
-      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
-      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
+      # Distinct service.name per group so the Alloy preprocessing transform
+      # (which rebrands flow data as integrations/ktranslate-netflow) doesn't
+      # touch SNMP telemetry, and so each group is separable in Grafana.
+      - OTEL_SERVICE_NAME=ktranslate-snmp-${GROUP}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     volumes:
       - type: bind
         source: ${REPO_PATH}/config/poller-${GROUP}.yaml
@@ -33,9 +36,12 @@
       - ${TRAP_PORT}:${TRAP_PORT}/udp
 
   discover_${GROUP}:
-    image: kentik/ktranslate:latest
+    image: quay.io/kentik/ktranslate:v2
     pull_policy: always
     profiles: ["discovery"]
+    environment:
+      - OTEL_SERVICE_NAME=ktranslate-discover-${GROUP}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     volumes:
       - type: bind
         source: ${REPO_PATH}/state/discovery-${GROUP}.runtime.yaml

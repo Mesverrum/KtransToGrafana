@@ -1,0 +1,48 @@
+  ktranslate_snmp_${GROUP}:
+    image: kentik/ktranslate:latest
+    restart: always
+    pull_policy: always
+    environment:
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
+    volumes:
+      - type: bind
+        source: ${REPO_PATH}/config/poller-${GROUP}.yaml
+        target: /snmp.yaml
+        read_only: true
+      - type: bind
+        source: ${REPO_PATH}/state/devices-${GROUP}.yaml
+        target: /state/devices-${GROUP}.yaml
+        read_only: true
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --snmp=/snmp.yaml
+      - --metalisten=0.0.0.0:${METALISTEN_PORT}
+      - --dns=127.0.0.1:53
+      - --sinks=otel
+      - --metrics=jchf
+      - --tee_logs=true
+      - --service_name=snmp-${GROUP}
+      - --max_flows_per_message=100
+    ports:
+      - ${METALISTEN_PORT}:${METALISTEN_PORT}
+      - ${TRAP_PORT}:${TRAP_PORT}/udp
+
+  discover_${GROUP}:
+    image: kentik/ktranslate:latest
+    pull_policy: always
+    profiles: ["discovery"]
+    volumes:
+      - type: bind
+        source: ${REPO_PATH}/state/discovery-${GROUP}.runtime.yaml
+        target: /snmp.yaml
+    command:
+      - --snmp=/snmp.yaml
+      - -snmp_discovery=true
+      - --tee_logs=true
+      - --service_name=discover-${GROUP}
+

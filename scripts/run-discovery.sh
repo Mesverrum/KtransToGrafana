@@ -45,11 +45,16 @@ if [[ -f "${DEVICES_OUT}" ]]; then
   cp "${DEVICES_OUT}" "${DEVICES_PREV}"
 fi
 
-COMPOSE_FILE="${REPO_ROOT}/compose-discovery.yaml"
+COMPOSE_ARGS=(-f "${REPO_ROOT}/compose-base.yaml" -f "${REPO_ROOT}/compose-groups.generated.yaml")
+
+if [[ ! -f "${REPO_ROOT}/compose-groups.generated.yaml" ]]; then
+  echo "missing generated compose file. Run ./scripts/generate-groups.sh first." >&2
+  exit 1
+fi
 
 # Run the one-shot discovery container. The compose service is gated by
 # the "discovery" profile so it never starts as part of `docker compose up`.
-docker compose -f "${COMPOSE_FILE}" \
+docker compose "${COMPOSE_ARGS[@]}" \
   --profile discovery \
   run --rm "discover_${GROUP}"
 
@@ -85,9 +90,9 @@ fi
 # Fail soft: if the poller isn't running (first bootstrap, operator paused it,
 # host just rebooted) we don't want to fail the whole discovery run.
 POLLER_SERVICE="ktranslate_snmp_${GROUP}"
-if docker compose -f "${COMPOSE_FILE}" ps --status running --services 2>/dev/null \
+if docker compose "${COMPOSE_ARGS[@]}" ps --status running --services 2>/dev/null \
      | grep -qx "${POLLER_SERVICE}"; then
-  docker compose -f "${COMPOSE_FILE}" kill -s HUP "${POLLER_SERVICE}"
+  docker compose "${COMPOSE_ARGS[@]}" kill -s HUP "${POLLER_SERVICE}"
   echo "sent SIGHUP to ${POLLER_SERVICE}"
 else
   echo "poller ${POLLER_SERVICE} not running; new devices will be picked up on next start" >&2

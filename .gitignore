@@ -1,11 +1,15 @@
 # Local secrets and runtime state — never commit.
 .env
-config/poller-cisco.yaml
-config/poller-palo.yaml
-config/discovery-cisco.yaml
-config/discovery-palo.yaml
 config.alloy
 
-# Discovery runtime artifacts: written by the discovery container on each run.
+# Generator inputs with real credentials (templates are in groups/*.env.sample).
+groups/*.env
+!groups/*.env.sample
+
+# Generator outputs (re-created by scripts/generate-groups.sh).
+config/*.yaml
+compose-groups.generated.yaml
+
+# Discovery runtime artifacts (written by scripts/run-discovery.sh).
 state/*.yaml
 !state/.gitkeep

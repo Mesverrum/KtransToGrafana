@@ -1,11 +1,11 @@
 services:
   ktranslate_flow:
-    image: kentik/ktranslate:latest
+    image: quay.io/kentik/ktranslate:v2
     restart: always
     pull_policy: always
     environment:
       - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
-      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     depends_on:
       - alloy
     command:
@@ -20,6 +20,8 @@ services:
       - --tee_logs=true
       - --service_name=flow
       - --max_flows_per_message=100
+      - --rollup_interval=60
+      - --rollup_top_k=100
       - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application,device_name,custom_str.src_host,custom_str.dst_host,src_geo,dst_geo
       - --rollup_keep_undefined=true
     ports:
@@ -27,12 +29,12 @@ services:
       - 9996:9996
 
   ktranslate_syslog:
-    image: kentik/ktranslate:latest
+    image: quay.io/kentik/ktranslate:v2
     restart: always
     pull_policy: always
     environment:
-      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
-      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
+      - OTEL_SERVICE_NAME=ktranslate-syslog
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     depends_on:
       - alloy
     command:

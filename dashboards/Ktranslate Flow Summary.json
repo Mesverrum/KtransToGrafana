@@ -54,7 +54,7 @@
           "links": [
             {
               "title": "Filter Device",
-              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=${__value.raw}&var-src_addr=$src_addr&var-dst_addr=$dst_addr"
+              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=${__value.raw}&var-network_local_address=$network_local_address&var-network_peer_address=$network_peer_address"
             }
           ],
           "mappings": [],
@@ -119,12 +119,12 @@
           "disableTextWrap": false,
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(device_name) (kentik_rollup_bytes_by_flow{device_name=~\"$device_name\",src_addr=~\"$src_addr\",dst_addr=~\"$dst_addr\",application=~\"$application\"})",
+          "expr": "sum by(device_name) (network_io_by_flow{device_name=~\"$device_name\",network_local_address=~\"$network_local_address\",network_peer_address=~\"$network_peer_address\",network_protocol_name=~\"$network_protocol_name\"})",
           "format": "table",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "Source: {{src_addr}} - Dest: {{dst_addr}}",
+          "legendFormat": "Source: {{network_local_address}} - Dest: {{network_peer_address}}",
           "range": true,
           "refId": "A",
           "useBackend": false
@@ -146,11 +146,11 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "dst_addr": {
+              "network_peer_address": {
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "src_addr": {
+              "network_local_address": {
                 "aggregations": [],
                 "operation": "groupby"
               }
@@ -268,11 +268,11 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "dst_addr": {
+              "network_peer_address": {
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "src_addr": {
+              "network_local_address": {
                 "aggregations": [],
                 "operation": "groupby"
               }
@@ -411,7 +411,7 @@
           "links": [
             {
               "title": "Filter Source",
-              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=$device_name&var-src_addr=${__value.raw}&var-dst_addr=$dst_addr"
+              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=$device_name&var-network_local_address=${__value.raw}&var-network_peer_address=$network_peer_address"
             }
           ],
           "mappings": [],
@@ -475,12 +475,12 @@
           "disableTextWrap": false,
           "editorMode": "code",
           "exemplar": false,
-          "expr": "(kentik_rollup_bytes_by_flow{device_name=~\"$device_name\",src_addr=~\"$src_addr\",dst_addr=~\"$dst_addr\",application=~\"$application\"})",
+          "expr": "(network_io_by_flow{device_name=~\"$device_name\",network_local_address=~\"$network_local_address\",network_peer_address=~\"$network_peer_address\",network_protocol_name=~\"$network_protocol_name\"})",
           "format": "table",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
-          "legendFormat": "{{src_addr}}",
+          "legendFormat": "{{network_local_address}}",
           "range": true,
           "refId": "A",
           "useBackend": false
@@ -497,7 +497,7 @@
                   "max"
                 ]
               },
-              "application": {
+              "network_protocol_name": {
                 "aggregations": [
                   "distinctCount"
                 ],
@@ -509,13 +509,13 @@
                 ],
                 "operation": "aggregate"
               },
-              "dst_addr": {
+              "network_peer_address": {
                 "aggregations": [
                   "distinctCount"
                 ],
                 "operation": "aggregate"
               },
-              "src_addr": {
+              "network_local_address": {
                 "aggregations": [],
                 "operation": "groupby"
               }
@@ -530,17 +530,17 @@
             },
             "includeByName": {},
             "indexByName": {
-              "application (distinctCount)": 2,
+              "network_protocol_name (distinctCount)": 2,
               "device_name (distinctCount)": 1,
-              "dst_addr (distinctCount)": 3,
-              "src_addr": 0
+              "network_peer_address (distinctCount)": 3,
+              "network_local_address": 0
             },
             "renameByName": {
               "Value (max)": "",
-              "application (distinctCount)": "Applications",
+              "network_protocol_name (distinctCount)": "Applications",
               "device_name (distinctCount)": "Devices",
-              "dst_addr (distinctCount)": "Destinations",
-              "src_addr": "Source"
+              "network_peer_address (distinctCount)": "Destinations",
+              "network_local_address": "Source"
             }
           }
         },
@@ -580,7 +580,7 @@
             {
               "targetBlank": false,
               "title": "Filter Destination",
-              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=$device_name&var-src_addr=$src_addr&var-dst_addr=${__value.raw}"
+              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=$device_name&var-network_local_address=$network_local_address&var-network_peer_address=${__value.raw}"
             }
           ],
           "mappings": [],
@@ -659,7 +659,7 @@
                 "aggregations": [],
                 "operation": "aggregate"
               },
-              "application": {
+              "network_protocol_name": {
                 "aggregations": [
                   "distinctCount"
                 ],
@@ -671,11 +671,11 @@
                 ],
                 "operation": "aggregate"
               },
-              "dst_addr": {
+              "network_peer_address": {
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "src_addr": {
+              "network_local_address": {
                 "aggregations": [
                   "distinctCount"
                 ],
@@ -690,16 +690,16 @@
             "excludeByName": {},
             "includeByName": {},
             "indexByName": {
-              "application (distinctCount)": 2,
+              "network_protocol_name (distinctCount)": 2,
               "device_name (distinctCount)": 1,
-              "dst_addr": 0,
-              "src_addr (distinctCount)": 3
+              "network_peer_address": 0,
+              "network_local_address (distinctCount)": 3
             },
             "renameByName": {
-              "application (distinctCount)": "Applications",
+              "network_protocol_name (distinctCount)": "Applications",
               "device_name (distinctCount)": "Devices",
-              "dst_addr": "Destination",
-              "src_addr (distinctCount)": "Sources"
+              "network_peer_address": "Destination",
+              "network_local_address (distinctCount)": "Sources"
             }
           }
         },
@@ -831,29 +831,29 @@
                 ],
                 "operation": "aggregate"
               },
-              "application": {
+              "network_protocol_name": {
                 "aggregations": [],
                 "operation": "groupby"
               },
               "device_name": {
                 "aggregations": []
               },
-              "dst_addr": {
+              "network_peer_address": {
                 "aggregations": []
               },
               "dst_host": {
                 "aggregations": []
               },
-              "dst_port": {
+              "network_peer_port": {
                 "aggregations": []
               },
-              "src_addr": {
+              "network_local_address": {
                 "aggregations": []
               },
               "src_host": {
                 "aggregations": []
               },
-              "src_port": {
+              "network_local_port": {
                 "aggregations": []
               }
             }
@@ -875,23 +875,23 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "src_addr": false
+              "network_local_address": false
             },
             "includeByName": {},
             "indexByName": {
               "Value (sum)": 3,
-              "application": 0,
-              "dst_port": 1,
-              "src_port": 2
+              "network_protocol_name": 0,
+              "network_peer_port": 1,
+              "network_local_port": 2
             },
             "renameByName": {
               "Value (sum)": "Bytes",
-              "application": "Application",
+              "network_protocol_name": "Application",
               "device_name": "Device",
-              "dst_addr": "Destination",
-              "dst_port": "Source Port",
-              "src_addr": "Source",
-              "src_port": "Destination Port"
+              "network_peer_address": "Destination",
+              "network_peer_port": "Source Port",
+              "network_local_address": "Source",
+              "network_local_port": "Destination Port"
             }
           }
         }
@@ -998,17 +998,17 @@
                 ],
                 "operation": "aggregate"
               },
-              "application": {
+              "network_protocol_name": {
                 "aggregations": [],
                 "operation": "groupby"
               },
               "device_name": {
                 "aggregations": []
               },
-              "dst_addr": {
+              "network_peer_address": {
                 "aggregations": []
               },
-              "src_addr": {
+              "network_local_address": {
                 "aggregations": []
               }
             }
@@ -1121,7 +1121,7 @@
         {
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "sum by(application) (kentik_rollup_bytes_by_flow{device_name=~\"$device_name\",src_addr=~\"$src_addr\",dst_addr=~\"$dst_addr\",application=~\"$application\"})",
+          "expr": "sum by(network_protocol_name) (network_io_by_flow{device_name=~\"$device_name\",network_local_address=~\"$network_local_address\",network_peer_address=~\"$network_peer_address\",network_protocol_name=~\"$network_protocol_name\"})",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -1167,17 +1167,17 @@
           "links": [
             {
               "title": "Filter Device",
-              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=${__value.raw}&var-src_addr=$src_addr&var-dst_addr=$dst_addr"
+              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=${__value.raw}&var-network_local_address=$network_local_address&var-network_peer_address=$network_peer_address"
             },
             {
               "targetBlank": false,
               "title": "Filter Source",
-              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=$device_name&var-src_addr=${__value.raw}&var-dst_addr=$dst_addr"
+              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=$device_name&var-network_local_address=${__value.raw}&var-network_peer_address=$network_peer_address"
             },
             {
               "targetBlank": false,
               "title": "Filter Dest",
-              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=$device_name&var-src_addr=$src_addr&var-dst_addr=${__value.raw}"
+              "url": "/d/${__dashboard.uid}﻿/${__dashboard}?&from=${__from}&to=${__to}&timezone=browser&var-device_name=$device_name&var-network_local_address=$network_local_address&var-network_peer_address=${__value.raw}"
             }
           ],
           "mappings": [],
@@ -1263,14 +1263,14 @@
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "dst_addr": {
+              "network_peer_address": {
                 "aggregations": [],
                 "operation": "groupby"
               },
               "dst_host": {
                 "aggregations": []
               },
-              "src_addr": {
+              "network_local_address": {
                 "aggregations": [],
                 "operation": "groupby"
               },
@@ -1300,14 +1300,14 @@
             "indexByName": {
               "Value (sum)": 3,
               "device_name": 0,
-              "dst_addr": 2,
-              "src_addr": 1
+              "network_peer_address": 2,
+              "network_local_address": 1
             },
             "renameByName": {
               "Value (sum)": "Bytes",
               "device_name": "Device",
-              "dst_addr": "Destination",
-              "src_addr": "Source"
+              "network_peer_address": "Destination",
+              "network_local_address": "Source"
             }
           }
         }
@@ -1389,11 +1389,11 @@
                 ],
                 "operation": "aggregate"
               },
-              "dst_addr": {
+              "network_peer_address": {
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "src_addr": {
+              "network_local_address": {
                 "aggregations": [],
                 "operation": "groupby"
               }
@@ -1503,13 +1503,13 @@
           "disableTextWrap": false,
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(device_name,src_addr,dst_addr) (kentik_rollup_bytes_by_flow{device_name=~\"$device_name\",src_addr=~\"$src_addr\",dst_addr=~\"$dst_addr\",application=~\"$application\"})",
+          "expr": "sum by(device_name,network_local_address,network_peer_address) (network_io_by_flow{device_name=~\"$device_name\",network_local_address=~\"$network_local_address\",network_peer_address=~\"$network_peer_address\",network_protocol_name=~\"$network_protocol_name\"})",
           "format": "time_series",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
           "interval": "",
-          "legendFormat": "{{src_addr}} {{dst_addr}}",
+          "legendFormat": "{{network_local_address}} {{network_peer_address}}",
           "range": true,
           "refId": "A",
           "useBackend": false
@@ -1595,34 +1595,34 @@
             "excludeByName": {
               "Time": true,
               "Value": false,
-              "dst_port": true,
-              "src_port": true
+              "network_peer_port": true,
+              "network_local_port": true
             },
             "includeByName": {},
             "indexByName": {
               "Time": 6,
               "Value": 7,
               "__name__": 8,
-              "application": 2,
+              "network_protocol_name": 2,
               "device_name": 3,
-              "dst_addr": 5,
-              "dst_country": 9,
+              "network_peer_address": 5,
+              "network_peer_country": 9,
               "dst_host": 10,
-              "dst_port": 4,
+              "network_peer_port": 4,
               "job": 11,
-              "protocol": 12,
-              "src_addr": 0,
-              "src_country": 13,
+              "network_transport": 12,
+              "network_local_address": 0,
+              "network_local_country": 13,
               "src_host": 14,
-              "src_port": 1
+              "network_local_port": 1
             },
             "renameByName": {
-              "application": "Application",
+              "network_protocol_name": "Application",
               "device_name": "Device",
-              "dst_addr": "Destination",
-              "dst_port": "Destination Port",
-              "src_addr": "Source",
-              "src_port": "Source Port"
+              "network_peer_address": "Destination",
+              "network_peer_port": "Destination Port",
+              "network_local_address": "Source",
+              "network_local_port": "Source Port"
             }
           }
         },
@@ -1660,22 +1660,22 @@
                 ],
                 "operation": "aggregate"
               },
-              "dst_addr": {
+              "network_peer_address": {
                 "aggregations": [],
                 "operation": "groupby"
               },
               "dst_host": {
                 "aggregations": []
               },
-              "dst_port": {
+              "network_peer_port": {
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "src_addr": {
+              "network_local_address": {
                 "aggregations": [],
                 "operation": "groupby"
               },
-              "src_port": {
+              "network_local_port": {
                 "aggregations": [],
                 "operation": "groupby"
               }
@@ -1792,7 +1792,7 @@
               "options": "A"
             },
             "location": {
-              "lookup": "src_country",
+              "lookup": "network_local_country",
               "mode": "lookup"
             },
             "name": "Layer 1",
@@ -1818,7 +1818,7 @@
           "disableTextWrap": false,
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(src_country) (kentik_rollup_bytes_by_flow{device_name=~\"$device_name\",src_addr=~\"$src_addr\",dst_addr=~\"$dst_addr\",application=~\"$application\"})",
+          "expr": "sum by(network_local_country) (network_io_by_flow{device_name=~\"$device_name\",network_local_address=~\"$network_local_address\",network_peer_address=~\"$network_peer_address\",network_protocol_name=~\"$network_protocol_name\"})",
           "format": "table",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -1908,7 +1908,7 @@
               "options": "A"
             },
             "location": {
-              "lookup": "dst_country",
+              "lookup": "network_peer_country",
               "mode": "lookup"
             },
             "name": "Layer 1",
@@ -1934,7 +1934,7 @@
           "disableTextWrap": false,
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by(dst_country) (kentik_rollup_bytes_by_flow{device_name=~\"$device_name\",src_addr=~\"$src_addr\",dst_addr=~\"$dst_addr\",application=~\"$application\"})",
+          "expr": "sum by(network_peer_country) (network_io_by_flow{device_name=~\"$device_name\",network_local_address=~\"$network_local_address\",network_peer_address=~\"$network_peer_address\",network_protocol_name=~\"$network_protocol_name\"})",
           "format": "table",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
@@ -1961,7 +1961,7 @@
           "text": "All",
           "value": "$__all"
         },
-        "definition": "label_values(kentik_rollup_bytes_by_flow{device_name=~\".*\"},device_name)",
+        "definition": "label_values(network_io_by_flow{device_name=~\".*\"},device_name)",
         "description": "Name of the device reporting the flows",
         "includeAll": true,
         "label": "device_name",
@@ -1969,7 +1969,7 @@
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(kentik_rollup_bytes_by_flow{device_name=~\".*\"},device_name)",
+          "query": "label_values(network_io_by_flow{device_name=~\".*\"},device_name)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
@@ -1983,15 +1983,15 @@
           "text": "All",
           "value": "$__all"
         },
-        "definition": "label_values(kentik_rollup_bytes_by_flow{device_name=~\"$device_name\"},src_addr)",
+        "definition": "label_values(network_io_by_flow{device_name=~\"$device_name\"},network_local_address)",
         "description": "Source IP of the Flow Traffic",
         "includeAll": true,
-        "label": "src_addr",
-        "name": "src_addr",
+        "label": "network_local_address",
+        "name": "network_local_address",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(kentik_rollup_bytes_by_flow{device_name=~\"$device_name\"},src_addr)",
+          "query": "label_values(network_io_by_flow{device_name=~\"$device_name\"},network_local_address)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
@@ -2005,15 +2005,15 @@
           "text": "All",
           "value": "$__all"
         },
-        "definition": "label_values(kentik_rollup_bytes_by_flow{device_name=~\"$device_name\"},dst_addr)",
+        "definition": "label_values(network_io_by_flow{device_name=~\"$device_name\"},network_peer_address)",
         "description": "Destination IP of the Flow Traffic",
         "includeAll": true,
-        "label": "dst_addr",
-        "name": "dst_addr",
+        "label": "network_peer_address",
+        "name": "network_peer_address",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(kentik_rollup_bytes_by_flow{device_name=~\"$device_name\"},dst_addr)",
+          "query": "label_values(network_io_by_flow{device_name=~\"$device_name\"},network_peer_address)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
@@ -2027,15 +2027,15 @@
           "text": "All",
           "value": "$__all"
         },
-        "definition": "label_values(kentik_rollup_bytes_by_flow{device_name=~\"$device_name\"},application)",
+        "definition": "label_values(network_io_by_flow{device_name=~\"$device_name\"},network_protocol_name)",
         "description": "Application associated with the ports in use",
         "includeAll": true,
-        "label": "application",
-        "name": "application",
+        "label": "network_protocol_name",
+        "name": "network_protocol_name",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(kentik_rollup_bytes_by_flow{device_name=~\"$device_name\"},application)",
+          "query": "label_values(network_io_by_flow{device_name=~\"$device_name\"},network_protocol_name)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,

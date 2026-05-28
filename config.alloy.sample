@@ -10,15 +10,62 @@ logging {
 otelcol.receiver.otlp "default" {
         // configures the default grpc endpoint "0.0.0.0:4317"
         grpc {
-          max_recv_msg_size = "128MiB"  
+          max_recv_msg_size = "128MiB"
         }
         // configures the default http/protobuf endpoint "0.0.0.0:4318"
         http { }
 
         output {
-                metrics = [otelcol.processor.resourcedetection.default.input]
+                metrics = [otelcol.processor.transform.preprocessing.input]
                 logs    = [otelcol.processor.resourcedetection.default.input]
                 traces  = [otelcol.processor.resourcedetection.default.input]
+        }
+}
+
+// Mirrors the official Grafana Cloud ktranslate-netflow integration:
+// renames kentik.rollup.bytes_by_flow to network.io.by_flow and remaps the
+// flow attributes (src_addr/dst_addr/etc.) to OTEL semantic-convention names,
+// so the official "Netflow overview" dashboard works against this pipeline.
+// Only data tagged with service.name=ktranslate (the flow container's default)
+// gets the rebrand; SNMP and syslog set their own service.name so this pass
+// leaves them alone.
+otelcol.processor.transform "preprocessing" {
+        error_mode = "ignore"
+
+        metric_statements {
+                context    = "metric"
+                statements = [
+                        `set(metric.name, "network.io.by_flow") where metric.name == "kentik.rollup.bytes_by_flow"`,
+                        `set(resource.attributes["service.name"], "integrations/ktranslate-netflow") where metric.name == "network.io.by_flow"`,
+                        `set(metric.unit, "By") where metric.name == "network.io.by_flow"`,
+                ]
+        }
+
+        metric_statements {
+                context    = "datapoint"
+                statements = [
+                        `set(datapoint.attributes["network.protocol.name"], datapoint.attributes["application"]) where metric.name == "network.io.by_flow"`,
+                        `delete_key(datapoint.attributes, "application") where metric.name == "network.io.by_flow"`,
+                        `set(datapoint.attributes["network.transport"], datapoint.attributes["protocol"]) where metric.name == "network.io.by_flow"`,
+                        `delete_key(datapoint.attributes, "protocol") where metric.name == "network.io.by_flow"`,
+                        `set(datapoint.attributes["network.local.country"], datapoint.attributes["src_country"]) where metric.name == "network.io.by_flow"`,
+                        `delete_key(datapoint.attributes, "src_country") where metric.name == "network.io.by_flow"`,
+                        `set(datapoint.attributes["network.peer.country"], datapoint.attributes["dst_country"]) where metric.name == "network.io.by_flow"`,
+                        `delete_key(datapoint.attributes, "dst_country") where metric.name == "network.io.by_flow"`,
+                        `set(datapoint.attributes["network.local.address"], datapoint.attributes["src_addr"]) where metric.name == "network.io.by_flow"`,
+                        `delete_key(datapoint.attributes, "src_addr") where metric.name == "network.io.by_flow"`,
+                        `set(datapoint.attributes["network.local.port"], datapoint.attributes["src_port"]) where metric.name == "network.io.by_flow"`,
+                        `delete_key(datapoint.attributes, "src_port") where metric.name == "network.io.by_flow"`,
+                        `set(datapoint.attributes["network.peer.address"], datapoint.attributes["dst_addr"]) where metric.name == "network.io.by_flow"`,
+                        `delete_key(datapoint.attributes, "dst_addr") where metric.name == "network.io.by_flow"`,
+                        `set(datapoint.attributes["network.peer.port"], datapoint.attributes["dst_port"]) where metric.name == "network.io.by_flow"`,
+                        `delete_key(datapoint.attributes, "dst_port") where metric.name == "network.io.by_flow"`,
+                        `delete_key(datapoint.attributes, "zone") where metric.name == "network.io.by_flow"`,
+                ]
+        }
+
+        output {
+                metrics = [otelcol.processor.resourcedetection.default.input]
         }
 }
 

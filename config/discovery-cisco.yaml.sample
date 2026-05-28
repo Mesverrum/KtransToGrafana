@@ -1,0 +1,62 @@
+# Discovery-only config for the Cisco credential group.
+# This file is used by the short-lived discovery container (see scripts/run-discovery.sh).
+# It will be COPIED to state/discovery-cisco.runtime.yaml before each discovery run, and
+# the runtime copy will be mutated in place by ktranslate. Keep this file as the
+# canonical intent in git; the runtime copy is not version-controlled.
+devices: {}
+trap:
+    listen: 0.0.0.0:1620
+    community: cisco_trap_string
+    version: ""
+    transport: ""
+    v3_config: null
+    trap_only: false
+    drop_undefined: false
+    endpoint: ""
+    endpoint_port: 0
+discovery:
+    cidrs:
+      - 10.10.1.10/32   # cisco-core-1
+      - 10.10.1.11/32   # cisco-core-2
+      - 10.10.1.12/32   # cisco-dist-1
+      - 10.10.1.13/32   # cisco-access-1
+    ignore_list: []
+    debug: false
+    ports:
+      - 161
+    default_communities: []
+    use_snmp_v1: false
+    default_v3:
+        user_name: cisco_snmp_user
+        authentication_protocol: SHA
+        authentication_passphrase: REPLACE_ME_CISCO_AUTH
+        privacy_protocol: AES
+        privacy_passphrase: REPLACE_ME_CISCO_PRIV
+        context_engine_id: ""
+        context_name: ""
+    add_devices: true
+    add_mibs: true
+    threads: 4
+    replace_devices: true
+    kentik: null
+    no_use_bulkwalkall: false
+global:
+    poll_time_sec: 60
+    drop_if_outside_poll: false
+    mib_profile_dir: /etc/ktranslate/profiles
+    mibs_db: ""
+    mibs_enabled:
+      - IF-MIB
+    timeout_ms: 10000
+    retries: 1
+    global_v3: null
+    response_time: true
+    purge_devices_after_num: 0
+    no_device_hardcoded_oids: false
+    user_tags: {}
+    match_attributes: {}
+    providers: {}
+    jitter_time_sec: 30
+    fast_poll: false
+    watch_profile_changes: false
+    save_mds_cache: false

@@ -21,12 +21,13 @@ services:
       - --service_name=flow
       - --max_flows_per_message=100
       - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application,device_name,custom_str.src_host,custom_str.dst_host,src_geo,dst_geo
-#      - --rollups=s_sum,pkts_by_flow,in_pkts+out_pkts,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application,device_name,custom_str.src_host,custom_str.dst_host,src_geo,dst_geo
       - --rollup_keep_undefined=true
     ports:
       - 9995:9995/udp
       - 9996:9996
-  ktranslate_snmp:
+
+  # ---- Long-running pollers. These never mutate their config files. ----
+  ktranslate_snmp_cisco:
     image: kentik/ktranslate:latest
     restart: always
     pull_policy: always
@@ -35,8 +36,13 @@ services:
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
     volumes:
       - type: bind
-        source: ./snmp.yaml
+        source: /opt/Grafana/KtransToGrafana/config/poller-cisco.yaml
         target: /snmp.yaml
+        read_only: true
+      - type: bind
+        source: /opt/Grafana/KtransToGrafana/state/devices-cisco.yaml
+        target: /state/devices-cisco.yaml
+        read_only: true
     depends_on:
       - alloy
     command:
@@ -49,14 +55,13 @@ services:
       - --sinks=otel
       - --metrics=jchf
       - --tee_logs=true
-      - --service_name=snmp
+      - --service_name=snmp-cisco
       - --max_flows_per_message=100
-      - --snmp_discovery_on_start=true
-      - --snmp_discovery_min=720
     ports:
       - 9997:9997
       - 1620:1620/udp
-  ktranslate_syslog:
+
+  ktranslate_snmp_palo:
     image: kentik/ktranslate:latest
     restart: always
     pull_policy: always
@@ -65,8 +70,68 @@ services:
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
     volumes:
       - type: bind
-        source: ./snmp.yaml
+        source: /opt/Grafana/KtransToGrafana/config/poller-palo.yaml
         target: /snmp.yaml
+        read_only: true
+      - type: bind
+        source: /opt/Grafana/KtransToGrafana/state/devices-palo.yaml
+        target: /state/devices-palo.yaml
+        read_only: true
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --snmp=/snmp.yaml
+      - --metalisten=0.0.0.0:9987
+      - --dns=127.0.0.1:53
+      - --sinks=otel
+      - --metrics=jchf
+      - --tee_logs=true
+      - --service_name=snmp-palo
+      - --max_flows_per_message=100
+    ports:
+      - 9987:9987
+      - 1621:1621/udp
+
+  # ---- Short-lived discovery containers. Gated by the "discovery" profile so
+  # ---- `docker compose up` never starts them. Invoke via scripts/run-discovery.sh.
+  discover_cisco:
+    image: kentik/ktranslate:latest
+    pull_policy: always
+    profiles: ["discovery"]
+    volumes:
+      - type: bind
+        source: /opt/Grafana/KtransToGrafana/state/discovery-cisco.runtime.yaml
+        target: /snmp.yaml
+    command:
+      - --snmp=/snmp.yaml
+      - -snmp_discovery=true
+      - --tee_logs=true
+      - --service_name=discover-cisco
+
+  discover_palo:
+    image: kentik/ktranslate:latest
+    pull_policy: always
+    profiles: ["discovery"]
+    volumes:
+      - type: bind
+        source: /opt/Grafana/KtransToGrafana/state/discovery-palo.runtime.yaml
+        target: /snmp.yaml
+    command:
+      - --snmp=/snmp.yaml
+      - -snmp_discovery=true
+      - --tee_logs=true
+      - --service_name=discover-palo
+
+  ktranslate_syslog:
+    image: kentik/ktranslate:latest
+    restart: always
+    pull_policy: always
+    environment:
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_SERVICE_NAME}
     depends_on:
       - alloy
     command:
@@ -83,6 +148,7 @@ services:
       - 1514:1514/udp
       - 1514:1514/tcp
       - 9998:9998
+
   alloy:
     image: grafana/alloy:latest
     restart: always
@@ -91,9 +157,10 @@ services:
       - GC_OTLP_URL=${GC_OTLP_URL}
       - GC_OTLP_ACCOUNT=${GC_OTLP_ACCOUNT}
       - GC_OTLP_KEY=${GC_OTLP_KEY}
+      - OTEL_METRIC_EXPORT_INTERVAL=1000
     volumes:
       - type: bind
-        source: ./config.alloy
+        source: /opt/Grafana/KtransToGrafana/config.alloy
         target: /config.alloy
     ports:
       - 4317:4317
@@ -104,15 +171,3 @@ services:
       - --stability.level=experimental
       - run
       - /config.alloy
-  # Including host sflow to provide some starting data captured from the Docker host, remove this if you already have other sources of flow available.
-  host-sflow:
-    image: sflow/host-sflow
-    container_name: host-sflow
-    restart: unless-stopped
-    environment:
-      - COLLECTOR=127.0.0.1
-      - PORT=9995
-      - NET=ens4
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    network_mode: host

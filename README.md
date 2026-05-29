@@ -160,7 +160,7 @@ Add cron entries on the host so new devices get picked up automatically. Stagger
 0  */6 * * * cd /opt/Grafana/KtransToGrafana && ./scripts/run-discovery.sh cisco >> /var/log/ktrans-discovery.log 2>&1
 5  */6 * * * cd /opt/Grafana/KtransToGrafana && ./scripts/run-discovery.sh palo  >> /var/log/ktrans-discovery.log 2>&1
 ```
-Each run scans the configured CIDRs, atomically publishes a fresh `state/devices-<group>.yaml`, and sends a SIGHUP to the matching poller so it picks up the new device list without a restart. If discovery returns zero devices (network blip, container crash) the script preserves the previous device list rather than wiping it. If the device list is unchanged from the previous run, no reload is sent.
+Each run scans the configured CIDRs, atomically publishes a fresh `state/devices-<group>.yaml`, and sends `SIGUSR2` to the matching poller so it picks up the new device list without a restart. (`SIGUSR2` is ktranslate's reload signal — `SIGHUP` has no handler and would terminate the container.) If discovery returns zero devices (network blip, container crash) the script preserves the previous device list rather than wiping it. If the device list is unchanged from the previous run, no reload is sent.
 
 ## Data in Grafana
 Within a couple minutes of seeing ktranslate polling your devices there should be data in your Grafana Cloud's default Prometheus data source. Metrics start with `kentik_snmp_*` and carry labels like `device_name` and `if_interface_name` based on the SNMP profile assigned during discovery. Each poller stamps its own `service.name` (`snmp-cisco`, `snmp-palo`, etc.) so you can split dashboards by credential group.

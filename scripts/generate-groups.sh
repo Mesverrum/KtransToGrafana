@@ -16,7 +16,12 @@ TEMPLATES_DIR="${REPO_ROOT}/templates"
 CONFIG_DIR="${REPO_ROOT}/config"
 STATE_DIR="${REPO_ROOT}/state"
 COMPOSE_OUT="${REPO_ROOT}/compose-groups.generated.yaml"
-REPO_PATH="${REPO_ROOT}"
+# REPO_PATH ends up baked into the bind-mount sources of the rendered
+# compose-groups.generated.yaml. Default to REPO_ROOT (where the script
+# lives), but let the caller override — needed when this script runs from
+# inside a container (e.g. the ktranslate-tools admin sidecar) that has a
+# different idea of its own filesystem layout than the docker host does.
+REPO_PATH="${REPO_PATH:-${REPO_ROOT}}"
 export REPO_PATH
 
 if ! command -v envsubst >/dev/null 2>&1; then

@@ -10,6 +10,7 @@ services:
       - alloy
     command:
       - --format=otel
+      - --format_metric=otel
       - --otel.protocol=grpc
       - --otel.endpoint=http://alloy:4317/
       - --nf.source=${NF_SOURCE}
@@ -39,6 +40,7 @@ services:
       - alloy
     command:
       - --format=otel
+      - --format_metric=otel
       - --otel.protocol=grpc
       - --otel.endpoint=http://alloy:4317/
       - --syslog.source=${SYSLOG_SOURCE}

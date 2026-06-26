@@ -45,13 +45,24 @@
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
       - NETBOX_HOST=${NETBOX_HOST}
       - NETBOX_TOKEN=${NETBOX_TOKEN}
+      # Discovery containers are short-lived; export internal metrics sooner than
+      # the default 60s so a quick scan still emits health data to Alloy.
+      - OTEL_METRIC_EXPORT_INTERVAL=10000
     volumes:
       - type: bind
         source: ${REPO_PATH}/state/discovery-${GROUP}.runtime.yaml
         target: /snmp.yaml
+    depends_on:
+      - alloy
     command:
+      - --format=otel
+      - --format_metric=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
       - --snmp=/snmp.yaml
       - -snmp_discovery=true
+      - --sinks=otel
+      - --metrics=jchf
       - --tee_logs=true
       - --service_name=discover-${GROUP}
 

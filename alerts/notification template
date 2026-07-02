@@ -1,0 +1,42 @@
+{{ define "network.subject" -}}
+[{{ .Status | toUpper }}] {{ (index .Alerts 0).Labels.alertname -}}
+{{ if eq (len .Alerts) 1 }} — {{ (index .Alerts 0).Labels.device_name -}}
+{{ else }} — {{ len .Alerts }} alerts{{ end }}
+{{- end }}
+
+{{ define "network.message" -}}
+{{ range .Alerts -}}
+{{ if eq .Status "firing" }}🔴 FIRING{{ else }}✅ RESOLVED{{ end }} — {{ .Labels.alertname }}
+
+{{ .Annotations.summary }}
+{{ if .Annotations.description }}{{ .Annotations.description }}
+{{ end }}
+Device:     {{ .Labels.device_name }}{{ if .Labels.src_addr }}  ({{ .Labels.src_addr }}){{ end }}
+{{ if .Labels.tags_kentik_model }}Model:      {{ .Labels.tags_kentik_model }}
+{{ end -}}
+{{ if .Labels.if_interface_name }}
+Interface:  {{ .Labels.if_interface_name }}{{ if .Labels.if_Description }} — {{ .Labels.if_Description }}{{ end }}
+Status:     {{ .Labels.if_OperStatus }}{{ if .Labels.if_Speed }}  ({{ .Labels.if_Speed }} Mbps){{ end }}
+{{ end -}}
+{{ if .Labels.entity_name }}
+Component:  {{ .Labels.entity_name }}{{ if .Labels.entity_model }} — {{ .Labels.entity_model }}{{ end }}
+{{ if .Labels.entity_serial }}Serial:     {{ .Labels.entity_serial }}
+{{ end -}}
+{{ end -}}
+{{ if .Labels.fru_power_oper_status }}Power:      {{ .Labels.fru_power_oper_status }}
+{{ end -}}
+{{ if .Labels.fan_descr }}Fan:        {{ .Labels.fan_descr }} — {{ .Labels.fan_state }}
+{{ end -}}
+{{ if .Labels.temp_descr }}Temp:       {{ .Labels.temp_descr }} — {{ .Labels.temp_state }} (threshold {{ .Labels.temp_threshold }}°C)
+{{ end }}
+Dashboard:  https://commvault.grafana.net/d/magz6qw1?var-instance={{ urlquery .Labels.device_name }}&dtab=Overview
+{{ if .Labels.if_interface_name -}}
+Interface:  https://commvault.grafana.net/d/magz6qw1?var-instance={{ urlquery .Labels.device_name }}&var-interface_name={{ urlquery .Labels.if_interface_name }}&dtab=Interfaces
+{{ end -}}
+{{ if .Labels.entity_name -}}
+Hardware:   https://commvault.grafana.net/d/magz6qw1?var-instance={{ urlquery .Labels.device_name }}&dtab=Hardware-Sensors
+{{ end -}}
+Silence:    {{ .SilenceURL }}
+---
+{{ end -}}
+{{ end }}

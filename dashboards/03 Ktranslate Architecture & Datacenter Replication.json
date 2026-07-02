@@ -1,0 +1,585 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "ktrans-arch-replication",
+    "namespace": "stacks-1338978",
+    "uid": "280b5479-448e-4c57-bfc1-f05aa7e85fd1",
+    "resourceVersion": "2067423374472118831",
+    "generation": 6,
+    "creationTimestamp": "2026-06-18T01:29:20Z",
+    "labels": {
+      "grafana.app/deprecatedInternalID": "267130440851456"
+    },
+    "annotations": {
+      "grafana.app/createdBy": "service-account:dfpg4zso5epz4e",
+      "grafana.app/saved-from-ui": "Grafana Cloud",
+      "grafana.app/updatedBy": "user:afnjz800nez28b",
+      "grafana.app/updatedTimestamp": "2026-06-18T01:45:17Z"
+    }
+  },
+  "spec": {
+    "annotations": [
+      {
+        "kind": "AnnotationQuery",
+        "spec": {
+          "query": {
+            "kind": "DataQuery",
+            "group": "grafana",
+            "version": "v0",
+            "datasource": {
+              "name": "-- Grafana --"
+            },
+            "spec": {}
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "builtIn": true
+        }
+      }
+    ],
+    "cursorSync": "Off",
+    "description": "Architecture reference and replication checklist for KtransToGrafana → Grafana Cloud. Audience: engineers deploying the same setup at another datacenter.",
+    "editable": true,
+    "elements": {
+      "panel-1": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1,
+          "title": "Purpose & audience",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.0-27412447110",
+            "spec": {
+              "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
+                "content": "## Ktranslate → Grafana Cloud: architecture & datacenter replication\n\nThis guide documents the **reference architecture** used to deliver SNMP, flow, and related network telemetry into **Grafana Cloud** via [KtransToGrafana](https://github.com/Mesverrum/KtransToGrafana).\n\n**Audience:** Commvault network / platform engineers standing up the **same capability in another datacenter** (new Docker host, new CIDRs/credentials, same Grafana Cloud stack or a new stack).\n\n**What you get when it works:**\n- SNMP metrics as `kentik_snmp_*` (device health, interfaces, sensors, etc.)\n- Rolled-up flow metrics as `network_io_by_flow_*` (OTEL semantic convention names)\n- ICMP reachability as `kentik_ping_*`\n- Dashboards in this folder for fleet summary, per-device drilldown, and flow analysis\n\n> This repo is a community example (not maintained by Kentik or Grafana). Use it as the deployment blueprint; open issues/PRs on GitHub for config questions.",
+                "mode": "markdown"
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "Architecture (reference)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.0-27412447110",
+            "spec": {
+              "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
+                "content": "## End-to-end data path\n\n![Ktranslate architecture diagram](https://raw.githubusercontent.com/Mesverrum/KtransToGrafana/main/ktrans_architecture.png)\n\n![Ktranslate to Alloy OTLP path](https://raw.githubusercontent.com/Mesverrum/KtransToGrafana/main/ktrans_to_alloy.png)\n\n```\nNetwork devices / exporters          Docker host (KtransToGrafana)              Grafana Cloud\n─────────────────────────────        ─────────────────────────────            ───────────────\nSNMP (161/udp)  ───────────────►  ktranslate_snmp  ──┐\nNetFlow/sFlow   ───────────────►  ktranslate_flow  ──┼──►  Grafana Alloy  ──OTLP/HTTP──►  Mimir (Prometheus)\nSyslog (opt.)   ───────────────►  ktranslate_syslog ─┘      (config.alloy)              Explore + dashboards\nhost-sflow (opt.) ─────────────►  ktranslate_flow\n```\n\n**Key idea:** ktranslate converts SNMP/flow/syslog into **OTLP metrics**; a minimal **Alloy** agent forwards them to your Grafana Cloud OTLP gateway. No full observability stack is required on the collector host.",
+                "mode": "markdown"
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "id": 3,
+          "title": "Docker Compose services",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.0-27412447110",
+            "spec": {
+              "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
+                "content": "## Containers in [compose.yaml](https://github.com/Mesverrum/KtransToGrafana/blob/main/compose.yaml)\n\n| Service | Role | Listens / notes |\n|---|---|---|\n| **ktranslate_snmp** | SNMP discovery + polling via `snmp.yaml` | Updates device list from Kentik [snmp-profiles](https://github.com/kentik/snmp-profiles); emits `kentik_snmp_*` |\n| **ktranslate_flow** | NetFlow/sFlow/IPFIX aggregation | UDP 9995; rollups `--rollup_top_k=100`, `--rollup_interval=60` cap cardinality |\n| **ktranslate_syslog** | Syslog ingestion (optional) | UDP/TCP 1514 |\n| **alloy** | OTLP receiver → Grafana Cloud exporter | Reads `GC_OTLP_URL`, `GC_OTLP_ACCOUNT`, `GC_OTLP_KEY` from `.env` |\n| **host-sflow** | Demo flow from Docker host NIC (optional) | Remove if you already export flow from routers |\n\n**Alloy preprocessing (flow only):** renames rollup metrics to `network.io.by_flow` semantic names and sets `service.name=integrations/ktranslate-netflow` so official NetFlow dashboards can be used. SNMP/ping keep distinct `OTEL_SERVICE_NAME` values so they are not rewritten.",
+                "mode": "markdown"
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "Deployment models (pick a branch)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.0-27412447110",
+            "spec": {
+              "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
+                "content": "## Which Git branch to clone?\n\n| Branch | When to use |\n|---|---|\n| **main** | Single credential set, CIDR discovery — fastest PoC |\n| **multicontainer_example** | Multiple SNMP credential groups (vendor/site) — one poller per group |\n| **multicontainer_netbox** | Device inventory from NetBox tags/roles instead of CIDR scan |\n\nFor a **new datacenter**, choose based on how you manage credentials and inventory:\n\n- One SNMP community / v3 profile for the site → **main**\n- Different communities per vendor or zone → **multicontainer_example**\n- NetBox is source of truth → **multicontainer_netbox**\n\nClone: `git clone https://github.com/Mesverrum/KtransToGrafana.git`",
+                "mode": "markdown"
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Metrics you should see",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.0-27412447110",
+            "spec": {
+              "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
+                "content": "## Metric families (Prometheus / Mimir)\n\n| Signal | Example metrics | Primary labels |\n|---|---|---|\n| SNMP | `kentik_snmp_CPU`, `kentik_snmp_if_OperStatus`, `kentik_snmp_entSensorValue` | `device_name`, `provider`, `if_interface_name` |\n| Ping | `kentik_ping_PacketLossPct`, `kentik_ping_AvgRttMs` | `device_name` |\n| Flow (rolled up) | `network_io_by_flow_bytes` | `device_name`, `network_local_address`, `network_peer_address`, `network_protocol_name` |\n\n**Cardinality rule of thumb:** ~1,000 active series per network device (simple gear less, core/LB more). Flow is capped by rollup top-K (see repo README for active-series math).\n\n**Do not hardcode device names in dashboards** — use the `$instance` / `$device_name` template variables (see dashboards in this folder).",
+                "mode": "markdown"
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-6": {
+        "kind": "Panel",
+        "spec": {
+          "id": 6,
+          "title": "Dashboards in Ktranslate Dashboards",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.0-27412447110",
+            "spec": {
+              "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
+                "content": "## Grafana dashboards in this folder\n\n| Dashboard | UID | Use |\n|---|---|---|\n| [00. Network Device Summary](/d/mavgvqv/00-network-device-summary) | `mavgvqv` | Fleet health — all SNMP devices |\n| [01. Network Device Details](/d/magz6qw1/01-network-device-details) | `magz6qw1` | Per-device drilldown (tabs: Overview, Interfaces, Sensors, Connections) |\n| [02. Network Flow Summary](/d/be8hpir89dds0a/02-network-flow-summary) | `be8hpir89dds0a` | Top talkers, protocols, geo — rolled-up flow |\n\n**Copying dashboards to another Grafana stack:** use **Dashboard settings → JSON Model → Save to file** (or **Share → Export**) on each dashboard above. The [KtransToGrafana repo](https://github.com/Mesverrum/KtransToGrafana/tree/main/dashboards) also ships starter dashboard JSON you can import via **Dashboards → New → Import**.",
+                "mode": "markdown"
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-7": {
+        "kind": "Panel",
+        "spec": {
+          "id": 7,
+          "title": "Datacenter replication checklist",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.0-27412447110",
+            "spec": {
+              "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
+                "content": "## Stand up another site (copy this list)\n\n### 1. Collector host\n- [ ] Ubuntu Linux or WSL2 host with Docker + Compose (`docker run hello-world`)\n- [ ] UDP/TCP reachability from host to SNMP (161) and flow exporters (typically 9995/udp)\n- [ ] Outbound HTTPS to Grafana Cloud OTLP gateway\n\n### 2. Clone & configure [KtransToGrafana](https://github.com/Mesverrum/KtransToGrafana)\n- [ ] `git clone` the branch that matches your credential/inventory model\n- [ ] `cp .env.sample .env` — set `GC_OTLP_URL`, `GC_OTLP_ACCOUNT`, `GC_OTLP_KEY` from Grafana Cloud → **Connections → OpenTelemetry**\n- [ ] `cp snmp.yaml.sample snmp.yaml` — set discovery CIDRs (`/32` for single IPs) and SNMP v2/v3 credentials\n- [ ] `cp config.alloy.sample config.alloy` (usually no edits unless customizing Alloy)\n- [ ] `sudo chown 1000:1000 snmp.yaml` (ktranslate mutates this file during discovery)\n- [ ] Set `HOST_NET` for host-sflow or remove that service if unused (`make detect-net`)\n\n### 3. Start & validate collector\n- [ ] `make preflight` then `make up` (or `docker compose up -d`)\n- [ ] `make logs` — confirm SNMP discovery maps devices to Kentik profiles\n- [ ] From host: `snmpwalk` to one device if discovery is empty (see repo `troubleshooting/`)\n\n### 4. Validate Grafana Cloud\n- [ ] Explore → Prometheus: `count by (device_name) (kentik_snmp_DeviceMetrics)` — one row per polled device\n- [ ] Explore → Prometheus: `sum by (device_name) (rate(network_io_by_flow_bytes[5m]))` — flow if exporters configured\n- [ ] Open dashboards in this folder; confirm `$datasource` and device variables populate\n\n### 5. Import dashboards to a new stack (if not sharing this stack)\n- [ ] Export JSON from the dashboards in this folder (settings → JSON Model, or Share → Export)\n- [ ] Or import starter JSON from the [KtransToGrafana `dashboards/` folder](https://github.com/Mesverrum/KtransToGrafana/tree/main/dashboards)\n- [ ] **Dashboards → New → Import** on the target stack; set the Prometheus datasource on import\n- [ ] Re-link drilldown URLs if dashboard UIDs change after import\n\n### 6. Production hardening (recommended)\n- [ ] Secrets in `.env` — restrict file permissions; use separate `.env` per environment\n- [ ] Document which CIDRs and credentials belong to this datacenter\n- [ ] Tune flow `--rollup_top_k` if cardinality or cost is high\n- [ ] Add syslog/ICMP only if required (each adds series)",
+                "mode": "markdown"
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-8": {
+        "kind": "Panel",
+        "spec": {
+          "id": 8,
+          "title": "Verification queries",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.0-27412447110",
+            "spec": {
+              "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
+                "content": "## PromQL quick checks (Explore → Prometheus)\n\n**SNMP devices polling:**\n```promql\ncount by (device_name) (kentik_snmp_DeviceMetrics)\n```\n\n**SNMP active series by device (rough footprint):**\n```promql\ncount by (device_name) ({__name__=~\"kentik_snmp_.+\"})\n```\n\n**Flow bytes rate by exporter:**\n```promql\nsum by (device_name) (rate(network_io_by_flow_bytes[5m]))\n```\n\n**Ping loss (if enabled):**\n```promql\navg by (device_name) (kentik_ping_PacketLossPct)\n```\n\nIf SNMP query returns rows but dashboards are empty, check the **device template variable** and datasource selector at the top of each dashboard.",
+                "mode": "markdown"
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-9": {
+        "kind": "Panel",
+        "spec": {
+          "id": 9,
+          "title": "Troubleshooting & references",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "text",
+            "version": "13.1.0-27412447110",
+            "spec": {
+              "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
+                "content": "## When something breaks\n\n| Symptom | First place to look |\n|---|---|\n| No SNMP devices | `docker compose logs ktranslate_snmp`, `https://github.com/Mesverrum/KtransToGrafana/tree/main/troubleshooting` |\n| Devices discovered but no metrics | Kentik profile match — check SysObjectID in logs vs [snmp-profiles](https://github.com/kentik/snmp-profiles) |\n| No flow | Exporter IP/port, firewall UDP 9995, rollup logs on `ktranslate_flow` |\n| Metrics in Cloud but wrong names | Alloy transform — SNMP should **not** get `integrations/ktranslate-netflow` service name |\n| High cardinality / cost | Lower `--rollup_top_k`; review label cardinality on `network_io_by_flow_*` |\n\n**References**\n- [KtransToGrafana README](https://github.com/Mesverrum/KtransToGrafana#readme)\n- [Kentik ktranslate](https://github.com/kentik/ktranslate)\n- [Kentik SNMP profiles](https://github.com/kentik/snmp-profiles)\n- [Grafana Cloud OTLP](https://grafana.com/docs/grafana-cloud/send-data/otlp/)\n- [Advanced Ktranslate Configuration](https://github.com/kentik/ktranslate/wiki/Advanced-Ktranslate-Configuration) — detailed ktranslate config options\n\n**Contact:** [KtransToGrafana Issues](https://github.com/Mesverrum/KtransToGrafana/issues) on GitHub.",
+                "mode": "markdown"
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "GridLayout",
+      "spec": {
+        "items": [
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 9,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-1"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 9,
+              "width": 24,
+              "height": 14,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 23,
+              "width": 24,
+              "height": 11,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-3"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 34,
+              "width": 24,
+              "height": 9,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 43,
+              "width": 24,
+              "height": 10,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 53,
+              "width": 24,
+              "height": 9,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-6"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 62,
+              "width": 24,
+              "height": 16,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-7"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 78,
+              "width": 24,
+              "height": 11,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-8"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 89,
+              "width": 24,
+              "height": 10,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-9"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "links": [
+      {
+        "title": "00. Network Device Summary",
+        "type": "link",
+        "icon": "dashboard",
+        "tooltip": "",
+        "url": "/d/mavgvqv/00-network-device-summary",
+        "tags": [],
+        "asDropdown": false,
+        "targetBlank": false,
+        "includeVars": false,
+        "keepTime": false
+      },
+      {
+        "title": "01. Network Device Details",
+        "type": "link",
+        "icon": "dashboard",
+        "tooltip": "",
+        "url": "/d/magz6qw1/01-network-device-details",
+        "tags": [],
+        "asDropdown": false,
+        "targetBlank": false,
+        "includeVars": false,
+        "keepTime": false
+      },
+      {
+        "title": "02. Network Flow Summary",
+        "type": "link",
+        "icon": "dashboard",
+        "tooltip": "",
+        "url": "/d/be8hpir89dds0a/02-network-flow-summary",
+        "tags": [],
+        "asDropdown": false,
+        "targetBlank": false,
+        "includeVars": false,
+        "keepTime": false
+      },
+      {
+        "title": "KtransToGrafana (GitHub)",
+        "type": "link",
+        "icon": "external link",
+        "tooltip": "",
+        "url": "https://github.com/Mesverrum/KtransToGrafana",
+        "tags": [],
+        "asDropdown": false,
+        "targetBlank": true,
+        "includeVars": false,
+        "keepTime": false
+      }
+    ],
+    "liveNow": false,
+    "preload": false,
+    "tags": [
+      "ktranslate",
+      "architecture",
+      "documentation"
+    ],
+    "timeSettings": {
+      "timezone": "browser",
+      "from": "now-6h",
+      "to": "now",
+      "autoRefresh": "",
+      "autoRefreshIntervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ],
+      "hideTimepicker": false,
+      "fiscalYearStartMonth": 0
+    },
+    "title": "03. Ktranslate Architecture & Datacenter Replication",
+    "variables": []
+  }
+}

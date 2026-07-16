@@ -1,6 +1,6 @@
 services:
   ktranslate_flow:
-    image: quay.io/kentik/ktranslate:v2
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
     restart: always
     pull_policy: always
     environment:
@@ -30,7 +30,7 @@ services:
       - 9996:9996
 
   ktranslate_syslog:
-    image: quay.io/kentik/ktranslate:v2
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
     restart: always
     pull_policy: always
     environment:
@@ -55,7 +55,7 @@ services:
       - 9998:9998
 
   alloy:
-    image: grafana/alloy:latest
+    image: ${ALLOY_IMAGE:-grafana/alloy:latest}
     restart: always
     pull_policy: always
     environment:

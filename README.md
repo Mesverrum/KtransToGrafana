@@ -97,6 +97,8 @@ There are two distinct mechanisms in Docker Compose for "loading variables from 
 
 The `config.alloy` file is already wired to those env vars; you should not need to touch it unless you have non-ktranslate changes to make.
 
+`KTRANSLATE_IMAGE` and `ALLOY_IMAGE` in `.env` select container images. Leave blank for `:latest`, or pin in production (e.g. `KTRANSLATE_IMAGE=quay.io/kentik/ktranslate:v2.2.37`). After changing a pin, `docker compose pull` and recreate.
+
 ### Configure the SNMP credential groups
 Each file in `groups/*.env` is one credential group. Open the file and fill in the values — every variable is documented inline in the sample. The important ones:
 

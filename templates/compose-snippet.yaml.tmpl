@@ -1,5 +1,5 @@
   ktranslate_snmp_${GROUP}:
-    image: quay.io/kentik/ktranslate:v2
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
     restart: always
     pull_policy: always
     environment:
@@ -37,7 +37,7 @@
       - ${TRAP_PORT}:${TRAP_PORT}/udp
 
   discover_${GROUP}:
-    image: quay.io/kentik/ktranslate:v2
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
     pull_policy: always
     profiles: ["discovery"]
     environment:

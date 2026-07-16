@@ -1,9 +1,13 @@
-.PHONY: up down logs preflight detect-net help
+.PHONY: up down logs preflight detect-net limits limits-show help
+
+COMPOSE := docker compose -f compose.yaml -f compose-limits.generated.yaml
 
 help:
 	@echo "make preflight    Check that .env / snmp.yaml / config.alloy are ready"
 	@echo "make detect-net   Append HOST_NET=<your-default-interface> to .env"
-	@echo "make up           Run preflight, then docker compose up -d"
+	@echo "make limits       Compute per-container memory limits from host RAM"
+	@echo "make limits-show  Print the limits plan without writing the overlay"
+	@echo "make up           Run preflight + limits, then docker compose up -d"
 	@echo "make down         docker compose down"
 	@echo "make logs         Tail logs from all containers"
 
@@ -16,11 +20,17 @@ detect-net:
 	@echo "HOST_NET=$$(ip -4 route show default | awk '/^default/ {print $$5; exit}')" >> .env
 	@echo "set HOST_NET in .env"
 
-up: preflight
-	docker compose up -d
+limits:
+	@./scripts/compute-limits.sh
+
+limits-show:
+	@./scripts/compute-limits.sh --dry-run
+
+up: preflight limits
+	$(COMPOSE) up -d
 
 down:
-	docker compose down
+	$(COMPOSE) down
 
 logs:
-	docker compose logs -f
+	$(COMPOSE) logs -f

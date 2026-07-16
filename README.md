@@ -106,6 +106,9 @@ The `config.alloy` file is already configured to use those ENV variables, so the
 #### Container image pins
 `KTRANSLATE_IMAGE` and `ALLOY_IMAGE` in `.env` control which images Compose pulls. Leave them blank to use `:latest`. For production, pin explicit tags (e.g. `KTRANSLATE_IMAGE=quay.io/kentik/ktranslate:v2.2.37`) so a published `:latest` build cannot break a client overnight. After changing a pin, run `docker compose pull` and recreate the stack.
 
+#### Memory limits
+On each `make up`, `scripts/compute-limits.sh` reads host `MemAvailable` and writes `compose-limits.generated.yaml` with per-container caps (SNMP poller share capped at 4G by default). Preview with `make limits-show`. Optional `.env` knobs: `MEM_BUDGET_FRACTION`, `MEM_SNMP_MAX`, `MEM_SNMP_LIMIT`, `MEM_LIMITS=off`.
+
 #### host-sflow interface
 The `host-sflow` service in `compose.yaml` needs to know which interface to listen on. It reads `HOST_NET` from `.env` and falls back to `ens4` if unset. The shipped `.env.sample` includes `HOST_NET=ens4` as a placeholder — overwrite it with your host's real interface either by hand, or with:
 ```
@@ -158,14 +161,18 @@ sudo chown 1000:1000 snmp.yaml
 With your variables set and your target CIDR subnets in place you can now run the containers. There's a small Makefile to wrap the common operations:
 ```
 make preflight    # check that .env / snmp.yaml / config.alloy are ready and Grafana creds are filled in
-make up           # runs preflight, then docker compose up -d
+make limits-show  # preview per-container memory caps from host RAM (dry-run)
+make up           # runs preflight + limits, then docker compose up -d
 make logs         # tail logs from all containers
 make down         # stop and remove the stack
 ```
+On each `make up`, `scripts/compute-limits.sh` sizes per-container memory caps from host RAM (SNMP poller share capped at 4G by default). See `.env.sample` for `MEM_*` overrides or `MEM_LIMITS=off`.
+
 If you'd rather skip the Makefile, the equivalent raw commands work too:
 ```
 ./scripts/preflight.sh
-docker compose up -d
+./scripts/compute-limits.sh
+docker compose -f compose.yaml -f compose-limits.generated.yaml up -d
 ```
 You will see the latest container images get downloaded and as long as we did no introduce any syntax errors you should see ktranslate importing the collection of profiles and begin discovery. If you have a reasonable range of subnets this should only take a minute or two and then you will see devices being mapped to profiles and the relevant OIDs start getting polled. If you don't see any major errors you can return to your terminal session by pressing `CTRL+Z` (unless you are using vscode and it is intercepting the key combo...)
 

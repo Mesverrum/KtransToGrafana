@@ -152,19 +152,23 @@ There's a small Makefile wrapping the common operations:
 make preflight              # check that .env / groups / generated configs are ready
 make generate               # render configs and compose-groups.generated.yaml from groups/*.env
 make bootstrap              # seed empty state/devices-<group>.yaml so pollers can start
-make up                     # runs preflight + bootstrap, then docker compose up -d
+make limits-show            # preview per-container memory caps from host RAM (dry-run)
+make up                     # runs preflight + bootstrap + limits, then docker compose up -d
 make logs                   # tail logs from all containers
 make down                   # stop and remove the stack
 make discover GROUP=cisco   # one-shot NetBox sync + discovery for one group
 ```
 `make up` is idempotent — it'll start newly-added services without disturbing running ones. The pollers begin polling whatever devices are in their respective `state/devices-<group>.yaml`; until you've run discovery, those are empty stubs (`{}`) and no SNMP traffic actually goes out. Run `make discover GROUP=cisco` (and the same for each group) to populate them from NetBox.
 
+On each `make up`, `scripts/compute-limits.sh` reads the host's available memory and writes `compose-limits.generated.yaml` with per-container caps. SNMP pollers get the largest share (capped at 4G each by default). Preview with `make limits-show`. Optional `.env` knobs: `MEM_BUDGET_FRACTION`, `MEM_SNMP_MAX`, `MEM_SNMP_LIMIT`, `MEM_LIMITS=off`.
+
 If you'd rather skip the Makefile, the equivalent raw commands are:
 ```
 ./scripts/preflight.sh
 ./scripts/generate-groups.sh
 echo '{}' | tee state/devices-cisco.yaml state/devices-palo.yaml   # bootstrap
-docker compose -f compose-base.yaml -f compose-groups.generated.yaml up -d
+./scripts/compute-limits.sh
+docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-limits.generated.yaml up -d
 ./scripts/run-discovery.sh cisco
 ```
 The `discover_*` services are gated behind a Compose profile so `up` does not start them — they only run when invoked via `make discover` or `./scripts/run-discovery.sh`.

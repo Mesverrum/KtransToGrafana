@@ -1,6 +1,8 @@
 # Local secrets and runtime state — never commit.
 .env
 config.alloy
+compose-base.yaml
+compose.override.yaml
 
 # Generator inputs with real credentials (templates are in groups/*.env.sample).
 groups/*.env

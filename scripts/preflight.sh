@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Catch the three most common setup mistakes before the stack starts:
-#   - .env / snmp.yaml / config.alloy haven't been copied from .sample
+#   - .env / snmp.yaml / config.alloy / compose.yaml haven't been copied from .sample
 #   - .env still contains the placeholder Grafana Cloud values
 #   - the docker daemon isn't reachable
 # Exits non-zero on any hard failure so `make up` (or CI) can gate on it.
@@ -26,7 +26,7 @@ else
 fi
 
 # --- runtime files exist ---
-for f in .env snmp.yaml config.alloy; do
+for f in .env snmp.yaml config.alloy compose.yaml; do
   if [[ -f "${f}" ]]; then
     _ok "${f} exists"
   else

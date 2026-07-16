@@ -46,12 +46,14 @@ git clone https://github.com/Mesverrum/KtransToGrafana.git
 cd KtransToGrafana/
 ```
 
-There are 3 .sample files in here that you will need to copy and modify to your requirements
+There are 4 `.sample` files in here that you will need to copy and modify to your requirements. Local copies are gitignored so custom edits won't conflict on `git pull` and won't get pushed back upstream:
 ```
 cp .env.sample .env
 cp snmp.yaml.sample snmp.yaml
 cp config.alloy.sample config.alloy
+cp compose.yaml.sample compose.yaml
 ```
+If you already customized a tracked `compose.yaml` before this change, rename it to `compose.yaml` (or merge your edits into a fresh copy from the sample) so pulls stop conflicting.
 
 ### ENV variables
 Setting up the .env file is the first step. Log in to your Grafana Cloud account and search for `Add new connection` then in that screen search for `otlp`, and select the `OpenTelemetry` tile. 

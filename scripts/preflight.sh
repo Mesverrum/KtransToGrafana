@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Catch the common setup mistakes before the stack starts:
-#   - .env / config.alloy haven't been copied from .sample
+#   - .env / config.alloy / compose-base.yaml haven't been copied from .sample
 #   - .env still contains the placeholder Grafana Cloud or NetBox values
 #   - the generator hasn't been run (no compose-groups.generated.yaml, no rendered config/)
 #   - docker / envsubst / yq aren't installed or reachable
@@ -38,7 +38,7 @@ else
 fi
 
 # --- Base runtime files copied from .sample ---
-for f in .env config.alloy; do
+for f in .env config.alloy compose-base.yaml; do
   if [[ -f "${f}" ]]; then
     _ok "${f} exists"
   else

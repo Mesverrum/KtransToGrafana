@@ -53,11 +53,13 @@ cd KtransToGrafana/
 ```
 
 ### Copy the sample files
-The base files (env + Alloy) are one-time copies:
+The base files (env, Alloy, compose) are one-time copies — local edits stay yours and won't be overwritten on `git pull`:
 ```
 cp .env.sample .env
 cp config.alloy.sample config.alloy
+cp compose-base.yaml.sample compose-base.yaml
 ```
+If you already customized a tracked `compose-base.yaml` before this change, rename it to `compose-base.yaml` (or merge your edits into a fresh copy from the sample) so pulls stop conflicting.
 The credential groups are managed under `groups/`. Two sample groups ship in the repo — copy whichever you want as a starting point, or both:
 ```
 cp groups/cisco.env.sample groups/cisco.env

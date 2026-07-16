@@ -144,6 +144,8 @@ make discover GROUP=cisco   # one-shot discovery for one group; populates state/
 ```
 `make up` is idempotent — it'll start newly-added services without disturbing running ones. The pollers begin polling whatever devices are in their respective `state/devices-<group>.yaml`; until you've run discovery, those are empty stubs (`{}`) and no SNMP traffic actually goes out. Run `make discover GROUP=cisco` (and the same for each group) to populate them.
 
+
+Container images are selected via `KTRANSLATE_IMAGE` and `ALLOY_IMAGE` in `.env` (see `.env.sample`). Leave blank for `:latest`, or pin in production (e.g. `KTRANSLATE_IMAGE=quay.io/kentik/ktranslate:v2.2.37`). After changing a pin, `docker compose pull` and recreate.
 If you'd rather skip the Makefile, the equivalent raw commands are:
 ```
 ./scripts/preflight.sh

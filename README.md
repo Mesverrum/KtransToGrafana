@@ -137,21 +137,30 @@ There's a small Makefile wrapping the common operations:
 make preflight              # check that .env / groups / generated configs are ready
 make generate               # render configs and compose-groups.generated.yaml from groups/*.env
 make bootstrap              # seed empty state/devices-<group>.yaml so pollers can start
-make up                     # runs preflight + bootstrap, then docker compose up -d
+make limits-show            # preview per-container memory caps from host RAM (dry-run)
+make up                     # runs preflight + bootstrap + limits, then docker compose up -d
 make logs                   # tail logs from all containers
 make down                   # stop and remove the stack
 make discover GROUP=cisco   # one-shot discovery for one group; populates state/devices-cisco.yaml
 ```
 `make up` is idempotent — it'll start newly-added services without disturbing running ones. The pollers begin polling whatever devices are in their respective `state/devices-<group>.yaml`; until you've run discovery, those are empty stubs (`{}`) and no SNMP traffic actually goes out. Run `make discover GROUP=cisco` (and the same for each group) to populate them.
 
+On each `make up`, `scripts/compute-limits.sh` reads the host's available memory and writes `compose-limits.generated.yaml` with per-container caps. Docker Compose has no project-wide memory budget — each service gets its own limit — but the script sizes caps so their sum stays within a configurable fraction of available RAM. SNMP pollers receive the largest share, capped at **4G each**, which matches a typical **4 vCPU / 8 GiB** trial host running one poller plus alloy, flow, and syslog. Preview the plan without restarting with `make limits-show`.
 
-Container images are selected via `KTRANSLATE_IMAGE` and `ALLOY_IMAGE` in `.env` (see `.env.sample`). Leave blank for `:latest`, or pin in production (e.g. `KTRANSLATE_IMAGE=quay.io/kentik/ktranslate:v2.2.37`). After changing a pin, `docker compose pull` and recreate.
+Optional `.env` tuning (see `.env.sample`):
+- `KTRANSLATE_IMAGE` / `ALLOY_IMAGE` — leave blank for `:latest`, or pin e.g. `quay.io/kentik/ktranslate:v2.2.37` / `grafana/alloy:v1.8.3`. After changing a pin, `docker compose pull` and recreate.
+- `MEM_BUDGET_FRACTION=0.80` — fraction of `MemAvailable` allocated across the stack
+- `MEM_SNMP_MAX=4g` — per-poller ceiling (default 4g)
+- `MEM_SNMP_LIMIT=4g` — hard override for every SNMP poller (skip auto math)
+- `MEM_LIMITS=off` — disable limits entirely
+
 If you'd rather skip the Makefile, the equivalent raw commands are:
 ```
 ./scripts/preflight.sh
 ./scripts/generate-groups.sh
 echo '{}' | tee state/devices-cisco.yaml state/devices-palo.yaml   # bootstrap
-docker compose -f compose-base.yaml -f compose-groups.generated.yaml up -d
+./scripts/compute-limits.sh
+docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-limits.generated.yaml up -d
 ./scripts/run-discovery.sh cisco
 ```
 The `discover_*` services are gated behind a Compose profile so `up` does not start them — they only run when invoked via `make discover` or `./scripts/run-discovery.sh`.

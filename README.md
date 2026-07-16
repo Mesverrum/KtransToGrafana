@@ -103,6 +103,9 @@ There are two distinct mechanisms in Docker Compose for "loading variables from 
 
 The `config.alloy` file is already configured to use those ENV variables, so there should not be a need to modify this file unless you have modifications to make that are unrelated to ktranslate.
 
+#### Container image pins
+`KTRANSLATE_IMAGE` and `ALLOY_IMAGE` in `.env` control which images Compose pulls. Leave them blank to use `:latest`. For production, pin explicit tags (e.g. `KTRANSLATE_IMAGE=quay.io/kentik/ktranslate:v2.2.37`) so a published `:latest` build cannot break a client overnight. After changing a pin, run `docker compose pull` and recreate the stack.
+
 #### host-sflow interface
 The `host-sflow` service in `compose.yaml` needs to know which interface to listen on. It reads `HOST_NET` from `.env` and falls back to `ens4` if unset. The shipped `.env.sample` includes `HOST_NET=ens4` as a placeholder — overwrite it with your host's real interface either by hand, or with:
 ```

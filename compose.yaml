@@ -1,6 +1,6 @@
 services:
   ktranslate_flow:
-    image: quay.io/kentik/ktranslate:v2
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
     restart: always
     pull_policy: always
     environment:
@@ -30,7 +30,7 @@ services:
       - 9995:9995/udp
       - 9996:9996
   ktranslate_snmp:
-    image: quay.io/kentik/ktranslate:v2
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
     restart: always
     pull_policy: always
     environment:
@@ -64,7 +64,7 @@ services:
       - 9997:9997
       - 1620:1620/udp
   ktranslate_syslog:
-    image: quay.io/kentik/ktranslate:v2
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
     restart: always
     pull_policy: always
     environment:
@@ -92,7 +92,7 @@ services:
       - 1514:1514/tcp
       - 9998:9998
   alloy:
-    image: grafana/alloy:latest
+    image: ${ALLOY_IMAGE:-grafana/alloy:latest}
     restart: always
     pull_policy: always
     environment:

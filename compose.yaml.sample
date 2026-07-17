@@ -4,7 +4,9 @@ services:
     restart: always
     pull_policy: always
     environment:
-      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
+      # ${KTRANS_HOST:+-}${KTRANS_HOST} appends "-<host>" only when KTRANS_HOST
+      # is set, so service.name reads e.g. "ktranslate-site-a" (blank -> no suffix).
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     depends_on:
       - alloy
@@ -36,8 +38,9 @@ services:
     environment:
       # Distinct service.name so the Alloy preprocessing transform (which
       # rebrands flow data as integrations/ktranslate-netflow) doesn't touch
-      # SNMP telemetry.
-      - OTEL_SERVICE_NAME=ktranslate-snmp
+      # SNMP telemetry. The ${KTRANS_HOST:+-}${KTRANS_HOST} suffix appends
+      # "-<host>" (when set) so two hosts stay separable in Grafana.
+      - OTEL_SERVICE_NAME=ktranslate-snmp${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     volumes:
       - type: bind
@@ -68,7 +71,7 @@ services:
     restart: always
     pull_policy: always
     environment:
-      - OTEL_SERVICE_NAME=ktranslate-syslog
+      - OTEL_SERVICE_NAME=ktranslate-syslog${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     volumes:
       - type: bind
@@ -99,6 +102,9 @@ services:
       - GC_OTLP_URL=${GC_OTLP_URL}
       - GC_OTLP_ACCOUNT=${GC_OTLP_ACCOUNT}
       - GC_OTLP_KEY=${GC_OTLP_KEY}
+      # Read by Alloy's resourcedetection "env" detector and stamped onto every
+      # signal passing through, so all telemetry from this host carries it.
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.host=${KTRANS_HOST}
     volumes:
       - type: bind
         source: ./config.alloy

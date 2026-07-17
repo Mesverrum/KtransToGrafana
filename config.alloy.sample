@@ -158,6 +158,10 @@ otelcol.processor.transform "add_resource_attributes_as_metric_attributes" {
                 statements = [
                         "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
                         "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+                        // Promote the per-host identifier (set via KTRANS_HOST ->
+                        // OTEL_RESOURCE_ATTRIBUTES) to a metric label so every series
+                        // is directly filterable by `deployment_host` in Grafana.
+                        "set(attributes[\"deployment.host\"], resource.attributes[\"deployment.host\"]) where resource.attributes[\"deployment.host\"] != nil",
                 ]
         }
 

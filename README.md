@@ -166,6 +166,7 @@ make preflight    # check that .env / snmp.yaml / config.alloy are ready and Gra
 make limits-show  # preview per-container memory caps from host RAM (dry-run)
 make up           # runs preflight + limits, then docker compose up -d
 make logs         # tail logs from all containers
+make host         # print the deployment.host value this stack will use
 make down         # stop and remove the stack
 ```
 On each `make up`, `scripts/compute-limits.sh` sizes per-container memory caps from host RAM (SNMP poller share capped at 4G by default). See `.env.sample` for `MEM_*` overrides or `MEM_LIMITS=off`.
@@ -178,6 +179,24 @@ docker compose -f compose.yaml -f compose-limits.generated.yaml up -d
 ```
 You will see the latest container images get downloaded and as long as we did no introduce any syntax errors you should see ktranslate importing the collection of profiles and begin discovery. If you have a reasonable range of subnets this should only take a minute or two and then you will see devices being mapped to profiles and the relevant OIDs start getting polled. If you don't see any major errors you can return to your terminal session by pressing `CTRL+Z` (unless you are using vscode and it is intercepting the key combo...)
 
+
+## Telling multiple deployments apart
+
+If you run this stack on more than one host (e.g. one per site or datacenter), every signal can be tagged with which host produced it so the hosts never get mixed up in Grafana. A single variable, `KTRANS_HOST`, controls this:
+
+- **Leave it blank** (the default) and `make` auto-fills it with the machine's hostname, so each host self-identifies with no configuration.
+- **Set it explicitly** in `.env` (e.g. `KTRANS_HOST=site-a`) if you'd rather use a friendlier name than the raw hostname. An explicit value always wins.
+
+`KTRANS_HOST` does two things:
+1. **Labels every metric, log, and trace** with `deployment_host`, applied by Alloy to everything it forwards — SNMP, flow, syslog, and ktranslate's own health metrics. Filter or group any query by `deployment_host` to scope it to one host. (The metric label is added by the `otelcol.processor.transform "add_resource_attributes_as_metric_attributes"` block in `config.alloy` — make sure your live `config.alloy` matches the current `config.alloy.sample` if you deployed before this was added.)
+2. **Suffixes each container's `service.name`**, so the same workload on two hosts never shares a name — e.g. `ktranslate-snmp-site-a` vs `ktranslate-snmp-site-b`.
+
+Check what a host will report before starting:
+```
+make host          # prints the resolved value
+make up            # also prints "deployment.host = <value>" as it starts
+```
+The resolution logic lives in `scripts/host-id.sh`. A raw `docker compose up` (bypassing `make`) reads `KTRANS_HOST` from `.env` verbatim and does **not** apply the hostname fallback — set the variable explicitly if you don't drive the stack through the Makefile.
 
 ## Data in Grafana
 
@@ -208,7 +227,7 @@ The flow pipeline in this repo is aligned with the [official Grafana Cloud ktran
 What this means in practice:
 - You can import the **Netflow overview** dashboard from the official integration page and it will light up against this pipeline.
 - The bundled `dashboards/Ktranslate Flow Summary.json` was authored against the old `kentik.rollup.*` names and will need its queries updated (or replaced with the official dashboard).
-- SNMP and syslog telemetry is untouched — those containers set their own `OTEL_SERVICE_NAME` (`ktranslate-snmp` / `ktranslate-syslog`) so the preprocessing transform's `service.name` rewrite skips them.
+- SNMP and syslog telemetry is untouched — those containers set their own `OTEL_SERVICE_NAME` (`ktranslate-snmp` / `ktranslate-syslog`, plus the `-<host>` suffix when `KTRANS_HOST` is set) so the preprocessing transform's `service.name` rewrite skips them.
 
 The quick-verification PromQL for flow:
 ```

@@ -5,8 +5,10 @@
     environment:
       # Distinct service.name per group so the Alloy preprocessing transform
       # (which rebrands flow data as integrations/ktranslate-netflow) doesn't
-      # touch SNMP telemetry, and so each group is separable in Grafana.
-      - OTEL_SERVICE_NAME=ktranslate-snmp-${GROUP}
+      # touch SNMP telemetry, and so each group is separable in Grafana. The
+      # ${KTRANS_HOST:+-}${KTRANS_HOST} suffix appends "-<host>" (when set) so
+      # the same group on two hosts stays separable too.
+      - OTEL_SERVICE_NAME=ktranslate-snmp-${GROUP}${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     volumes:
       - type: bind
@@ -41,7 +43,7 @@
     pull_policy: always
     profiles: ["discovery"]
     environment:
-      - OTEL_SERVICE_NAME=ktranslate-discover-${GROUP}
+      - OTEL_SERVICE_NAME=ktranslate-discover-${GROUP}${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
       # Discovery containers are short-lived; export internal metrics sooner than
       # the default 60s so a quick scan still emits health data to Alloy.

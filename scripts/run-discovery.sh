@@ -19,6 +19,12 @@ if [[ -z "${GROUP}" ]]; then
 fi
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# Resolve the host identifier the same way `make up` does, so the discovery
+# container's service.name carries the host suffix even when this runs from cron
+# (where the Makefile's export isn't in scope).
+export KTRANS_HOST="$("${REPO_ROOT}/scripts/host-id.sh")"
+
 SRC="${REPO_ROOT}/config/discovery-${GROUP}.yaml"
 RUNTIME="${REPO_ROOT}/state/discovery-${GROUP}.runtime.yaml"
 DEVICES_OUT="${REPO_ROOT}/state/devices-${GROUP}.yaml"

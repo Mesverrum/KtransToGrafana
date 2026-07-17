@@ -18,7 +18,7 @@ Copy only the ones you need, and copy additional sample files to define more gro
 
 Every variable is documented inline in the sample. The important ones:
 
-- **`GROUP`** — short identifier (`cisco`, `palo`, etc.). Used in container names, file paths, and the OTEL `service.name` so dashboards can split by group.
+- **`GROUP`** — short identifier (`cisco`, `palo`, etc.). Used in container names, file paths, and the OTEL `service.name` (a label identifying which collector produced the data) so dashboards can split by group.
 - **`SNMP_VERSION`** — `v2c` or `v3`. The other credential fields are only required for the matching version.
 - **`DISCOVERY_SOURCE`** — where this group's device list comes from: `cidr` or `netbox` (defaults to `cidr` if unset).
 - **`METALISTEN_PORT` / `TRAP_PORT`** — host ports for this group. Must be unique across groups and must not collide with the static services (9995, 9996, 9998, 4317, 12346, 1514). The generator refuses to run if it finds a collision.
@@ -46,10 +46,10 @@ NetBox groups also need shared credentials in `.env`: **`NETBOX_HOST`** and **`N
 make generate
 ```
 
-This produces (all git-ignored, derived artifacts — **don't hand-edit them**; edit the templates in `templates/` instead):
+This produces (all git-ignored, derived artifacts — files the generator writes for you — **don't hand-edit them**; edit the templates in `templates/` instead):
 
 - `config/discovery-<group>.yaml` — the canonical discovery config the discovery script feeds to ktranslate
-- `config/poller-<group>.yaml` — the polling config, with the `devices:` block pointing at `state/devices-<group>.yaml` via an `@`-include
+- `config/poller-<group>.yaml` — the polling config, with the `devices:` block pointing at `state/devices-<group>.yaml` via an `@`-include (a reference that pulls in another file's contents)
 - `compose-groups.generated.yaml` — service definitions for every group's poller and discovery container
 
 ## Adding, removing, or modifying a group

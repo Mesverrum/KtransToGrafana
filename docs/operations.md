@@ -25,7 +25,7 @@ make host                   # print the deployment.host value this stack will us
 
 ## Permissions
 
-The discovery script writes files into `state/` that the containers (running as uid 1000) need to read. Set ownership once:
+The discovery script writes files into `state/` that the containers (running as uid 1000 — the user ID the containers run as, so folder ownership matters) need to read. Set ownership once:
 
 ```
 sudo chown -R 1000:1000 config/ state/
@@ -77,8 +77,8 @@ If you run this stack on more than one host (e.g. one per site or datacenter), e
 
 `KTRANS_HOST` does two things:
 
-1. **Labels every metric, log, and trace** with `deployment_host`, applied by Alloy to everything it forwards — SNMP, flow, syslog, discovery, and ktranslate's own health metrics. Filter or group any query by `deployment_host` to scope it to one host. (The metric label is added by the `otelcol.processor.transform "add_resource_attributes_as_metric_attributes"` block in `config.alloy` — make sure your live `config.alloy` matches the current `config.alloy.sample` if you deployed before this was added.)
-2. **Suffixes each container's `service.name`**, so the same workload on two hosts never shares a name — e.g. `ktranslate-snmp-cisco-site-a` vs `ktranslate-snmp-cisco-site-b`.
+1. **Labels every metric, log, and trace** with `deployment_host`, applied by Alloy to everything it forwards — SNMP, flow, syslog, discovery, and ktranslate's own health metrics. Filter or group any query by `deployment_host` to scope it to one host. (This metric label — a label on the metric — is added by the `otelcol.processor.transform "add_resource_attributes_as_metric_attributes"` block in `config.alloy`, a small Alloy rule that rewrites the data — make sure your live `config.alloy` matches the current `config.alloy.sample` if you deployed before this was added.)
+2. **Suffixes each container's `service.name`** (a label identifying which collector produced the data), so the same workload on two hosts never shares a name — e.g. `ktranslate-snmp-cisco-site-a` vs `ktranslate-snmp-cisco-site-b`.
 
 Check what a host will report before starting:
 

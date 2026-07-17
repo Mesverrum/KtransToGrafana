@@ -1,12 +1,25 @@
 # KtransToGrafana
 
-A quick, functional example of deploying [Ktranslate](https://github.com/kentik/ktranslate/) → [Grafana Cloud](https://grafana.com/products/cloud/) over OTLP, without requiring much Linux or Alloy expertise. Follow the quickstart below and you should have SNMP data in Grafana in about 10–15 minutes.
+A quick, working example of getting your network devices monitored in [Grafana Cloud](https://grafana.com/products/cloud/) using [Ktranslate](https://github.com/kentik/ktranslate/) — no deep Linux or observability background required. Follow the quickstart below and you should have SNMP data in Grafana in about 10–15 minutes.
 
 This repo is not maintained by Kentik or Grafana — it's a demonstration of connecting the two. Config questions can be raised here; bugs/feature requests for either tool belong in their own repos. If you get stuck, check the `troubleshooting/` folder.
 
-## How it works, in one line
+## How it works
 
-A deployment is one or more **credential groups** (a file per group in `groups/`), each of which discovers devices by CIDR scan or from NetBox, then polls them. **A single device is just one group** — that's the quickstart. Everything scales up from there; see [Going further](#going-further).
+Three small pieces run as containers on one Linux host (via Docker Compose) and hand data down a line to Grafana Cloud:
+
+- **ktranslate** — the collector. It talks to your gear the way you already do — SNMP polling, receiving netflow/sflow, and syslog — and turns what it gathers into metrics and logs.
+- **Alloy** — Grafana's shipping agent. It takes what ktranslate produces and sends it up to Grafana Cloud.
+- **Grafana Cloud** — where the data lands, and where you build dashboards and alerts.
+
+```mermaid
+flowchart LR
+  D["Your network<br/>routers, switches, firewalls"] -->|"SNMP, netflow/sflow, syslog"| K["ktranslate<br/>collects and translates"]
+  K -->|"hands off data"| A["Alloy<br/>Grafana's shipping agent"]
+  A -->|"over the internet"| G[("Grafana Cloud<br/>dashboards and alerts")]
+```
+
+You tell ktranslate about your devices with one or more **credential groups** — a plain settings file per group under `groups/`, holding one set of SNMP credentials plus which devices they apply to. A group finds its devices either by scanning IP ranges you list (`cidr`) or by pulling them from NetBox. **A single device is just one group with one address** — that's the quickstart below. See [Going further](#going-further) to scale up.
 
 ## Prerequisites
 

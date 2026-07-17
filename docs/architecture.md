@@ -2,13 +2,41 @@
 
 [← back to README](../README.md)
 
-This example deploys a small set of containers via Docker Compose:
+In plain terms: a set of small containers run on one Linux host (via Docker Compose). Each one talks to your network in a way you already know (SNMP, netflow/sflow, syslog), converts what it collects into **metrics and logs**, and hands them to a shipping agent (Alloy) that forwards everything to Grafana Cloud. "OTEL"/"OTLP" below just mean the OpenTelemetry data format — the common shape ktranslate and Alloy use so they speak the same language.
 
-- **`ktranslate_flow`** — receives netflow data (netflow 5/9, sflow, ipfix, nbar, pan, etc.) and converts it to OTEL metrics via configurable rollups.
-- **`ktranslate_snmp_<group>`** — one long-running SNMP poller per credential group. Each reads a static config file from `config/` plus a separately-managed device list from `state/`.
-- **`discover_<group>`** — one short-lived discovery container per credential group. Runs on a schedule, writes discovered devices back to `state/`, and signals the matching poller to reload.
-- **`ktranslate_syslog`** — collects syslog and forwards as OTEL logs.
-- **`alloy`** — a stripped-down Grafana Alloy agent that forwards all OTLP traffic from the above to Grafana Cloud.
+The containers:
+
+- **`ktranslate_flow`** — receives netflow data (netflow 5/9, sflow, ipfix, nbar, pan, etc.) and converts it into metrics.
+- **`ktranslate_snmp_<group>`** — one long-running SNMP poller per credential group. Each reads a settings file from `config/` plus a separately-managed device list from `state/`.
+- **`discover_<group>`** — one short-lived discovery container per credential group. Runs on a schedule, finds devices, writes the list back to `state/`, and tells the matching poller to reload.
+- **`ktranslate_syslog`** — collects syslog and forwards it as logs.
+- **`alloy`** — a small Grafana Alloy agent that forwards everything from the containers above to Grafana Cloud.
+
+```mermaid
+flowchart TB
+  subgraph net["Your network"]
+    DEV["Routers · switches · firewalls"]
+  end
+  subgraph host["One Linux host — Docker Compose"]
+    direction TB
+    SNMP["ktranslate_snmp_&lt;group&gt;<br/>polls devices (one per group)"]
+    DISC["discover_&lt;group&gt;<br/>finds devices, updates the list"]
+    FLOW["ktranslate_flow<br/>receives netflow/sflow"]
+    SYS["ktranslate_syslog<br/>receives syslog"]
+    ALLOY["alloy<br/>forwards everything"]
+  end
+  GC[("Grafana Cloud")]
+  DEV -->|SNMP| SNMP
+  DEV -->|"netflow / sflow"| FLOW
+  DEV -->|syslog| SYS
+  DISC -.->|"writes device list"| SNMP
+  SNMP --> ALLOY
+  FLOW --> ALLOY
+  SYS --> ALLOY
+  ALLOY -->|"internet"| GC
+```
+
+The older hand-drawn diagrams below show the same flow in more detail:
 
 ![Architecture](../ktrans_architecture.png)
 ![Detail](../ktrans_to_alloy.png)

@@ -19,7 +19,7 @@ flowchart LR
   A -->|"over the internet"| G[("Grafana Cloud<br/>dashboards and alerts")]
 ```
 
-You tell ktranslate about your devices with one or more **credential groups** — a plain settings file per group under `groups/`, holding one set of SNMP credentials plus which devices they apply to. A group finds its devices either by scanning IP ranges you list (`cidr`) or by pulling them from NetBox. **A single device is just one group with one address** — that's the quickstart below. See [Going further](#going-further) to scale up.
+You tell ktranslate about your devices with **credential groups** — a plain settings file per group under `groups/`. A group holds a set of **candidate** SNMP credentials plus where to find devices (an IP range to scan, or NetBox). You **don't** need to know which credential goes with which device: discovery tries every credential against every device and keeps whichever authenticates, recording it per device. The quickstart below onboards a whole range this way — the usual starting point. (A single device is just the trivial case: one address, one credential.) See [Going further](#going-further) to scale up.
 
 ## Prerequisites
 
@@ -38,7 +38,9 @@ yq --version
 envsubst --version
 ```
 
-## Quickstart — one device in about 10 minutes
+## Quickstart — onboard your devices in about 15 minutes
+
+You'll point ktranslate at a range of devices and hand it your candidate credentials; discovery works out which credential each device uses.
 
 **1. Clone.**
 
@@ -61,13 +63,19 @@ cp compose-base.yaml.sample compose-base.yaml
 - `GC_OTLP_ACCOUNT` ← the `username` (instance ID)
 - `GC_OTLP_KEY` ← the `password` (`glc_...` token)
 
-**4. Point a group at your device.**
+**4. List your devices and candidate credentials.**
 
 ```
-cp groups/single.env.sample groups/single.env
-# edit groups/single.env: set TARGETS to your device (e.g. 192.168.1.1/32),
-# SNMP_VERSION, and the community / v3 credentials.
+cp groups/onboarding.env.sample groups/onboarding.env
+# edit groups/onboarding.env:
+#   TARGETS            the IP range(s) to scan, e.g. 10.0.0.0/24
+#   SNMP_V2_COMMUNITY  candidate community strings, comma-separated
+#   SNMP_V3_* (_2,_3)  any v3 credential sets to try
 ```
+
+Discovery tries every credential against every device in the range and records the one that works per device — so you don't need the mapping up front.
+
+> **Just one device?** Same flow, smaller: `cp groups/single.env.sample groups/single.env` and set `TARGETS` to one address with one credential (then use `GROUP=single` in step 7).
 
 **5. Generate the per-group configs:**
 
@@ -81,14 +89,14 @@ make generate
 sudo chown -R 1000:1000 config state
 ```
 
-**7. Start the stack and discover your device:**
+**7. Start the stack and run discovery:**
 
 ```
-make up                      # start flow, syslog, SNMP, and Alloy
-make discover GROUP=single   # find the device and hand it to the poller
+make up                          # start flow, syslog, SNMP, and Alloy
+make discover GROUP=onboarding   # scan the range, match credentials, hand devices to the poller
 ```
 
-That's it — `make up` prints the resolved `deployment.host` and brings everything up. Discovery populates `state/devices-single.yaml` and reloads the poller.
+`make up` prints the resolved `deployment.host` and brings everything up. Discovery writes `state/devices-onboarding.yaml` — each device stamped with the credential that worked — and reloads the poller.
 
 ## See your data
 
@@ -98,7 +106,7 @@ In Grafana Cloud → **Explore** → your default Prometheus data source:
 count by (device_name, service_name) (kentik_snmp_DeviceMetrics)
 ```
 
-One row per polled device means it's working. Empty after a couple minutes? Check `make logs` and confirm `snmpwalk` reaches your device from the host (`troubleshooting/snmp.md`).
+One row per polled device means it's working. First check what discovery actually claimed — `state/devices-onboarding.yaml` lists each device it found and the credential that worked; anything that didn't answer simply isn't there (wrong creds, an ACL blocking the host, non-SNMP, or unreachable) and is your follow-up list. Still empty in Grafana after a couple minutes? Check `make logs` and confirm `snmpwalk` reaches a device from the host (`troubleshooting/snmp.md`).
 
 Then import a dashboard from `dashboards/` (e.g. `ktranslate snmp device view`) to get a real view.
 

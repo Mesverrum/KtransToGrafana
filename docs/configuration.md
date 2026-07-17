@@ -2,7 +2,7 @@
 
 [← back to README](../README.md)
 
-Each file in `groups/*.env` is one credential group. The [quickstart](../README.md#quickstart--one-device-in-about-10-minutes) covers the single-device case; this doc covers multiple groups and both discovery sources.
+Each file in `groups/*.env` is one credential group. The [quickstart](../README.md#quickstart--onboard-your-devices-in-about-15-minutes) walks through onboarding a range with candidate credentials; this doc covers multiple groups, both discovery sources, and the credential options in depth.
 
 Three sample groups ship in the repo — copy whichever fit your environment:
 

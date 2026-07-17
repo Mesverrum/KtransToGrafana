@@ -114,6 +114,8 @@ The quickstart is deliberately minimal. Deeper topics live in `docs/`:
 - **[docs/grafana.md](docs/grafana.md)** — verification queries, flow rollups & cardinality, the official netflow-integration compatibility, and the bundled dashboards/alerts/skills.
 - **`troubleshooting/`** — common SNMP and connectivity problems.
 
+Modifying the repo? See [CONTRIBUTING.md](CONTRIBUTING.md) for the conventions (the docs-index rule, the config generator, `.env` quoting).
+
 # Contact me
 
 Feel free to reach out via Issues and PRs, or directly: marcnetterfield@gmail.com

@@ -1,6 +1,15 @@
-.PHONY: up down logs preflight generate bootstrap limits limits-show discover help
+.PHONY: up down logs preflight generate bootstrap limits limits-show discover host help
 
 COMPOSE := docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-limits.generated.yaml
+
+# Resolve the per-host identifier that Alloy stamps onto all telemetry
+# (deployment.host) and that suffixes every container's service.name. Prefer an
+# explicit KTRANS_HOST in .env; if blank, fall back to the machine's hostname so
+# each host self-identifies with no config. Exported so `docker compose` picks
+# it up — a value in the process environment overrides a blank one in .env.
+# scripts/host-id.sh holds the logic so the discovery cron job agrees with make.
+KTRANS_HOST := $(shell ./scripts/host-id.sh 2>/dev/null)
+export KTRANS_HOST
 
 help:
 	@echo "make preflight              Check that .env / groups / generated configs are ready"
@@ -12,6 +21,7 @@ help:
 	@echo "make down                   docker compose down"
 	@echo "make logs                   Tail logs from all containers"
 	@echo "make discover GROUP=cisco   Run a one-shot NetBox sync + discovery for one group"
+	@echo "make host                   Print the deployment.host value this stack will use"
 
 preflight:
 	@./scripts/preflight.sh
@@ -38,7 +48,11 @@ limits-show:
 	@./scripts/compute-limits.sh --dry-run
 
 up: preflight bootstrap limits
+	@echo "deployment.host = $(KTRANS_HOST)"
 	$(COMPOSE) up -d
+
+host:
+	@echo "$(KTRANS_HOST)"
 
 down:
 	$(COMPOSE) down

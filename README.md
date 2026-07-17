@@ -101,6 +101,9 @@ The `config.alloy` file is already wired to those env vars; you should not need 
 
 `KTRANSLATE_IMAGE` and `ALLOY_IMAGE` in `.env` select container images. Leave blank for `:latest`, or pin in production (e.g. `KTRANSLATE_IMAGE=quay.io/kentik/ktranslate:v2.2.37`). After changing a pin, `docker compose pull` and recreate.
 
+Optional `.env` tuning (see `.env.sample`):
+- `KTRANS_HOST` — identifies which host this stack runs on; tags all telemetry and suffixes each `service.name`. Leave blank to auto-use the machine's hostname. See [Telling multiple deployments apart](#telling-multiple-deployments-apart).
+
 ### Configure the SNMP credential groups
 Each file in `groups/*.env` is one credential group. Open the file and fill in the values — every variable is documented inline in the sample. The important ones:
 
@@ -159,6 +162,7 @@ make up                     # runs preflight + bootstrap + limits, then docker c
 make logs                   # tail logs from all containers
 make down                   # stop and remove the stack
 make discover GROUP=cisco   # one-shot NetBox sync + discovery for one group
+make host                   # print the deployment.host value this stack will use
 ```
 `make up` is idempotent — it'll start newly-added services without disturbing running ones. The pollers begin polling whatever devices are in their respective `state/devices-<group>.yaml`; until you've run discovery, those are empty stubs (`{}`) and no SNMP traffic actually goes out. Run `make discover GROUP=cisco` (and the same for each group) to populate them from NetBox.
 
@@ -183,8 +187,26 @@ Add cron entries on the host so new devices added to NetBox get picked up automa
 ```
 Each run queries NetBox with the group's filter, atomically publishes a fresh `state/devices-<group>.yaml`, and sends `SIGUSR2` to the matching poller so it picks up the new device list without a restart. (`SIGUSR2` is ktranslate's reload signal — `SIGHUP` has no handler and would terminate the container.) If discovery returns zero devices (NetBox unreachable, filter matched nothing) the script preserves the previous device list rather than wiping it. If the device list is unchanged from the previous run, no reload is sent.
 
+## Telling multiple deployments apart
+
+If you run this stack on more than one host (e.g. one per site or datacenter), every signal can be tagged with which host produced it so the two never get mixed up in Grafana. A single variable, `KTRANS_HOST`, controls this:
+
+- **Leave it blank** (the default) and `make` auto-fills it with the machine's hostname, so each host self-identifies with no configuration.
+- **Set it explicitly** in `.env` (e.g. `KTRANS_HOST=site-a`) if you'd rather use a friendlier name than the raw hostname. An explicit value always wins.
+
+`KTRANS_HOST` does two things:
+1. **Labels every metric, log, and trace** with `deployment_host`, applied by Alloy to everything it forwards — SNMP, flow, syslog, discovery, and ktranslate's own health metrics. Filter or group any query by `deployment_host` to scope it to one host. (The metric label is added by the `otelcol.processor.transform "add_resource_attributes_as_metric_attributes"` block in `config.alloy` — make sure your live `config.alloy` matches the current `config.alloy.sample` if you deployed before this was added.)
+2. **Suffixes each container's `service.name`**, so the same workload on two hosts never shares a name — e.g. `ktranslate-snmp-cisco-site-a` vs `ktranslate-snmp-cisco-site-b`.
+
+Check what a host will report before starting:
+```
+make host          # prints the resolved value
+make up            # also prints "deployment.host = <value>" as it starts
+```
+The resolution logic lives in `scripts/host-id.sh` and is shared by `make` and the discovery cron job, so long-running and scheduled containers always agree. A raw `docker compose up` (bypassing `make`) reads `KTRANS_HOST` from `.env` verbatim and does **not** apply the hostname fallback — set the variable explicitly if you don't drive the stack through the Makefile.
+
 ## Data in Grafana
-Within a couple minutes of seeing ktranslate polling your devices there should be data in your Grafana Cloud's default Prometheus data source. Metrics start with `kentik_snmp_*` and carry labels like `device_name` and `if_interface_name` based on the SNMP profile assigned during discovery. Each SNMP poller stamps its `service.name` resource attribute as `ktranslate-snmp-<group>` (e.g. `ktranslate-snmp-cisco`) so you can split dashboards by credential group. Discovery containers use `ktranslate-discover-<group>` for the same reason.
+Within a couple minutes of seeing ktranslate polling your devices there should be data in your Grafana Cloud's default Prometheus data source. Metrics start with `kentik_snmp_*` and carry labels like `device_name` and `if_interface_name` based on the SNMP profile assigned during discovery. Each SNMP poller stamps its `service.name` resource attribute as `ktranslate-snmp-<group>` (e.g. `ktranslate-snmp-cisco`) so you can split dashboards by credential group. Discovery containers use `ktranslate-discover-<group>` for the same reason. When `KTRANS_HOST` is set (or auto-detected — see [Telling multiple deployments apart](#telling-multiple-deployments-apart)), a `-<host>` suffix is appended to each of these, e.g. `ktranslate-snmp-cisco-site-a`.
 
 ### Quick verification
 Open Grafana Cloud → Explore → your default Prometheus data source, and paste this:
@@ -209,7 +231,7 @@ The flow pipeline in this repo is aligned with the [official Grafana Cloud ktran
 What this means in practice:
 - You can import the **Netflow overview** dashboard from the official integration page and it will light up against this pipeline.
 - The bundled `dashboards/Ktranslate Flow Summary.json` has been updated to query the new OTEL semconv metric and label names.
-- SNMP and discovery containers set their own `OTEL_SERVICE_NAME` (`ktranslate-snmp-<group>` / `ktranslate-discover-<group>`) so the preprocessing transform's `service.name` rewrite skips them.
+- SNMP and discovery containers set their own `OTEL_SERVICE_NAME` (`ktranslate-snmp-<group>` / `ktranslate-discover-<group>`, plus the `-<host>` suffix when `KTRANS_HOST` is set) so the preprocessing transform's `service.name` rewrite skips them.
 
 JSON for example dashboards (flow summary, fleet overview, device view) is in the `dashboards/` folder — import them into your Grafana instance to get started.
 

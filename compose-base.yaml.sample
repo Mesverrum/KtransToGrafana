@@ -4,7 +4,9 @@ services:
     restart: always
     pull_policy: always
     environment:
-      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}
+      # ${KTRANS_HOST:+-}${KTRANS_HOST} appends "-<host>" only when KTRANS_HOST
+      # is set, so service.name reads e.g. "ktranslate-site-a" (blank -> no suffix).
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     depends_on:
       - alloy
@@ -34,7 +36,7 @@ services:
     restart: always
     pull_policy: always
     environment:
-      - OTEL_SERVICE_NAME=ktranslate-syslog
+      - OTEL_SERVICE_NAME=ktranslate-syslog${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
     depends_on:
       - alloy
@@ -63,6 +65,9 @@ services:
       - GC_OTLP_ACCOUNT=${GC_OTLP_ACCOUNT}
       - GC_OTLP_KEY=${GC_OTLP_KEY}
       - OTEL_METRIC_EXPORT_INTERVAL=1000
+      # Read by Alloy's resourcedetection "env" detector and stamped onto every
+      # signal passing through, so all telemetry from this host carries it.
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.host=${KTRANS_HOST}
     volumes:
       - type: bind
         source: /opt/Grafana/KtransToGrafana/config.alloy

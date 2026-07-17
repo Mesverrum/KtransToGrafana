@@ -81,6 +81,20 @@ if [[ -f .env ]]; then
   fi
 fi
 
+# --- Host identity that tags all telemetry and suffixes service.name ---
+if [[ -x scripts/host-id.sh ]]; then
+  HOST_ID="$(./scripts/host-id.sh 2>/dev/null)"
+  if [[ -n "${HOST_ID}" ]]; then
+    if grep -qE '^KTRANS_HOST=.+' .env 2>/dev/null; then
+      _ok "deployment.host = ${HOST_ID} (explicit KTRANS_HOST in .env)"
+    else
+      _ok "deployment.host = ${HOST_ID} (auto from hostname; set KTRANS_HOST in .env to override)"
+    fi
+  else
+    _warn "could not resolve a host identifier; telemetry won't be host-tagged"
+  fi
+fi
+
 # --- At least one group defined ---
 shopt -s nullglob
 GROUP_FILES=(groups/*.env)

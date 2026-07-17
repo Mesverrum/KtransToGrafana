@@ -34,7 +34,7 @@ mkdir -p "${CONFIG_DIR}" "${STATE_DIR}"
 # Only the placeholders listed here get substituted. Everything else
 # (notably docker compose's own ${OTEL_SERVICE_NAME}, ${NF_SOURCE}, ${GC_*})
 # stays literal so docker compose can resolve it from .env at runtime.
-SUBST_VARS='$GROUP $METALISTEN_PORT $TRAP_PORT $TRAP_COMMUNITY $DISCOVERY_THREADS $POLL_INTERVAL_SEC $CIDRS_YAML $NETBOX_BLOCK_YAML $DEFAULT_COMMUNITIES_YAML $DEFAULT_V3_YAML $REPO_PATH'
+SUBST_VARS='$GROUP $METALISTEN_PORT $TRAP_PORT $TRAP_COMMUNITY $DISCOVERY_THREADS $POLL_INTERVAL_SEC $CIDRS_YAML $NETBOX_BLOCK_YAML $DEFAULT_COMMUNITIES_YAML $DEFAULT_V3_YAML $OTHER_V3S_YAML $REPO_PATH'
 
 shopt -s nullglob
 GROUP_FILES=("${GROUPS_DIR}"/*.env)
@@ -87,21 +87,46 @@ for env_file in "${GROUP_FILES[@]}"; do
       *) echo "ERROR: ${env_file}: DISCOVERY_SOURCE must be cidr or netbox, got '${DISCOVERY_SOURCE:-}'" >&2; exit 1 ;;
     esac
 
+    # Validate a full v3 credential set for a given suffix ("" = primary, "_2"..).
+    _check_v3_set() {
+      local sfx="$1" v name
+      for v in SNMP_V3_USER SNMP_V3_AUTH_PROTOCOL SNMP_V3_AUTH_PASS SNMP_V3_PRIV_PROTOCOL SNMP_V3_PRIV_PASS; do
+        name="${v}${sfx}"
+        if [[ -z "${!name:-}" ]]; then
+          echo "ERROR: ${env_file}: v3 set ${name} is required (a partial v3 credential set)" >&2
+          exit 1
+        fi
+      done
+    }
+
     case "${SNMP_VERSION}" in
       v2c)
+        # SNMP_V2_COMMUNITY may be a single value or a comma-separated list of
+        # candidate communities for discovery to try.
         if [[ -z "${SNMP_V2_COMMUNITY:-}" ]]; then
           echo "ERROR: ${env_file}: SNMP_VERSION=v2c requires SNMP_V2_COMMUNITY" >&2
           exit 1
         fi ;;
       v3)
-        for var in SNMP_V3_USER SNMP_V3_AUTH_PROTOCOL SNMP_V3_AUTH_PASS SNMP_V3_PRIV_PROTOCOL SNMP_V3_PRIV_PASS; do
-          if [[ -z "${!var:-}" ]]; then
-            echo "ERROR: ${env_file}: SNMP_VERSION=v3 requires ${var}" >&2
-            exit 1
-          fi
-        done ;;
-      *) echo "ERROR: ${env_file}: SNMP_VERSION must be v2c or v3, got '${SNMP_VERSION}'" >&2; exit 1 ;;
+        _check_v3_set "" ;;
+      mixed)
+        # An onboarding group: try any/all provided credentials during discovery.
+        if [[ -z "${SNMP_V2_COMMUNITY:-}" && -z "${SNMP_V3_USER:-}" ]]; then
+          echo "ERROR: ${env_file}: SNMP_VERSION=mixed requires at least one credential (SNMP_V2_COMMUNITY and/or SNMP_V3_USER)" >&2
+          exit 1
+        fi
+        [[ -n "${SNMP_V3_USER:-}" ]] && _check_v3_set "" ;;
+      *) echo "ERROR: ${env_file}: SNMP_VERSION must be v2c, v3, or mixed, got '${SNMP_VERSION}'" >&2; exit 1 ;;
     esac
+
+    # Any numbered v3 set (SNMP_V3_USER_2, _3, ...) must be complete, in v3/mixed.
+    if [[ "${SNMP_VERSION}" == "v3" || "${SNMP_VERSION}" == "mixed" ]]; then
+      for n in 2 3 4 5 6 7 8 9; do
+        _u="SNMP_V3_USER_${n}"
+        [[ -n "${!_u:-}" ]] && _check_v3_set "_${n}"
+      done
+    fi
+    true  # the loop above can end on a false test; keep the subshell's exit 0
   )
 
   GN=$(awk -F= '/^GROUP=/{print $2; exit}'           "${env_file}")
@@ -195,27 +220,56 @@ for env_file in "${GROUP_FILES[@]}"; do
     fi
     export CIDRS_YAML NETBOX_BLOCK_YAML
 
-    # Render the credential blocks conditional on SNMP version. The exact
-    # leading whitespace matters — these slot into `default_communities:`
-    # and `default_v3:` placeholders that are themselves at 4-space indent.
-    if [[ "${SNMP_VERSION}" == "v2c" ]]; then
-      DEFAULT_COMMUNITIES_YAML=$'\n      - '"${SNMP_V2_COMMUNITY}"
-      DEFAULT_V3_YAML=" null"
-    else
-      DEFAULT_COMMUNITIES_YAML=" []"
-      DEFAULT_V3_YAML=$(cat <<EOF
+    # ---- Discovery credentials ----
+    # A group may carry MULTIPLE candidate credentials so discovery can match
+    # them to devices when the mapping isn't known up front. Discovery tries
+    # every one and records the working credential per device; the poller then
+    # uses each device's own credential. This renders three placeholders that
+    # slot into the discovery config (each at a fixed indent that matters):
+    #   default_communities (list)  default_v3 (primary)  other_v3s (the rest)
 
-        user_name: ${SNMP_V3_USER}
-        authentication_protocol: ${SNMP_V3_AUTH_PROTOCOL}
-        authentication_passphrase: ${SNMP_V3_AUTH_PASS}
-        privacy_protocol: ${SNMP_V3_PRIV_PROTOCOL}
-        privacy_passphrase: ${SNMP_V3_PRIV_PASS}
-        context_engine_id: ""
-        context_name: ""
-EOF
-)
+    # default_communities — the comma-separated SNMP_V2_COMMUNITY, for v2c and
+    # mixed groups. Each entry becomes a candidate community discovery tries.
+    DEFAULT_COMMUNITIES_YAML=" []"
+    if [[ "${SNMP_VERSION}" == "v2c" || "${SNMP_VERSION}" == "mixed" ]] && [[ -n "${SNMP_V2_COMMUNITY:-}" ]]; then
+      _comms=""
+      IFS=',' read -ra _COMM_ARR <<< "${SNMP_V2_COMMUNITY}"
+      for c in "${_COMM_ARR[@]}"; do
+        c="${c#"${c%%[![:space:]]*}"}"; c="${c%"${c##*[![:space:]]}"}"   # trim ws
+        [[ -z "$c" ]] && continue
+        _comms+=$'\n      - '"${c}"
+      done
+      [[ -n "${_comms}" ]] && DEFAULT_COMMUNITIES_YAML="${_comms}"
     fi
-    export DEFAULT_COMMUNITIES_YAML DEFAULT_V3_YAML
+
+    # Emit the 7 v3 fields. $1 = first-line prefix (8 spaces for default_v3, or
+    # "      - " for an other_v3s list item), $2 = continuation indent.
+    _v3_block() {
+      local first="$1" ind="$2"
+      printf '\n%suser_name: %s' "$first" "$3"
+      printf '\n%sauthentication_protocol: %s' "$ind" "$4"
+      printf '\n%sauthentication_passphrase: %s' "$ind" "$5"
+      printf '\n%sprivacy_protocol: %s' "$ind" "$6"
+      printf '\n%sprivacy_passphrase: %s' "$ind" "$7"
+      printf '\n%scontext_engine_id: ""' "$ind"
+      printf '\n%scontext_name: ""' "$ind"
+    }
+
+    # default_v3 (primary set) + other_v3s (numbered sets _2.._9), for v3/mixed.
+    DEFAULT_V3_YAML=" null"
+    OTHER_V3S_YAML=""
+    if [[ "${SNMP_VERSION}" == "v3" || "${SNMP_VERSION}" == "mixed" ]] && [[ -n "${SNMP_V3_USER:-}" ]]; then
+      DEFAULT_V3_YAML="$(_v3_block '        ' '        ' "${SNMP_V3_USER}" "${SNMP_V3_AUTH_PROTOCOL}" "${SNMP_V3_AUTH_PASS}" "${SNMP_V3_PRIV_PROTOCOL}" "${SNMP_V3_PRIV_PASS}")"
+      _others=""
+      for n in 2 3 4 5 6 7 8 9; do
+        _u="SNMP_V3_USER_${n}"; [[ -z "${!_u:-}" ]] && continue
+        _ap="SNMP_V3_AUTH_PROTOCOL_${n}"; _apass="SNMP_V3_AUTH_PASS_${n}"
+        _pp="SNMP_V3_PRIV_PROTOCOL_${n}"; _ppass="SNMP_V3_PRIV_PASS_${n}"
+        _others+="$(_v3_block '      - ' '        ' "${!_u}" "${!_ap}" "${!_apass}" "${!_pp}" "${!_ppass}")"
+      done
+      [[ -n "${_others}" ]] && OTHER_V3S_YAML=$'\n    other_v3s:'"${_others}"
+    fi
+    export DEFAULT_COMMUNITIES_YAML DEFAULT_V3_YAML OTHER_V3S_YAML
 
     envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/discovery.yaml.tmpl" \
       > "${CONFIG_DIR}/discovery-${GROUP}.yaml"

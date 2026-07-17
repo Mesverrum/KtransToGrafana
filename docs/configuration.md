@@ -19,7 +19,7 @@ Copy only the ones you need, and copy additional sample files to define more gro
 Every variable is documented inline in the sample. The important ones:
 
 - **`GROUP`** — short identifier (`cisco`, `palo`, etc.). Used in container names, file paths, and the OTEL `service.name` (a label identifying which collector produced the data) so dashboards can split by group.
-- **`SNMP_VERSION`** — `v2c` or `v3`. The other credential fields are only required for the matching version.
+- **`SNMP_VERSION`** — `v2c`, `v3`, or `mixed`. The other credential fields are only required for the matching version; `mixed` lets one group carry both v2c and v3 candidates (see [Multiple candidate credentials](#multiple-candidate-credentials-unknown-mapping)).
 - **`DISCOVERY_SOURCE`** — where this group's device list comes from: `cidr` or `netbox` (defaults to `cidr` if unset).
 - **`METALISTEN_PORT` / `TRAP_PORT`** — host ports for this group. Must be unique across groups and must not collide with the static services (9995, 9996, 9998, 4317, 12346, 1514). The generator refuses to run if it finds a collision.
 
@@ -39,6 +39,45 @@ ktranslate queries NetBox and polls the devices that match your filters:
 - **`NETBOX_IP_TO_PICK`** — which IP to poll on each matched device: `primary` (the device's primary IP) or `oob` (out-of-band IP).
 
 NetBox groups also need shared credentials in `.env`: **`NETBOX_HOST`** and **`NETBOX_TOKEN`**. They're shared by every netbox group and only required if at least one group uses `DISCOVERY_SOURCE=netbox` — `preflight` fails if a netbox group exists but they're unset. Leave them blank for CIDR-only deployments.
+
+## Multiple candidate credentials (unknown mapping)
+
+If you have a long list of devices and several credentials but don't know which
+credential goes with which device, you don't have to map them by hand. SNMP
+discovery tries every candidate credential against every device, keeps whichever
+authenticates, and records it **per device** in `state/devices-<group>.yaml`. The
+poller then polls each device with its own credential — so a single group can end
+up polling devices that use different communities or v3 users.
+
+Give a group more than one candidate credential like this:
+
+- **Multiple v2c communities** — make `SNMP_V2_COMMUNITY` a comma-separated list,
+  e.g. `SNMP_V2_COMMUNITY="public,corp-ro,net-mon"`. Discovery tries each.
+- **Multiple v3 credential sets** — keep the primary `SNMP_V3_*` set, then add
+  numbered sets `SNMP_V3_USER_2` / `SNMP_V3_AUTH_PROTOCOL_2` / … through `_9`.
+  Each numbered set must be complete (all five fields).
+- **Both at once** — set `SNMP_VERSION=mixed` and provide any communities and/or
+  v3 sets; discovery tries them all.
+
+> Because group files are shell-sourced, **quote any value with spaces or shell
+> characters** — that's why the comma list above is in quotes. Extra spaces
+> inside the quotes are trimmed.
+
+`groups/onboarding.env.sample` is a ready-made `mixed` group demonstrating this.
+The typical workflow for a big unsorted pile:
+
+```
+cp groups/onboarding.env.sample groups/onboarding.env
+# edit: candidate communities, v3 sets, and TARGETS = the range to onboard
+make generate && make up && make discover GROUP=onboarding
+```
+
+Then review `state/devices-onboarding.yaml` — it lists each discovered device
+with the credential that worked. Devices that answered nothing don't appear;
+those are your follow-up list (wrong creds, ACLs blocking the poller host,
+non-SNMP, or unreachable). Trying many communities across a wide range generates
+a lot of probes — raise `DISCOVERY_THREADS` for speed, but mind device load,
+IDS alerts, and TACACS account lockouts, and validate against a few IPs first.
 
 ## Render the configs
 

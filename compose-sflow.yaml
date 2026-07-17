@@ -1,0 +1,24 @@
+# OPTIONAL demo overlay: runs host-sflow on the Docker host so you get some
+# real flow data flowing into the ktranslate_flow container immediately, without
+# needing a router or switch configured to export netflow/sflow yet. Remove or
+# skip this overlay once you have real flow sources pointed at UDP/9995.
+#
+# Enable by adding it to your compose invocation, e.g.:
+#   docker compose -f compose-base.yaml -f compose-groups.generated.yaml \
+#     -f compose-limits.generated.yaml -f compose-sflow.yaml up -d
+# or run `make up-demo` which layers it in for you.
+#
+# host-sflow needs the host's primary network interface. Set HOST_NET in .env
+# (run `make detect-net` to auto-fill it) — it defaults to ens4 otherwise.
+services:
+  host-sflow:
+    image: sflow/host-sflow
+    container_name: host-sflow
+    restart: unless-stopped
+    environment:
+      - COLLECTOR=127.0.0.1
+      - PORT=9995
+      - NET=${HOST_NET:-ens4}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    network_mode: host

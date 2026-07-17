@@ -26,46 +26,11 @@ services:
       - --rollup_interval=60
       - --rollup_top_k=100
       - --rollups=s_sum,bytes_by_flow,in_bytes+out_bytes,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application,device_name,custom_str.src_host,custom_str.dst_host,src_geo,dst_geo
-#      - --rollups=s_sum,pkts_by_flow,in_pkts+out_pkts,src_addr,dst_addr,l4_src_port,l4_dst_port,protocol,custom_str.application,device_name,custom_str.src_host,custom_str.dst_host,src_geo,dst_geo
       - --rollup_keep_undefined=true
     ports:
       - 9995:9995/udp
       - 9996:9996
-  ktranslate_snmp:
-    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
-    restart: always
-    pull_policy: always
-    environment:
-      # Distinct service.name so the Alloy preprocessing transform (which
-      # rebrands flow data as integrations/ktranslate-netflow) doesn't touch
-      # SNMP telemetry. The ${KTRANS_HOST:+-}${KTRANS_HOST} suffix appends
-      # "-<host>" (when set) so two hosts stay separable in Grafana.
-      - OTEL_SERVICE_NAME=ktranslate-snmp${KTRANS_HOST:+-}${KTRANS_HOST}
-      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
-    volumes:
-      - type: bind
-        source: ./snmp.yaml
-        target: /snmp.yaml
-    depends_on:
-      - alloy
-    command:
-      - --format=otel
-      - --format_metric=otel
-      - --otel.protocol=grpc
-      - --otel.endpoint=http://alloy:4317/
-      - --snmp=/snmp.yaml
-      - --metalisten=0.0.0.0:9997
-      - --dns=127.0.0.1:53
-      - --sinks=otel
-      - --metrics=jchf
-      - --tee_logs=true
-      - --service_name=snmp
-      - --max_flows_per_message=100
-      - --snmp_discovery_on_start=true
-      - --snmp_discovery_min=720
-    ports:
-      - 9997:9997
-      - 1620:1620/udp
+
   ktranslate_syslog:
     image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
     restart: always
@@ -73,10 +38,6 @@ services:
     environment:
       - OTEL_SERVICE_NAME=ktranslate-syslog${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
-    volumes:
-      - type: bind
-        source: ./snmp.yaml
-        target: /snmp.yaml
     depends_on:
       - alloy
     command:
@@ -94,6 +55,7 @@ services:
       - 1514:1514/udp
       - 1514:1514/tcp
       - 9998:9998
+
   alloy:
     image: ${ALLOY_IMAGE:-grafana/alloy:latest}
     restart: always
@@ -102,12 +64,13 @@ services:
       - GC_OTLP_URL=${GC_OTLP_URL}
       - GC_OTLP_ACCOUNT=${GC_OTLP_ACCOUNT}
       - GC_OTLP_KEY=${GC_OTLP_KEY}
+      - OTEL_METRIC_EXPORT_INTERVAL=1000
       # Read by Alloy's resourcedetection "env" detector and stamped onto every
       # signal passing through, so all telemetry from this host carries it.
       - OTEL_RESOURCE_ATTRIBUTES=deployment.host=${KTRANS_HOST}
     volumes:
       - type: bind
-        source: ./config.alloy
+        source: /opt/Grafana/KtransToGrafana/config.alloy
         target: /config.alloy
     ports:
       - 4317:4317
@@ -118,15 +81,3 @@ services:
       - --stability.level=experimental
       - run
       - /config.alloy
-  # Including host sflow to provide some starting data captured from the Docker host, remove this if you already have other sources of flow available.
-  host-sflow:
-    image: sflow/host-sflow
-    container_name: host-sflow
-    restart: unless-stopped
-    environment:
-      - COLLECTOR=127.0.0.1
-      - PORT=9995
-      - NET=${HOST_NET:-ens4}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    network_mode: host

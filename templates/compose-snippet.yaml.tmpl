@@ -1,0 +1,72 @@
+  ktranslate_snmp_${GROUP}:
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
+    restart: always
+    pull_policy: always
+    environment:
+      # Distinct service.name per group so the Alloy preprocessing transform
+      # (which rebrands flow data as integrations/ktranslate-netflow) doesn't
+      # touch SNMP telemetry, and so each group is separable in Grafana. The
+      # ${KTRANS_HOST:+-}${KTRANS_HOST} suffix appends "-<host>" (when set) so
+      # the same group on two hosts stays separable too.
+      - OTEL_SERVICE_NAME=ktranslate-snmp-${GROUP}${KTRANS_HOST:+-}${KTRANS_HOST}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
+    volumes:
+      - type: bind
+        source: ${REPO_PATH}/config/poller-${GROUP}.yaml
+        target: /snmp.yaml
+        read_only: true
+      - type: bind
+        source: ${REPO_PATH}/state/devices-${GROUP}.yaml
+        target: /state/devices-${GROUP}.yaml
+        read_only: true
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --format_metric=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --snmp=/snmp.yaml
+      - --metalisten=0.0.0.0:${METALISTEN_PORT}
+      - --dns=127.0.0.1:53
+      - --sinks=otel
+      - --metrics=jchf
+      - --tee_logs=true
+      - --service_name=snmp-${GROUP}
+      - --max_flows_per_message=100
+    ports:
+      - ${METALISTEN_PORT}:${METALISTEN_PORT}
+      - ${TRAP_PORT}:${TRAP_PORT}/udp
+
+  discover_${GROUP}:
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
+    pull_policy: always
+    profiles: ["discovery"]
+    environment:
+      - OTEL_SERVICE_NAME=ktranslate-discover-${GROUP}${KTRANS_HOST:+-}${KTRANS_HOST}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
+      # NetBox creds for DISCOVERY_SOURCE=netbox groups; ktranslate reads them at
+      # runtime. Harmless (blank, unused) for cidr groups.
+      - NETBOX_HOST=${NETBOX_HOST:-}
+      - NETBOX_TOKEN=${NETBOX_TOKEN:-}
+      # Discovery containers are short-lived; export internal metrics sooner than
+      # the default 60s so a quick scan still emits health data to Alloy.
+      - OTEL_METRIC_EXPORT_INTERVAL=10000
+    volumes:
+      - type: bind
+        source: ${REPO_PATH}/state/discovery-${GROUP}.runtime.yaml
+        target: /snmp.yaml
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --format_metric=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --snmp=/snmp.yaml
+      - -snmp_discovery=true
+      - --sinks=otel
+      - --metrics=jchf
+      - --tee_logs=true
+      - --service_name=discover-${GROUP}
+

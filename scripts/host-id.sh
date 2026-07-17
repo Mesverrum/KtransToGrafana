@@ -6,8 +6,9 @@
 #   1. An explicit, non-blank KTRANS_HOST in .env  -> used verbatim.
 #   2. Otherwise                                   -> this machine's hostname.
 #
-# Used by the Makefile so `make up` tags telemetry with the host without any
-# manual configuration. Prints the resolved value on stdout and nothing else.
+# Shared by the Makefile and scripts/run-discovery.sh so `make up` and the
+# discovery cron job always agree on the same value. Prints the resolved value
+# on stdout and nothing else.
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"

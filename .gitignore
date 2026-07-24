@@ -16,6 +16,7 @@ groups/*.env
 # Generator outputs (re-created by scripts/generate-groups.sh).
 config/*.yaml
 compose-groups.generated.yaml
+compose-catalog.generated.yaml
 compose-limits.generated.yaml
 
 # Discovery runtime artifacts (written by scripts/run-discovery.sh).

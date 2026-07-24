@@ -95,6 +95,16 @@ if [[ -f compose-groups.generated.yaml ]]; then
 else
   _fail "compose-groups.generated.yaml is missing — run: make generate"
 fi
+if [[ -f compose-catalog.generated.yaml ]]; then
+  _ok "compose-catalog.generated.yaml exists"
+else
+  _fail "compose-catalog.generated.yaml is missing — run: make generate"
+fi
+if [[ -f config/catalog.yaml ]]; then
+  _ok "config/catalog.yaml exists"
+else
+  _fail "config/catalog.yaml is missing — run: make generate"
+fi
 
 # --- Per-group rendered configs ---
 for env_file in "${GROUP_FILES[@]}"; do

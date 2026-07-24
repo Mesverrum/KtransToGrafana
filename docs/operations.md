@@ -17,6 +17,7 @@ make up-demo                # same as 'up' plus the host-sflow demo overlay (ins
 make logs                   # tail logs from all containers
 make down                   # stop and remove the stack
 make discover GROUP=cisco   # one-shot discovery for one group; populates state/devices-cisco.yaml
+make discover-all           # discover every group; reload flow/syslog + all pollers if any list changed
 make detect-net             # auto-fill HOST_NET in .env (only needed for the sflow demo overlay)
 make host                   # print the deployment.host value this stack will use
 ```
@@ -55,7 +56,15 @@ Add cron entries on the host so new devices get picked up automatically. Stagger
 5  */6 * * * cd /opt/Grafana/KtransToGrafana && ./scripts/run-discovery.sh palo  >> /var/log/ktrans-discovery.log 2>&1
 ```
 
-Each run scans the group's configured CIDRs (or queries NetBox, depending on its `DISCOVERY_SOURCE`), atomically publishes a fresh `state/devices-<group>.yaml`, and sends `SIGUSR2` to the matching poller so it picks up the new device list without a restart. (`SIGUSR2` is ktranslate's reload signal — `SIGHUP` has no handler and would terminate the container.) If discovery returns zero devices (network blip, container crash) the script preserves the previous device list rather than wiping it. If the device list is unchanged, no reload is sent.
+Each run scans the group's configured CIDRs (or queries NetBox, depending on its `DISCOVERY_SOURCE`), atomically publishes a fresh `state/devices-<group>.yaml`, and reloads ktranslate receivers that depend on the device catalog. Flow and syslog containers restart; SNMP pollers receive `SIGUSR2` (ktranslate's reload signal — `SIGHUP` has no handler and would terminate the container). If discovery returns zero devices (network blip, container crash) the script preserves the previous device list rather than wiping it. If the device list is unchanged, no reload is sent.
+
+To discover every group in one pass (one reload at the end if anything changed):
+
+```
+make discover-all
+```
+
+Or keep separate cron lines per group — each changed run still reloads flow, syslog, and all pollers so the shared catalog stays current.
 
 ## Instant flow data with the sflow demo overlay
 

@@ -3,7 +3,9 @@
 # discovered device list to state/devices-${group}.yaml for the polling
 # container to read via its @-include.
 #
-# Usage: ./scripts/run-discovery.sh <cisco|palo>
+# Usage: ./scripts/run-discovery.sh <group>
+#
+# Exit codes (when SKIP_RELOAD=1): 0 = device list changed, 2 = unchanged, 1 = error.
 #
 # Intended to be invoked from host cron, e.g.:
 #   0 */6 * * * cd /opt/Grafana/KtransToGrafana && ./scripts/run-discovery.sh cisco >> /var/log/ktrans-discovery.log 2>&1
@@ -51,10 +53,18 @@ if [[ -f "${DEVICES_OUT}" ]]; then
   cp "${DEVICES_OUT}" "${DEVICES_PREV}"
 fi
 
-COMPOSE_ARGS=(-f "${REPO_ROOT}/compose-base.yaml" -f "${REPO_ROOT}/compose-groups.generated.yaml")
+COMPOSE_ARGS=(
+  -f "${REPO_ROOT}/compose-base.yaml"
+  -f "${REPO_ROOT}/compose-groups.generated.yaml"
+  -f "${REPO_ROOT}/compose-catalog.generated.yaml"
+)
 
 if [[ ! -f "${REPO_ROOT}/compose-groups.generated.yaml" ]]; then
   echo "missing generated compose file. Run ./scripts/generate-groups.sh first." >&2
+  exit 1
+fi
+if [[ ! -f "${REPO_ROOT}/compose-catalog.generated.yaml" ]]; then
+  echo "missing compose-catalog.generated.yaml. Run ./scripts/generate-groups.sh first." >&2
   exit 1
 fi
 
@@ -82,25 +92,16 @@ mv "${TMP}" "${DEVICES_OUT}"
 
 echo "published ${DEVICE_COUNT} ${GROUP} devices to ${DEVICES_OUT}"
 
-# Only reload the poller if the device list actually changed. A cron tick where
+# Only reload ktranslate if the device list actually changed. A cron tick where
 # discovery confirms the same set of devices doesn't need to disturb polling.
 if [[ -f "${DEVICES_PREV}" ]] && cmp -s "${DEVICES_PREV}" "${DEVICES_OUT}"; then
-  echo "device list unchanged for ${GROUP}; skipping poller reload"
+  echo "device list unchanged for ${GROUP}; skipping ktranslate reload"
+  exit 2
+fi
+
+if [[ -n "${SKIP_RELOAD:-}" ]]; then
+  echo "device list changed for ${GROUP}; reload deferred (SKIP_RELOAD)"
   exit 0
 fi
 
-# Signal the long-running poller to re-read its config (which @-includes the
-# devices file we just published). ktranslate's SNMP input handles SIGUSR2
-# as "reload and restart the main loop" — SIGHUP has no handler and would
-# kill the container, so use USR2.
-#
-# Fail soft: if the poller isn't running (first bootstrap, operator paused it,
-# host just rebooted) we don't want to fail the whole discovery run.
-POLLER_SERVICE="ktranslate_snmp_${GROUP}"
-if docker compose "${COMPOSE_ARGS[@]}" ps --status running --services 2>/dev/null \
-     | grep -qx "${POLLER_SERVICE}"; then
-  docker compose "${COMPOSE_ARGS[@]}" kill -s USR2 "${POLLER_SERVICE}"
-  echo "sent SIGUSR2 to ${POLLER_SERVICE}"
-else
-  echo "poller ${POLLER_SERVICE} not running; new devices will be picked up on next start" >&2
-fi
+bash "${REPO_ROOT}/scripts/reload-ktranslate-devices.sh"

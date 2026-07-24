@@ -5,7 +5,7 @@
 #
 # Enable by adding it to your compose invocation, e.g.:
 #   docker compose -f compose-base.yaml -f compose-groups.generated.yaml \
-#     -f compose-limits.generated.yaml -f compose-sflow.yaml up -d
+#     -f compose-catalog.generated.yaml -f compose-limits.generated.yaml -f compose-sflow.yaml up -d
 # or run `make up-demo` which layers it in for you.
 #
 # host-sflow needs the host's primary network interface. Set HOST_NET in .env

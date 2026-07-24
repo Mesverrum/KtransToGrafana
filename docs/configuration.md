@@ -89,7 +89,25 @@ This produces (all git-ignored, derived artifacts — files the generator writes
 
 - `config/discovery-<group>.yaml` — the canonical discovery config the discovery script feeds to ktranslate
 - `config/poller-<group>.yaml` — the polling config, with the `devices:` block pointing at `state/devices-<group>.yaml` via an `@`-include (a reference that pulls in another file's contents)
+- `config/catalog.yaml` — enrichment-only SNMP config for **flow** and **syslog** receivers; `@`-includes every group's `state/devices-<group>.yaml` so `device_name` and `user_tags` stay consistent across traffic types
 - `compose-groups.generated.yaml` — service definitions for every group's poller and discovery container
+- `compose-catalog.generated.yaml` — volume mounts for `ktranslate_flow` and `ktranslate_syslog` (catalog + all device files)
+
+## Multi-group flow and syslog enrichment
+
+SNMP pollers already read `state/devices-<group>.yaml` per credential group. **Flow** and **syslog** receivers share a generated **`config/catalog.yaml`** that lists every group's device file:
+
+```yaml
+devices:
+  - "@/state/devices-cisco.yaml"
+  - "@/state/devices-palo.yaml"
+global:
+  user_tags: {}
+```
+
+`make generate` also writes `compose-catalog.generated.yaml`, which mounts the catalog (as `/snmp.yaml`) plus every `state/devices-*.yaml` into `ktranslate_flow` and `ktranslate_syslog`. Both containers run with `--snmp=/snmp.yaml` (`--flow_only=true` on flow) so ktranslate can map exporter/source IPs to `device_name` and apply `global.user_tags` / per-device tags without polling.
+
+When **any** group's device list changes, `scripts/run-discovery.sh` (or `make discover-all`) reloads **all** catalog consumers and SNMP pollers — flow/syslog restart; pollers receive `SIGUSR2`.
 
 ## Adding, removing, or modifying a group
 
@@ -122,8 +140,10 @@ The equivalent raw commands are:
 ./scripts/generate-groups.sh
 echo '{}' | tee state/devices-cisco.yaml state/devices-palo.yaml   # bootstrap
 ./scripts/compute-limits.sh
-docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-limits.generated.yaml up -d
+docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-catalog.generated.yaml -f compose-limits.generated.yaml up -d
 ./scripts/run-discovery.sh cisco
+# or discover every group in one shot:
+make discover-all
 ```
 
 The `discover_*` services are gated behind a Compose profile so `up` does not start them — they only run when invoked via `make discover` or `./scripts/run-discovery.sh`.

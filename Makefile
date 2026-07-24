@@ -1,6 +1,6 @@
-.PHONY: up up-demo down logs preflight generate bootstrap limits limits-show discover detect-net host help
+.PHONY: up up-demo down logs preflight generate bootstrap limits limits-show discover discover-all detect-net host help
 
-COMPOSE := docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-limits.generated.yaml
+COMPOSE := docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-catalog.generated.yaml -f compose-limits.generated.yaml
 
 # Resolve the per-host identifier that Alloy stamps onto all telemetry
 # (deployment.host) and that suffixes every container's service.name. Prefer an
@@ -22,6 +22,7 @@ help:
 	@echo "make down                   docker compose down"
 	@echo "make logs                   Tail logs from all containers"
 	@echo "make discover GROUP=cisco   Run a one-shot discovery for one group"
+	@echo "make discover-all           Discover every group; reload catalog consumers if any list changed"
 	@echo "make detect-net             Auto-fill HOST_NET in .env (only needed for the sflow overlay)"
 	@echo "make host                   Print the deployment.host value this stack will use"
 
@@ -71,6 +72,9 @@ logs:
 discover:
 	@test -n "$(GROUP)" || { echo "ERROR: pass GROUP=<name>, e.g. make discover GROUP=cisco" >&2; exit 1; }
 	@./scripts/run-discovery.sh $(GROUP)
+
+discover-all:
+	@./scripts/run-discovery-all.sh
 
 # Auto-detect the host's default interface and write it to .env as HOST_NET.
 # Only needed if you use the host-sflow demo overlay (make up-demo).

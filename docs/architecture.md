@@ -6,10 +6,10 @@ In plain terms: a set of small containers run on one Linux host (via Docker Comp
 
 The containers:
 
-- **`ktranslate_flow`** — receives netflow data (netflow 5/9, sflow, ipfix, nbar, pan, etc.) and converts it into metrics.
+- **`ktranslate_flow`** — receives netflow data (netflow 5/9, sflow, ipfix, nbar, pan, etc.) and converts it into metrics. Mounts the generated **device catalog** (`config/catalog.yaml`) so flow records get the same `device_name` and tags as SNMP.
 - **`ktranslate_snmp_<group>`** — one long-running SNMP poller per credential group. Each reads a settings file from `config/` plus a separately-managed device list from `state/`.
 - **`discover_<group>`** — one short-lived discovery container per credential group. Runs on a schedule, finds devices, writes the list back to `state/`, and tells the matching poller to reload.
-- **`ktranslate_syslog`** — collects syslog and forwards it as logs.
+- **`ktranslate_syslog`** — collects syslog and forwards it as logs. Uses the same device catalog as flow for consistent naming/tags.
 - **`alloy`** — a small Grafana Alloy agent that forwards everything from the containers above to Grafana Cloud.
 
 ```mermaid

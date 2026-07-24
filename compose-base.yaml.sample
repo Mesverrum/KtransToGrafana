@@ -8,6 +8,7 @@ services:
       # is set, so service.name reads e.g. "ktranslate-site-a" (blank -> no suffix).
       - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME}${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
+    # config/catalog.yaml + state/devices-*.yaml mounts: compose-catalog.generated.yaml
     depends_on:
       - alloy
     command:
@@ -15,6 +16,8 @@ services:
       - --format_metric=otel
       - --otel.protocol=grpc
       - --otel.endpoint=http://alloy:4317/
+      - --snmp=/snmp.yaml
+      - --flow_only=true
       - --nf.source=${NF_SOURCE}
       - --metalisten=0.0.0.0:9996
       - --dns=127.0.0.1:53
@@ -38,6 +41,7 @@ services:
     environment:
       - OTEL_SERVICE_NAME=ktranslate-syslog${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
+    # catalog volumes: compose-catalog.generated.yaml
     depends_on:
       - alloy
     command:
@@ -45,6 +49,7 @@ services:
       - --format_metric=otel
       - --otel.protocol=grpc
       - --otel.endpoint=http://alloy:4317/
+      - --snmp=/snmp.yaml
       - --syslog.source=${SYSLOG_SOURCE}
       - --metalisten=0.0.0.0:9998
       - --sinks=otel

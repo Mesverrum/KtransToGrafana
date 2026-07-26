@@ -123,6 +123,34 @@ make discover GROUP=fortinet
 
 `make up` is idempotent — it starts the new services without disturbing existing ones. Modifying or removing a group follows the same pattern (edit or delete the env file, re-run `make generate`, re-run `make up`).
 
+## Flow DNS (`flow_dns`)
+
+ktranslate enriches NetFlow rollups with `src_host` / `dst_host` via reverse DNS (`--dns=host:port`). The stock `--dns=127.0.0.1:53` default does nothing useful inside the container.
+
+This stack runs a small **dnsmasq** sidecar (`flow_dns`) that:
+
+1. **Answers PTR for discovered devices** — `scripts/refresh-flow-dns.sh` builds `host-record` lines from every `state/devices-*.yaml` (`device_name` + `device_ip`).
+2. **Forwards everything else** to upstream DNS (`FLOW_DNS_UPSTREAM`, default `host.docker.internal` → your host resolver).
+
+Optional knobs in `.env` (see `.env.sample`):
+
+| Variable | Purpose |
+|----------|---------|
+| `FLOW_DNS` | ktranslate `--dns` target (default `flow_dns:53`) |
+| `FLOW_DNS_UPSTREAM` | dnsmasq `server=` for recursion (default `host.docker.internal`) |
+| `FLOW_DNS_EXTRA_HOSTS` | Comma-separated `name:ip` pairs not in SNMP discovery |
+| `FLOW_DNS_DOCKER_NETWORK` / `FLOW_DNS_DOCKER_NODES` | Optional docker inspect overlay for dynamic lab mgmt IPs |
+
+Operator-edited static records: copy `dnsmasq/extra-hosts.conf.sample` → `dnsmasq/extra-hosts.conf`.
+
+`make flow-dns` regenerates records (also runs on `make up` and after discovery reload). Verify:
+
+```
+docker exec ktranslate_flow nslookup <device-ip> flow_dns
+```
+
+In production with corporate PTR records, point `--dns` at real DNS instead of `flow_dns`.
+
 ## Multiple environments on one host
 
 Docker Compose reads `.env` from the current directory automatically. To maintain side-by-side environments (dev/staging/prod), keep additional files like `.env.prod` and select one at run time:

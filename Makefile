@@ -1,4 +1,4 @@
-.PHONY: up up-demo down logs preflight generate bootstrap limits limits-show discover discover-all detect-net host help
+.PHONY: up up-demo down logs preflight generate bootstrap limits limits-show discover discover-all flow-dns detect-net host help
 
 COMPOSE := docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-catalog.generated.yaml -f compose-limits.generated.yaml
 
@@ -17,12 +17,13 @@ help:
 	@echo "make bootstrap              Seed empty state/devices-<group>.yaml stubs so pollers can start"
 	@echo "make limits                 Compute per-container memory limits from host RAM"
 	@echo "make limits-show            Print the limits plan without writing the overlay"
-	@echo "make up                     Run preflight + bootstrap + limits, then docker compose up -d"
+	@echo "make up                     Run preflight + bootstrap + flow-dns + limits, then docker compose up -d"
 	@echo "make up-demo                Same as 'up' plus the host-sflow demo overlay (instant flow data)"
 	@echo "make down                   docker compose down"
 	@echo "make logs                   Tail logs from all containers"
 	@echo "make discover GROUP=cisco   Run a one-shot discovery for one group"
 	@echo "make discover-all           Discover every group; reload catalog consumers if any list changed"
+	@echo "make flow-dns               Regenerate flow_dns PTR records from device catalog"
 	@echo "make detect-net             Auto-fill HOST_NET in .env (only needed for the sflow overlay)"
 	@echo "make host                   Print the deployment.host value this stack will use"
 
@@ -33,7 +34,7 @@ generate:
 	@./scripts/generate-groups.sh
 
 bootstrap:
-	@mkdir -p state
+	@mkdir -p state dnsmasq
 	@for envfile in groups/*.env; do \
 	  [ -f "$$envfile" ] || continue; \
 	  group=$$(awk -F= '/^GROUP=/{print $$2; exit}' "$$envfile"); \
@@ -43,6 +44,11 @@ bootstrap:
 	    echo "seeded empty state/devices-$$group.yaml"; \
 	  fi; \
 	done
+	@[ -f dnsmasq/hosts.generated.conf ] || echo '# pending refresh-flow-dns' > dnsmasq/hosts.generated.conf
+	@[ -f dnsmasq/upstream.conf ] || echo 'server=host.docker.internal' > dnsmasq/upstream.conf
+
+flow-dns:
+	@./scripts/refresh-flow-dns.sh
 
 limits:
 	@./scripts/compute-limits.sh
@@ -50,13 +56,13 @@ limits:
 limits-show:
 	@./scripts/compute-limits.sh --dry-run
 
-up: preflight bootstrap limits
+up: preflight bootstrap flow-dns limits
 	@echo "deployment.host = $(KTRANS_HOST)"
 	$(COMPOSE) up -d
 
 # Same as `up` but layers in the optional host-sflow demo overlay so you get
 # flow data immediately without a real netflow/sflow source configured yet.
-up-demo: preflight bootstrap limits
+up-demo: preflight bootstrap flow-dns limits
 	@echo "deployment.host = $(KTRANS_HOST)"
 	$(COMPOSE) -f compose-sflow.yaml up -d
 

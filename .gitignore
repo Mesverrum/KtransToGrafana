@@ -23,6 +23,10 @@ compose-limits.generated.yaml
 state/*.yaml
 !state/.gitkeep
 
+# flow_dns generated records (scripts/refresh-flow-dns.sh).
+dnsmasq/hosts.generated.conf
+dnsmasq/upstream.conf
+
 # OS and editor noise
 .DS_Store
 Thumbs.db

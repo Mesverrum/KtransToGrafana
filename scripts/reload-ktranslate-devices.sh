@@ -55,6 +55,8 @@ if [[ ${#RUNNING_RESTART[@]} -eq 0 && ${#RUNNING_POLLERS[@]} -eq 0 ]]; then
   exit 0
 fi
 
+bash "${REPO_ROOT}/scripts/refresh-flow-dns.sh"
+
 if [[ ${#RUNNING_RESTART[@]} -gt 0 ]]; then
   docker compose "${COMPOSE_ARGS[@]}" restart "${RUNNING_RESTART[@]}"
 fi

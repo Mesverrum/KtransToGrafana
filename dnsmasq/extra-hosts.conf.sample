@@ -1,0 +1,7 @@
+# Optional static host-records for IPs that are not in SNMP discovery output
+# (e.g. client workstations, servers, VIPs). Copy to extra-hosts.conf and edit.
+#
+#   cp dnsmasq/extra-hosts.conf.sample dnsmasq/extra-hosts.conf
+#
+# Format (dnsmasq host-record):
+# host-record=myserver,10.1.2.3

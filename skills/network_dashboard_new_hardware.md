@@ -1,123 +1,158 @@
 # Network Dashboard — Expanding for New Hardware
 
-Use this process whenever a new device type (new ktranslate profile or vendor) is added to monitoring and you want the Network Device Details dashboard to cover it correctly.
+Use when a **new device type** (ktranslate SNMP profile or vendor) is added and the **Network Device Details** dashboard should cover it correctly — on any Grafana Cloud stack.
 
-For all panel construction standards (timeseries config, naming rules, layout patterns, PromQL conventions, metric family rules) refer to: **"Network Dashboard — Design Patterns"**
+**Panel standards:** [Design Patterns](network_dashboard_design.md)
+
+**Convention:** `$device` = your single-device dashboard variable (PromQL label `device_name`).
 
 ---
 
 ## Overview
 
-The dashboard uses a `has_*` conditional-row system. Each row only renders when the selected device actually reports the metric that row covers. Adding support for a new device type means:
+The dashboard uses **`has_*` conditional rows**. Each row renders only when the selected device reports the gate metric. Adding a device type means:
 
-1. Discovering what metrics it reports
-2. Mapping those metrics to existing rows (most will already be covered)
-3. Identifying gaps — metrics with no row yet
-4. Building new rows and `has_*` variables for the gaps
+1. Discover what metrics it reports
+2. Map metrics to existing `has_*` rows (often no changes)
+3. Identify gaps
+4. Build new `has_*` variables + rows for gaps
+5. Validate show/hide behavior
 
 ---
 
-## Step 1 — Discover the Device's Metrics
+## Step 1 — Discover metrics
 
-Query Prometheus for all metric names the device reports:
+**Live Prometheus (any stack):**
 
 ```promql
-label_values({device_name=~"$device_name"}, __name__)
+count by (__name__) ({device_name=~"$device"})
 ```
 
-Or via the prometheus_query_handler tool:
-- operation: `search_label_values`
-- label_name: `__name__`
-- selector: `{device_name=~"$device_name"}`
-- regex: `kentik_.*`
+Or in Explore: label values for `__name__` with selector `{device_name=~"$device"}` and filter `kentik_.*`.
 
-This returns the full set of `kentik_snmp_*` and `kentik_ping_*` metrics the device is sending.
+**Grafana MCP / Assistant tools:**
 
-**Also check the ktranslate SNMP profile** for the device's vendor/model at:
-`https://github.com/kentik/snmp-profiles/tree/main/profiles/kentik_snmp`
+- `search_label_values` — label `__name__`, selector `{device_name=~"$device"}`, regex `kentik_.*`
 
-The profile shows what metrics are *expected* — the live query shows what is *actually arriving*. Use both.
+**SNMP profile (expected vs actual):**
 
----
+- Kentik upstream: [snmp-profiles](https://github.com/kentik/snmp-profiles/tree/main/profiles/kentik_snmp)
+- Your fork or custom profiles in your deployment
 
-## Step 2 — Map Metrics to Existing Rows
-
-Check what `has_*` variables currently exist in the dashboard. Each variable's gate metric tells you which metric family it covers. If a device metric matches a gate metric already in use, that row will automatically show or hide for the new device — no changes needed.
-
-To discover existing variables, read the dashboard spec or query the dashboard's variable definitions and look for all variables prefixed `has_`.
-
-The `has_*` variables filter by `device_name=~"$device_name"` so existing rows handle any device automatically once a matching variable is present.
+Profile = expected; Prometheus = what is actually arriving. Use both.
 
 ---
 
-## Step 3 — Identify Gaps
+## Step 2 — Map to existing rows
 
-Subtract the covered metrics from the full device metric list. What remains are candidates for new rows.
+List dashboard variables prefixed `has_`. Each gate's **`metric`** field defines which metric family the row needs.
 
-**Before building anything, ask:**
-- Is this metric meaningful to an operator at a glance? (If not, skip it.)
-- Does it belong in an existing section with a different `has_*` gate, or does it need its own row?
-- Is there a natural stat + timeseries pair, or is a table more appropriate?
+If the new device already exports that metric → row auto-shows. **No dashboard change.**
 
-**Deciding whether a metric warrants a new row:** if a metric carries health, state, or operational data for a hardware component, sensor, connection feature, or application-layer function that no existing row covers, it is a candidate. If it is a low-signal diagnostic OID unlikely to be acted on directly, skip it.
+Discover variables via:
+
+- Dashboard **Settings → Variables**
+- Exported v2 manifest (`spec.variables` or classic `templating.list`)
+- gcx: `dashboards get <uid>`
+
+All `has_*` filters should use `device_name=~"$device"` (or your equivalent).
+
+### Example gate metrics (verify on your fleet — not universal constants)
+
+| Variable | Example gate metric | Notes |
+|----------|---------------------|-------|
+| `has_ping` | `kentik_ping_PacketLossPct` | Not `kentik_snmp_*` |
+| `has_cpu` | `kentik_snmp_CPU` | |
+| `has_memory` | `kentik_snmp_MemoryUtilization` *or* `hrStorageUsedPercent` | Match what panels query |
+| `has_interfaces` | `kentik_snmp_if_OperStatus` | |
+| `has_polling` | `kentik_snmp_PollingHealth` | |
+| `has_bgp` | vendor-specific, e.g. `tBgpPeerNgConnState` | Confirm via live query |
 
 ---
 
-## Step 4 — Build New `has_*` Variables
+## Step 3 — Identify gaps
 
-For each new row, create a hidden QueryVariable before building the panels.
+Uncovered metrics that are **operator-meaningful** (health, state, capacity, errors) → candidates for new rows. Skip low-signal diagnostic OIDs.
 
-**Standard pattern:**
+Ask:
+
+- Stat + timeseries pair, or table?
+- Existing tab/section, or new row?
+- Does an existing `has_*` gate cover a sibling metric?
+
+---
+
+## Step 4 — Build `has_*` variables
+
+One hidden QueryVariable per new row **before** panels:
+
 ```
 kind: QueryVariable
-name: has_
+name: has_<feature>
 hide: hideVariable
 refresh: onTimeRangeChanged
 query:
- group: prometheus
- qryType: 1 (LabelValues)
- label: device_name
- metric: 
- labelFilters: [{ device_name =~ "$device_name" }]
+  group: prometheus
+  qryType: 1
+  label: device_name
+  metric: <primary metric for this section>
+  labelFilters: [{ device_name =~ "$device" }]
 ```
 
-Pick the metric that will always be present if this device type is selected — typically the primary counter or status metric for the section.
+**Gate metric rules:**
 
-Before choosing the gate metric, consult the **Design Patterns skill** for metric family rules (e.g., which metric families require their own variable rather than sharing with `kentik_snmp_*`-based variables).
+1. Must return label values when the device supports the feature
+2. Must match the **same metric family** panels query (see Design Patterns — ping vs SNMP)
+3. Confirm live: `count(<metric>{device_name="<device>"})`
 
 ---
 
-## Step 5 — Build the Row and Panels
+## Step 5 — Build row and panels
 
-Add the row to the appropriate tab based on the Placement Guide below.
+Place per **Placement Guide**. Follow Design Patterns for layout, transforms, PromQL, and naming.
 
-Follow the **Design Patterns skill** for all panel construction standards — layout, timeseries config, naming rules, PromQL conventions, table patterns, and status column colors.
+**Row conditional rendering:**
 
-Apply conditional rendering to the row:
 ```
-visibility: show, condition: and
-items: [{ variable: "has_", operator: "matches", value: ".+" }]
+visibility: show
+condition: and
+items: [{ kind: ConditionalRenderingVariable, variable: "has_<feature>", operator: "matches", value: ".+" }]
 ```
+
+**v2 TabsLayout edits:** GET manifest → edit `spec.elements` / tab layout → PUT with `resourceVersion`. Never `POST /api/dashboards/db` on tabbed boards.
 
 ---
 
 ## Step 6 — Validate
 
-1. Select the new device in the `$device_name` dropdown.
-2. Confirm the new row is visible and panels are populated.
-3. Switch to a different device type that does *not* have these metrics.
-4. Confirm the row is hidden (not just empty).
-5. Take a screenshot to verify layout, units, and legend placement.
+1. Select the **new device** in `$device`
+2. New row **visible** with populated panels
+3. Select a device **without** those metrics
+4. Row **hidden** (not merely empty — empty indicates wrong gate or query)
+5. Multi-row tables: confirm row count matches entity count (`merge` present)
+6. Screenshot: layout, units, legends
+
+```promql
+count(<gate_metric>{device_name="<new-device>"})
+max by(device_name)(<panel_metric>{device_name="<new-device>"})
+```
 
 ---
 
-## Placement Guide
+## Placement guide
 
-| Content type | Where to add |
-|---|---|
-| Device health KPIs (CPU, memory, uptime) | Overview tab, new conditional row |
-| Interface/traffic metrics | Interfaces tab, new conditional row |
-| Physical sensor data (temp, fan, power) | Hardware Sensors tab, new conditional row |
-| Session/connection/NAT/VPN counters | Connections tab, new conditional row |
-| Polling or telemetry metadata | Telemetry tab |
-| Very large feature set (e.g., BGP full table) | Consider a new tab |
+| Content | Tab (typical) |
+|---------|----------------|
+| CPU, memory, uptime KPIs | Overview |
+| Interface / traffic | Interfaces |
+| Temp, fan, power sensors | Hardware Sensors |
+| Sessions, NAT, VPN counters | Connections |
+| Polling / telemetry metadata | Telemetry |
+| Large feature sets (full BGP table) | Consider new tab |
+
+---
+
+## See also
+
+- [Design Patterns](network_dashboard_design.md)
+- [Skills README](README.md)

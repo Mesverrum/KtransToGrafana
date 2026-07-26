@@ -43,6 +43,12 @@ What this means in practice:
 
 The repo ships a set of assets to get you started:
 
-- **`dashboards/`** — importable JSON dashboards: `00 Network Device Summary`, `01 Network Device Details`, `02 Network Flow Summary`, `03 Ktranslate Architecture & Datacenter Replication`, plus `Ktranslate Flow Summary`, `ktranslate network fleet overview`, and `ktranslate snmp device view`. Import whichever you want into your Grafana instance.
+- **`dashboards/`** — v2 Grafana manifests (import via UI or gcx v2 — **not** legacy `POST /api/dashboards/db` on tabbed boards):
+  - **`00 Ktranslate Architecture`** — deployment guide and links
+  - **`01 Ktranslate Health`** — collector CHF / jchf health by `service_name`
+  - **`02 Network Flow Summary`** — NetFlow/sFlow rollups (`network_io_by_flow_bytes`)
+  - **`03 Network Device Summary`** — fleet overview (TabsLayout)
+  - **`04 Network Device Details`** — per-device drill-down (TabsLayout)
+  - Legacy/auxiliary: `Ktranslate Flow Summary`, `ktranslate network fleet overview`, `ktranslate snmp device view`
 - **`alerts/`** — example alert rules, a contact point, and a notification template you can adapt.
-- **`skills/`** — guides for network dashboard design and onboarding new hardware.
+- **`skills/`** — portable guides for network dashboard design and onboarding new hardware ([`skills/README.md`](../skills/README.md)). Copy into Grafana Cloud Assistant or use as agent context when extending dashboards.

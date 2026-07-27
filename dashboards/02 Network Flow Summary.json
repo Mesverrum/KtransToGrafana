@@ -1,12 +1,21 @@
 {
-  "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
+  "apiVersion": "dashboard.grafana.app/v2",
   "metadata": {
-    "name": "be8hpir89dds0a",
-    "generation": 45,
-    "creationTimestamp": "2026-06-11T18:30:30Z",
-    "labels": {},
-    "annotations": {}
+    "name": "ktranslate-flow-summary",
+    "namespace": "stacks-1061129",
+    "uid": "b418a587-770d-4406-90f9-eb306802e650",
+    "labels": {
+      "grafana.app/deprecatedInternalID": "563067985960960"
+    },
+    "annotations": {
+      "grafana.app/createdBy": "service-account:afseqskqsbtvka",
+      "grafana.app/folder": "network-lab",
+      "grafana.app/message": "Added Country breakdown + Transport & ports rows (lab sections 2+3).\nCountry breakdown + Transport & ports rows; country queries match Geo Maps filters.",
+      "grafana.app/saved-from-ui": "Grafana Cloud",
+      "grafana.app/updatedBy": "service-account:afseqskqsbtvka",
+      "grafana.app/updatedTimestamp": "2026-07-26T06:37:38Z"
+    }
   },
   "spec": {
     "annotations": [
@@ -17,10 +26,10 @@
             "kind": "DataQuery",
             "group": "grafana",
             "version": "v0",
-            "spec": {},
-            "labels": {
-              "grafana.app/export-label": "grafana-1"
-            }
+            "datasource": {
+              "name": "-- Grafana --"
+            },
+            "spec": {}
           },
           "enable": true,
           "hide": true,
@@ -31,7 +40,7 @@
       }
     ],
     "cursorSync": "Off",
-    "description": "Designed to visualize flow data coming in from Kentik's Ktranslate open source flow collector.",
+    "description": "Designed to visualize flow data coming in from Kentik's Ktranslate open source flow collector.\n\nNetwork lab dashboard (02). Interface bps uses ktranslate delta gauges: `(octets) * 8 / 60`.",
     "editable": true,
     "elements": {
       "panel-10": {
@@ -58,10 +67,10 @@
                       "spec": {
                         "app": "grafana-assistant-app",
                         "editorMode": "code",
-                        "expr": "topk(20, sum by(network_local_address) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range])))",
+                        "expr": "topk(20, sum by(network_local_address, src_host) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range])))",
                         "format": "table",
                         "instant": true,
-                        "legendFormat": "{{network_local_address}}",
+                        "legendFormat": "{{src_host}} ({{network_local_address}})",
                         "queryType": "instant",
                         "range": false
                       }
@@ -85,6 +94,10 @@
                           "operation": "aggregate"
                         },
                         "network_local_address": {
+                          "aggregations": [],
+                          "operation": "groupby"
+                        },
+                        "src_host": {
                           "aggregations": [],
                           "operation": "groupby"
                         }
@@ -113,7 +126,8 @@
                     "options": {
                       "renameByName": {
                         "Value (sum)": "Total Bytes",
-                        "network_local_address": "Local Address"
+                        "network_local_address": "Local Address",
+                        "src_host": "Local Host"
                       }
                     }
                   }
@@ -125,7 +139,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -227,10 +241,10 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "topk(20, sum by(network_peer_address) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range])))",
+                        "expr": "topk(20, sum by(network_peer_address, dst_host) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range])))",
                         "format": "table",
                         "instant": true,
-                        "legendFormat": "{{network_peer_address}}",
+                        "legendFormat": "{{dst_host}} ({{network_peer_address}})",
                         "queryType": "instant",
                         "range": false
                       }
@@ -252,6 +266,10 @@
                             "sum"
                           ],
                           "operation": "aggregate"
+                        },
+                        "dst_host": {
+                          "aggregations": [],
+                          "operation": "groupby"
                         },
                         "network_peer_address": {
                           "aggregations": [],
@@ -282,6 +300,7 @@
                     "options": {
                       "renameByName": {
                         "Value (sum)": "Total Bytes",
+                        "dst_host": "Peer Host",
                         "network_peer_address": "Peer Address"
                       }
                     }
@@ -294,7 +313,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -396,7 +415,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum by(device_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range]))",
+                        "expr": "sum by(device_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range]))",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
                         "queryType": "instant",
@@ -437,14 +456,13 @@
                       "kind": "DataQuery",
                       "group": "__expr__",
                       "version": "v0",
+                      "datasource": {
+                        "name": "__expr__"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
                         "expression": "SELECT A.device_name AS \"Exporter\", A.__value__ AS \"Total Bytes\", B.device_name AS \"SNMP Device\" FROM A LEFT JOIN B ON A.device_name = B.if_Address ORDER BY A.__value__ DESC LIMIT 100",
                         "type": "sql"
-                      },
-                      "labels": {
-                        "grafana.app/export-label": "__expr__-1",
-                        "grafana.app/export-datasource-name": "Expression"
                       }
                     },
                     "refId": "C",
@@ -471,7 +489,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -560,7 +578,7 @@
                           {
                             "targetBlank": true,
                             "title": "View Device Details",
-                            "url": "/d/magz6qw1/01-network-device-details?var-instance=${__value.raw}&from=${__from}&to=${__to}&timezone=browser"
+                            "url": "/d/ktranslate-device-details/01-network-device-details?var-instance=${__value.raw}&from=${__from}&to=${__to}&timezone=browser"
                           }
                         ]
                       },
@@ -602,14 +620,11 @@
                         "name": "${datasource}"
                       },
                       "spec": {
-                        "app": "grafana-assistant-app",
-                        "editorMode": "code",
-                        "expr": "sum by(network_peer_country) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range]))",
+                        "expr": "sum by(network_peer_country) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\",network_peer_country!~\"Private IP|undefined\"}[$__range]))",
                         "format": "table",
-                        "instant": false,
-                        "legendFormat": "__auto",
+                        "instant": true,
                         "queryType": "instant",
-                        "range": true
+                        "range": false
                       }
                     },
                     "refId": "A",
@@ -617,35 +632,14 @@
                   }
                 }
               ],
-              "transformations": [
-                {
-                  "kind": "Transformation",
-                  "group": "groupBy",
-                  "spec": {
-                    "options": {
-                      "fields": {
-                        "Value": {
-                          "aggregations": [
-                            "sum"
-                          ],
-                          "operation": "aggregate"
-                        },
-                        "network_peer_country": {
-                          "aggregations": [],
-                          "operation": "groupby"
-                        }
-                      }
-                    }
-                  }
-                }
-              ],
+              "transformations": [],
               "queryOptions": {}
             }
           },
           "vizConfig": {
             "kind": "VizConfig",
             "group": "geomap",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "basemap": {
@@ -665,12 +659,12 @@
                 "layers": [
                   {
                     "config": {
-                      "showLegend": false,
+                      "showLegend": true,
                       "style": {
                         "color": {
                           "fixed": "dark-green"
                         },
-                        "opacity": 0.8,
+                        "opacity": 0.9,
                         "rotation": {
                           "fixed": 0,
                           "max": 360,
@@ -678,10 +672,10 @@
                           "mode": "mod"
                         },
                         "size": {
-                          "field": "Value (sum)",
+                          "field": "Value",
                           "fixed": 25,
                           "max": 50,
-                          "min": 5
+                          "min": 10
                         },
                         "symbol": {
                           "fixed": "img/icons/marker/circle.svg",
@@ -710,7 +704,7 @@
                       "mode": "lookup"
                     },
                     "name": "Layer 1",
-                    "opacity": 0.8,
+                    "opacity": 0.9,
                     "tooltip": true,
                     "type": "markers"
                   }
@@ -787,14 +781,11 @@
                         "name": "${datasource}"
                       },
                       "spec": {
-                        "app": "grafana-assistant-app",
-                        "editorMode": "code",
-                        "expr": "sum by(network_local_country) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range]))",
+                        "expr": "sum by(network_local_country) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\",network_local_country!~\"Private IP|undefined\"}[$__range]))",
                         "format": "table",
-                        "instant": false,
-                        "legendFormat": "__auto",
+                        "instant": true,
                         "queryType": "instant",
-                        "range": true
+                        "range": false
                       }
                     },
                     "refId": "A",
@@ -802,35 +793,14 @@
                   }
                 }
               ],
-              "transformations": [
-                {
-                  "kind": "Transformation",
-                  "group": "groupBy",
-                  "spec": {
-                    "options": {
-                      "fields": {
-                        "Value": {
-                          "aggregations": [
-                            "sum"
-                          ],
-                          "operation": "aggregate"
-                        },
-                        "network_local_country": {
-                          "aggregations": [],
-                          "operation": "groupby"
-                        }
-                      }
-                    }
-                  }
-                }
-              ],
+              "transformations": [],
               "queryOptions": {}
             }
           },
           "vizConfig": {
             "kind": "VizConfig",
             "group": "geomap",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "basemap": {
@@ -850,29 +820,38 @@
                 "layers": [
                   {
                     "config": {
-                      "color": {
-                        "a": 1,
-                        "rgb": {
-                          "b": 0,
-                          "g": 80,
-                          "r": 220
-                        }
-                      },
-                      "fillOpacity": 0.7,
-                      "shape": "circle",
                       "showLegend": true,
-                      "size": {
-                        "fixed": 5,
-                        "max": 15,
-                        "min": 2
-                      },
                       "style": {
-                        "opacity": 0.8,
+                        "color": {
+                          "fixed": "dark-blue"
+                        },
+                        "opacity": 0.9,
+                        "rotation": {
+                          "fixed": 0,
+                          "max": 360,
+                          "min": -360,
+                          "mode": "mod"
+                        },
                         "size": {
-                          "field": "Value (sum)",
-                          "fixed": 10,
+                          "field": "Value",
+                          "fixed": 25,
                           "max": 50,
-                          "min": 5
+                          "min": 10
+                        },
+                        "symbol": {
+                          "fixed": "img/icons/marker/circle.svg",
+                          "mode": "fixed"
+                        },
+                        "symbolAlign": {
+                          "horizontal": "center",
+                          "vertical": "center"
+                        },
+                        "textConfig": {
+                          "fontSize": 12,
+                          "offsetX": 0,
+                          "offsetY": 0,
+                          "textAlign": "center",
+                          "textBaseline": "middle"
                         }
                       }
                     },
@@ -886,7 +865,7 @@
                       "mode": "lookup"
                     },
                     "name": "Layer 1",
-                    "opacity": 0.8,
+                    "opacity": 0.9,
                     "tooltip": true,
                     "type": "markers"
                   }
@@ -898,9 +877,7 @@
                   "allLayers": true,
                   "dashboardVariable": false,
                   "id": "fit",
-                  "lastOnly": false,
                   "lat": 0,
-                  "layer": "Layer 1",
                   "lon": 0,
                   "noRepeat": false,
                   "zoom": 2
@@ -966,7 +943,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum by(network_protocol_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__rate_interval]))",
+                        "expr": "sum by(network_protocol_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__rate_interval]))",
                         "instant": false,
                         "legendFormat": "{{network_protocol_name}}",
                         "queryType": "range",
@@ -985,7 +962,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "annotations": {
@@ -998,6 +975,7 @@
                   ],
                   "displayMode": "list",
                   "enableFacetedFilter": false,
+                  "overflow": "ellipsis",
                   "placement": "right",
                   "showLegend": true
                 },
@@ -1095,9 +1073,9 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "topk(10, sum by(network_local_address, network_peer_address)(max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\", network_local_address=~\"${src_addr:pipe}\", network_peer_address=~\"${dst_addr:pipe}\"}[$__range])))",
+                        "expr": "topk(10, sum by(network_local_address, network_peer_address, src_host, dst_host) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\", network_local_address=~\"${src_addr:pipe}\", network_peer_address=~\"${dst_addr:pipe}\", src_host=~\"${src_host:pipe}\", dst_host=~\"${dst_host:pipe}\"}[$__range])))",
                         "instant": true,
-                        "legendFormat": "{{network_local_address}} → {{network_peer_address}}",
+                        "legendFormat": "{{src_host}} ({{network_local_address}}) → {{dst_host}} ({{network_peer_address}})",
                         "queryType": "instant",
                         "range": false
                       }
@@ -1114,11 +1092,12 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "legend": {
                   "displayMode": "list",
+                  "overflow": "ellipsis",
                   "placement": "right",
                   "showLegend": true,
                   "values": [
@@ -1192,7 +1171,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "topk(25, sum by(device_name, network_local_address, network_peer_address, network_protocol_name)(max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\", network_local_address=~\"${src_addr:pipe}\", network_peer_address=~\"${dst_addr:pipe}\"}[$__range])))",
+                        "expr": "topk(25, sum by(device_name, network_local_address, network_peer_address, src_host, dst_host, network_protocol_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\", network_local_address=~\"${src_addr:pipe}\", network_peer_address=~\"${dst_addr:pipe}\", src_host=~\"${src_host:pipe}\", dst_host=~\"${dst_host:pipe}\"}[$__range])))",
                         "instant": true,
                         "legendFormat": "",
                         "queryType": "instant",
@@ -1228,17 +1207,21 @@
                         "Time": true
                       },
                       "indexByName": {
-                        "Value": 4,
-                        "device_name": 2,
+                        "Value": 6,
+                        "device_name": 3,
+                        "dst_host": 5,
                         "network_local_address": 0,
-                        "network_peer_address": 3,
-                        "network_protocol_name": 1
+                        "network_peer_address": 4,
+                        "network_protocol_name": 2,
+                        "src_host": 1
                       },
                       "renameByName": {
                         "device_name": "Exporter",
+                        "dst_host": "Peer Host",
                         "network_local_address": "Local",
                         "network_peer_address": "Peer",
-                        "network_protocol_name": "Application"
+                        "network_protocol_name": "Application",
+                        "src_host": "Local Host"
                       }
                     }
                   }
@@ -1261,7 +1244,15 @@
                           "aggregations": [],
                           "operation": "groupby"
                         },
+                        "Local Host": {
+                          "aggregations": [],
+                          "operation": "groupby"
+                        },
                         "Peer": {
+                          "aggregations": [],
+                          "operation": "groupby"
+                        },
+                        "Peer Host": {
                           "aggregations": [],
                           "operation": "groupby"
                         },
@@ -1363,7 +1354,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum by(network_protocol_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range]))",
+                        "expr": "sum by(network_protocol_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range]))",
                         "instant": true,
                         "legendFormat": "{{network_protocol_name}}",
                         "queryType": "instant",
@@ -1432,7 +1423,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -1534,7 +1525,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum by(network_protocol_name)(max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\", network_local_address=~\"${src_addr:pipe}\", network_peer_address=~\"${dst_addr:pipe}\", network_protocol_name=~\"${application:pipe}\"}[$__range]))",
+                        "expr": "sum by(network_protocol_name)(max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\", network_local_address=~\"${src_addr:pipe}\", network_peer_address=~\"${dst_addr:pipe}\", src_host=~\"${src_host:pipe}\", dst_host=~\"${dst_host:pipe}\", network_protocol_name=~\"${application:pipe}\"}[$__range]))",
                         "instant": true,
                         "legendFormat": "{{network_protocol_name}}",
                         "queryType": "instant",
@@ -1553,11 +1544,12 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "legend": {
                   "displayMode": "list",
+                  "overflow": "ellipsis",
                   "placement": "right",
                   "showLegend": true,
                   "values": [
@@ -1631,9 +1623,9 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "topk(25, sum by(device_name,network_local_address,network_peer_address) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__rate_interval])))",
+                        "expr": "topk(25, sum by(device_name, network_local_address, network_peer_address, src_host, dst_host) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__rate_interval])))",
                         "instant": false,
-                        "legendFormat": "{{network_local_address}} → {{network_peer_address}}",
+                        "legendFormat": "{{src_host}} ({{network_local_address}}) → {{dst_host}} ({{network_peer_address}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -1650,7 +1642,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "annotations": {
@@ -1663,6 +1655,7 @@
                   ],
                   "displayMode": "list",
                   "enableFacetedFilter": false,
+                  "overflow": "ellipsis",
                   "placement": "right",
                   "showLegend": true
                 },
@@ -1734,6 +1727,523 @@
           }
         }
       },
+      "panel-25": {
+        "kind": "Panel",
+        "spec": {
+          "id": 25,
+          "title": "Peer Destinations by Country",
+          "description": "Drill-down for Geo Maps: country, peer IP, and hostname. Same filters as Top Flow Peer Locations.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "spec": {
+                        "expr": "topk(25, sum by(network_peer_country, network_peer_address, dst_host) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\",network_peer_country!~\"Private IP|undefined\"}[$__range])))",
+                        "format": "table",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "labelsToFields",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "merge",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "indexByName": {
+                        "Value": 3,
+                        "dst_host": 2,
+                        "network_peer_address": 1,
+                        "network_peer_country": 0
+                      },
+                      "renameByName": {
+                        "Value": "Bytes",
+                        "dst_host": "Peer Host",
+                        "network_peer_address": "Peer IP",
+                        "network_peer_country": "Country"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "sortBy",
+                  "spec": {
+                    "options": {
+                      "sort": [
+                        {
+                          "desc": true,
+                          "field": "Bytes"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.2.0-29854286369",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "enablePagination": true,
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "Bytes"
+                  }
+                ]
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bytes",
+                  "thresholds": {
+                    "mode": "percentage",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Bytes"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "mode": "lcd",
+                          "type": "gauge"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-26": {
+        "kind": "Panel",
+        "spec": {
+          "id": 26,
+          "title": "Peer Country Traffic over Time",
+          "description": "Stacked bytes by peer country (excludes Private IP / undefined). Matches Geo Maps variable scope.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "spec": {
+                        "expr": "sum by(network_peer_country) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\",network_peer_country!~\"Private IP|undefined\"}[$__rate_interval]))",
+                        "instant": false,
+                        "legendFormat": "{{network_peer_country}}",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.2.0-29854286369",
+            "spec": {
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "sum"
+                  ],
+                  "displayMode": "list",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bytes",
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "noValue": "0",
+                  "custom": {
+                    "drawStyle": "bars",
+                    "fillOpacity": 80,
+                    "lineWidth": 0,
+                    "showPoints": "never",
+                    "stacking": {
+                      "group": "A",
+                      "mode": "normal"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-27": {
+        "kind": "Panel",
+        "spec": {
+          "id": 27,
+          "title": "Traffic by Transport",
+          "description": "TCP vs UDP share of flow bytes (all matched flows).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "spec": {
+                        "expr": "sum by(network_transport) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range]))",
+                        "instant": true,
+                        "legendFormat": "{{network_transport}}",
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "piechart",
+            "version": "13.2.0-29854286369",
+            "spec": {
+              "options": {
+                "legend": {
+                  "displayMode": "list",
+                  "overflow": "ellipsis",
+                  "placement": "right",
+                  "showLegend": true,
+                  "values": [
+                    "value"
+                  ]
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "limit": 10,
+                  "values": false
+                },
+                "sort": "desc",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bytes",
+                  "color": {
+                    "mode": "palette-classic",
+                    "fixedColor": "#73BF69"
+                  },
+                  "links": [
+                    {
+                      "targetBlank": false,
+                      "title": "Filter transport",
+                      "url": "/d/${__dashboard.uid}/${__dashboard.name}?from=${__from}&to=${__to}&timezone=browser&${device_name:queryparam}&${src_addr:queryparam}&${dst_addr:queryparam}&${application:queryparam}"
+                    }
+                  ],
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-28": {
+        "kind": "Panel",
+        "spec": {
+          "id": 28,
+          "title": "Top Destination Ports",
+          "description": "Peer port and L7 application (ktranslate protocol name).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${datasource}"
+                      },
+                      "spec": {
+                        "expr": "topk(20, sum by(network_peer_port, network_protocol_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range])))",
+                        "format": "table",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "labelsToFields",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "merge",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "indexByName": {
+                        "Value": 2,
+                        "network_peer_port": 0,
+                        "network_protocol_name": 1
+                      },
+                      "renameByName": {
+                        "Value": "Total Bytes",
+                        "network_peer_port": "Port",
+                        "network_protocol_name": "Application"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "sortBy",
+                  "spec": {
+                    "options": {
+                      "sort": [
+                        {
+                          "desc": true,
+                          "field": "Total Bytes"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.2.0-29854286369",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "enablePagination": true,
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "Total Bytes"
+                  }
+                ]
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "none",
+                  "thresholds": {
+                    "mode": "percentage",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Port"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "none"
+                      },
+                      {
+                        "id": "decimals",
+                        "value": 0
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Application"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "none"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Total Bytes"
+                    },
+                    "properties": [
+                      {
+                        "id": "unit",
+                        "value": "bytes"
+                      },
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "mode": "lcd",
+                          "type": "gauge"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
       "panel-4": {
         "kind": "Panel",
         "spec": {
@@ -1757,7 +2267,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "topk(25, sum by(device_name, network_local_address, network_peer_address)(max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\", network_local_address=~\"${src_addr:pipe}\", network_peer_address=~\"${dst_addr:pipe}\"}[$__range])))",
+                        "expr": "topk(25, sum by(device_name, network_local_address, network_peer_address, src_host, dst_host) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\", network_local_address=~\"${src_addr:pipe}\", network_peer_address=~\"${dst_addr:pipe}\", src_host=~\"${src_host:pipe}\", dst_host=~\"${dst_host:pipe}\"}[$__range])))",
                         "instant": true,
                         "legendFormat": "",
                         "queryType": "instant",
@@ -1793,16 +2303,20 @@
                         "Time": true
                       },
                       "indexByName": {
-                        "Value": 3,
+                        "Value": 5,
                         "device_name": 0,
+                        "dst_host": 4,
                         "network_local_address": 1,
-                        "network_peer_address": 2
+                        "network_peer_address": 3,
+                        "src_host": 2
                       },
                       "renameByName": {
                         "Value": "Bytes",
                         "device_name": "Exporter",
+                        "dst_host": "Peer Host",
                         "network_local_address": "Local Address",
-                        "network_peer_address": "Peer Address"
+                        "network_peer_address": "Peer Address",
+                        "src_host": "Local Host"
                       }
                     }
                   }
@@ -1828,7 +2342,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -1966,7 +2480,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum by(device_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range]))",
+                        "expr": "sum by(device_name) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__range]))",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
                         "queryType": "instant",
@@ -1985,12 +2499,13 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "displayLabels": [],
                 "legend": {
                   "displayMode": "table",
+                  "overflow": "ellipsis",
                   "placement": "bottom",
                   "showLegend": true,
                   "values": [
@@ -2064,7 +2579,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__rate_interval]))",
+                        "expr": "sum(max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__rate_interval]))",
                         "instant": false,
                         "legendFormat": "Total",
                         "queryType": "range",
@@ -2083,7 +2598,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.1.0-27412447110",
+            "version": "13.2.0-29854286369",
             "spec": {
               "options": {
                 "annotations": {
@@ -2096,6 +2611,7 @@
                   ],
                   "displayMode": "list",
                   "enableFacetedFilter": false,
+                  "overflow": "ellipsis",
                   "placement": "bottom",
                   "showLegend": true
                 },
@@ -2361,6 +2877,7 @@
             "spec": {
               "title": "Sankey Diagram",
               "collapse": false,
+              "fillScreen": true,
               "layout": {
                 "kind": "GridLayout",
                 "spec": {
@@ -2415,6 +2932,86 @@
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-13"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Country Breakdown",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 10,
+                        "height": 12,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-25"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 10,
+                        "y": 0,
+                        "width": 14,
+                        "height": 12,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-26"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "kind": "RowsLayoutRow",
+            "spec": {
+              "title": "Transport & Ports",
+              "collapse": false,
+              "layout": {
+                "kind": "GridLayout",
+                "spec": {
+                  "items": [
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 8,
+                        "height": 10,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-27"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 8,
+                        "y": 0,
+                        "width": 16,
+                        "height": 10,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-28"
                         }
                       }
                     }
@@ -2477,8 +3074,8 @@
           "refresh": "onDashboardLoad",
           "regex": "",
           "current": {
-            "text": "",
-            "value": ""
+            "text": "grafanacloud-marcnetterfield1-prom",
+            "value": "grafanacloud-prom"
           },
           "options": [],
           "multi": false,
@@ -2494,8 +3091,10 @@
         "spec": {
           "name": "device_name",
           "current": {
-            "text": "",
-            "value": ""
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
           },
           "label": "Exporter",
           "hide": "dontHide",
@@ -2505,16 +3104,15 @@
             "kind": "DataQuery",
             "group": "prometheus",
             "version": "v0",
+            "datasource": {
+              "name": "grafanacloud-prom"
+            },
             "spec": {
               "label": "device_name",
               "metric": "network_io_by_flow_bytes",
               "qryType": 1,
               "query": "label_values(network_io_by_flow_bytes,device_name)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
-            },
-            "labels": {
-              "grafana.app/export-label": "prometheus-1",
-              "grafana.app/export-datasource-name": "grafanacloud-commvault-prom"
             }
           },
           "regex": "",
@@ -2532,8 +3130,10 @@
         "spec": {
           "name": "src_addr",
           "current": {
-            "text": "",
-            "value": ""
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
           },
           "label": "Local Address",
           "hide": "dontHide",
@@ -2543,16 +3143,15 @@
             "kind": "DataQuery",
             "group": "prometheus",
             "version": "v0",
+            "datasource": {
+              "name": "grafanacloud-prom"
+            },
             "spec": {
               "label": "network_local_address",
               "metric": "network_io_by_flow_bytes",
               "qryType": 1,
               "query": "label_values(network_io_by_flow_bytes,network_local_address)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
-            },
-            "labels": {
-              "grafana.app/export-label": "prometheus-1",
-              "grafana.app/export-datasource-name": "grafanacloud-commvault-prom"
             }
           },
           "regex": "",
@@ -2570,8 +3169,10 @@
         "spec": {
           "name": "dst_addr",
           "current": {
-            "text": "",
-            "value": ""
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
           },
           "label": "Peer Address",
           "hide": "dontHide",
@@ -2581,16 +3182,15 @@
             "kind": "DataQuery",
             "group": "prometheus",
             "version": "v0",
+            "datasource": {
+              "name": "grafanacloud-prom"
+            },
             "spec": {
               "label": "network_peer_address",
               "metric": "network_io_by_flow_bytes",
               "qryType": 1,
               "query": "label_values(network_io_by_flow_bytes,network_peer_address)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
-            },
-            "labels": {
-              "grafana.app/export-label": "prometheus-1",
-              "grafana.app/export-datasource-name": "grafanacloud-commvault-prom"
             }
           },
           "regex": "",
@@ -2608,8 +3208,10 @@
         "spec": {
           "name": "application",
           "current": {
-            "text": "",
-            "value": ""
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
           },
           "label": "Protocol / Application",
           "hide": "dontHide",
@@ -2619,16 +3221,97 @@
             "kind": "DataQuery",
             "group": "prometheus",
             "version": "v0",
+            "datasource": {
+              "name": "grafanacloud-prom"
+            },
             "spec": {
               "label": "network_protocol_name",
               "metric": "network_io_by_flow_bytes",
               "qryType": 1,
               "query": "label_values(network_io_by_flow_bytes,network_protocol_name)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "alphabeticalAsc",
+          "options": [],
+          "multi": true,
+          "includeAll": true,
+          "allValue": ".*",
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "src_host",
+          "current": {
+            "text": [
+              "All"
+            ],
+            "value": [
+              "$__all"
+            ]
+          },
+          "label": "Local Host",
+          "hide": "dontHide",
+          "refresh": "onTimeRangeChanged",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "prometheus",
+            "version": "v0",
+            "datasource": {
+              "name": "grafanacloud-prom"
             },
-            "labels": {
-              "grafana.app/export-label": "prometheus-1",
-              "grafana.app/export-datasource-name": "grafanacloud-commvault-prom"
+            "spec": {
+              "label": "src_host",
+              "metric": "network_io_by_flow_bytes",
+              "qryType": 1,
+              "query": "label_values(network_io_by_flow_bytes,src_host)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "alphabeticalAsc",
+          "options": [],
+          "multi": true,
+          "includeAll": true,
+          "allValue": ".*",
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "dst_host",
+          "current": {
+            "text": [
+              "All"
+            ],
+            "value": [
+              "$__all"
+            ]
+          },
+          "label": "Peer Host",
+          "hide": "dontHide",
+          "refresh": "onTimeRangeChanged",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "prometheus",
+            "version": "v0",
+            "datasource": {
+              "name": "grafanacloud-prom"
+            },
+            "spec": {
+              "label": "dst_host",
+              "metric": "network_io_by_flow_bytes",
+              "qryType": 1,
+              "query": "label_values(network_io_by_flow_bytes,dst_host)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
             }
           },
           "regex": "",

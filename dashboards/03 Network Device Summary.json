@@ -13,7 +13,7 @@
       "grafana.app/folder": "network-lab",
       "grafana.app/saved-from-ui": "Grafana Cloud",
       "grafana.app/updatedBy": "user:be0hf1vuhjcowf",
-      "grafana.app/updatedTimestamp": "2026-07-30T23:09:52Z"
+      "grafana.app/updatedTimestamp": "2026-07-31T17:45:39Z"
     }
   },
   "spec": {
@@ -64,10 +64,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count(kentik_snmp_PollingHealth{provider=~\"$provider\",device_name=~\"$device_name\"} != 1) OR vector(0)",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "count(kentik_snmp_PollingHealth{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} != 1) OR vector(0)",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -399,11 +400,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "sort_desc(max by(device_name) (kentik_snmp_MemoryUtilization{provider=~\"$provider\",device_name=~\"$device_name\"}))",
-                        "instant": true,
-                        "legendFormat": "{{device_name}}",
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "sort_desc(max by(device_name, tags_snmp_group) (kentik_snmp_MemoryUtilization{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "instant": false,
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -499,9 +501,10 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "topk(10, max by(device_name) (kentik_snmp_MemoryUtilization{provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "app": "grafana-assistant-app",
+                        "expr": "topk(10, max by(device_name, tags_snmp_group) (kentik_snmp_MemoryUtilization{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -621,11 +624,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "topk(20, sum by(device_name, if_interface_name) (kentik_snmp_ifInErrors{provider=~\"$provider\",device_name=~\"$device_name\"} / 60) + sum by(device_name, if_interface_name) (kentik_snmp_ifOutErrors{provider=~\"$provider\",device_name=~\"$device_name\"} / 60))",
-                        "format": "table",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "topk(20, sum by(device_name, if_interface_name, tags_snmp_group) (kentik_snmp_ifInErrors{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} / 60) + sum by(device_name, if_interface_name, tags_snmp_group) (kentik_snmp_ifOutErrors{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} / 60))",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -761,11 +764,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "topk(20, sum by(device_name, if_interface_name) (kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\"} * 8 / 60) + sum by(device_name, if_interface_name) (kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\"} * 8 / 60))",
-                        "format": "table",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "topk(20, sum by(device_name, if_interface_name, tags_snmp_group) (kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} * 8 / 60) + sum by(device_name, if_interface_name, tags_snmp_group) (kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} * 8 / 60))",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -902,11 +905,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "sort_desc(\n  100 * count by(device_name) (kentik_snmp_tBgpPeerNgConnState{provider=~\"$provider\",device_name=~\"$device_name\"} == 6)\n  / count by(device_name) (kentik_snmp_tBgpPeerNgConnState{provider=~\"$provider\",device_name=~\"$device_name\"})\n)",
-                        "instant": true,
-                        "legendFormat": "{{device_name}}",
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "sort_desc(\n  100 * count by(device_name, tags_snmp_group) (kentik_snmp_tBgpPeerNgConnState{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} == 6)\n  / count by(device_name, tags_snmp_group) (kentik_snmp_tBgpPeerNgConnState{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"})\n)",
+                        "instant": false,
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -1002,10 +1006,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count(kentik_snmp_tBgpPeerNgConnState{provider=~\"$provider\",device_name=~\"$device_name\"} == 6) OR vector(0)",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "count(kentik_snmp_tBgpPeerNgConnState{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} == 6) OR vector(0)",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -1087,10 +1092,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count(kentik_snmp_tBgpPeerNgConnState{provider=~\"$provider\",device_name=~\"$device_name\"}) OR vector(0)",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "count(kentik_snmp_tBgpPeerNgConnState{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) OR vector(0)",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -1169,11 +1175,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "kentik_snmp_tBgpPeerNgConnState{provider=~\"$provider\",device_name=~\"$device_name\",tBgpPeerNgConnState!=\"established\"}",
-                        "format": "table",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "kentik_snmp_tBgpPeerNgConnState{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",tBgpPeerNgConnState!=\"established\"}",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -1384,9 +1390,10 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "topk(10, sum by(device_name) (increase(kentik_snmp_tBgpPeerNgOperFlaps{provider=~\"$provider\",device_name=~\"$device_name\"}[$__range])))",
+                        "app": "grafana-assistant-app",
+                        "expr": "topk(10, sum by(device_name, tags_snmp_group) (increase(kentik_snmp_tBgpPeerNgOperFlaps{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}[$__range])))",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -1506,10 +1513,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count(count by(device_name) (kentik_snmp_tmnxHwOperState{provider=~\"$provider\",device_name=~\"$device_name\"} != 2)) OR vector(0)",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "count(count by(device_name) (kentik_snmp_tmnxHwOperState{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} != 2)) OR vector(0)",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -1595,11 +1603,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "sort_desc(max by(device_name) (kentik_snmp_tmnxHwTemperature{provider=~\"$provider\",device_name=~\"$device_name\"}))",
-                        "instant": true,
-                        "legendFormat": "{{device_name}}",
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "sort_desc(max by(device_name, tags_snmp_group) (kentik_snmp_tmnxHwTemperature{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "instant": false,
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -1694,9 +1703,10 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "topk(10, max by(device_name) (kentik_snmp_tmnxHwTemperature{provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "app": "grafana-assistant-app",
+                        "expr": "topk(10, max by(device_name, tags_snmp_group) (kentik_snmp_tmnxHwTemperature{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -1816,11 +1826,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "kentik_snmp_tmnxHwOperState{provider=~\"$provider\",device_name=~\"$device_name\",tmnxHwOperState=~\"failed|outOfService|diagnosing|resetPending|booting\"}",
-                        "format": "table",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "kentik_snmp_tmnxHwOperState{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",tmnxHwOperState=~\"failed|outOfService|diagnosing|resetPending|booting\"}",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -2116,10 +2126,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count(kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\"}) OR vector(0)",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "count(kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) OR vector(0)",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -2198,10 +2209,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count(kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"}) OR vector(0)",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "count(kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"}) OR vector(0)",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -2280,10 +2292,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count(kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\"} == 1) OR vector(0)",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "count(kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} == 1) OR vector(0)",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -2538,11 +2551,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "topk(20, sum by(device_name, if_Alias, if_Description) (kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60) + sum by(device_name, if_Alias, if_Description) (kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60))",
-                        "format": "table",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "topk(20, sum by(device_name, if_Alias, if_Description, tags_snmp_group) (kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60) + sum by(device_name, if_Alias, if_Description, tags_snmp_group) (kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60))",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -2683,9 +2696,9 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum by(device_name, if_Alias) (kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60) + sum by(device_name, if_Alias) (kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60)",
+                        "expr": "sum by(device_name, if_Alias, tags_snmp_group) (kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60) + sum by(device_name, if_Alias, tags_snmp_group) (kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60)",
                         "instant": false,
-                        "legendFormat": "{{device_name}} — {{if_Alias}}",
+                        "legendFormat": "{{device_name}} — {{if_Alias}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -2805,10 +2818,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count(kentik_snmp_tmnxPhysChassisFanOperStatus{provider=~\"$provider\",device_name=~\"$device_name\",tmnxPhysChassisFanOperStatus!=\"deviceStateInService\"}) OR vector(0)",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "count(kentik_snmp_tmnxPhysChassisFanOperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",tmnxPhysChassisFanOperStatus!=\"deviceStateInService\"}) OR vector(0)",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -2894,10 +2908,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count(kentik_snmp_tmnxPhysChassisPMOutputStatus{provider=~\"$provider\",device_name=~\"$device_name\",tmnxPhysChassisPMOutputStatus=~\"failed|outOfService|degraded\"}) OR vector(0)",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "count(kentik_snmp_tmnxPhysChassisPMOutputStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",tmnxPhysChassisPMOutputStatus=~\"failed|outOfService|degraded\"}) OR vector(0)",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -2983,11 +2998,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "kentik_snmp_tmnxPhysChassisFanOperStatus{provider=~\"$provider\",device_name=~\"$device_name\",tmnxPhysChassisFanOperStatus!=\"deviceStateInService\"}",
-                        "format": "table",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "kentik_snmp_tmnxPhysChassisFanOperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",tmnxPhysChassisFanOperStatus!=\"deviceStateInService\"}",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -3201,11 +3216,11 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "kentik_snmp_tmnxPhysChassisPMOutputStatus{provider=~\"$provider\",device_name=~\"$device_name\",tmnxPhysChassisPMOutputStatus!~\"online|notEquipped|unknown\"}",
-                        "format": "table",
-                        "instant": true,
-                        "queryType": "instant",
-                        "range": false
+                        "app": "grafana-assistant-app",
+                        "expr": "kentik_snmp_tmnxPhysChassisPMOutputStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",tmnxPhysChassisPMOutputStatus!~\"online|notEquipped|unknown\"}",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -3420,7 +3435,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "count by (provider) (count by (device_name, provider) (kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "expr": "count by (provider) (count by (device_name, provider) (kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
                         "instant": true,
                         "legendFormat": "{{provider}}",
                         "queryType": "instant",
@@ -3510,7 +3525,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "count by (tags_kentik_model) (count by (device_name, tags_kentik_model) (kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "expr": "count by (tags_kentik_model) (count by (device_name, tags_kentik_model) (kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
                         "instant": true,
                         "legendFormat": "{{tags_kentik_model}}",
                         "queryType": "instant",
@@ -3581,8 +3596,8 @@
         "kind": "Panel",
         "spec": {
           "id": 135,
-          "title": "Devices by Poller",
-          "description": "Unique devices grouped by ktranslate service_name (SNMP collector).",
+          "title": "Devices by SNMP group",
+          "description": "Unique devices grouped by snmp_group (KtransToGrafana credential group from global.user_tags).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -3600,9 +3615,9 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "count by (service_name) (count by (device_name, service_name) (kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "expr": "count by (tags_snmp_group) (count by (device_name, tags_snmp_group) (kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
                         "instant": true,
-                        "legendFormat": "{{service_name}}",
+                        "legendFormat": "{{tags_snmp_group}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -3874,13 +3889,13 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "$datasource"
+                        "name": "grafanacloud-prom"
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "topk(10, sum by(device_name) ((kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))",
+                        "expr": "topk(10, sum by(device_name, tags_snmp_group) ((kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -4006,9 +4021,10 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "topk(10, sum by(device_name) ((kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))",
+                        "app": "grafana-assistant-app",
+                        "expr": "topk(10, sum by(device_name, tags_snmp_group) ((kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -4608,6 +4624,387 @@
           }
         }
       },
+      "panel-146": {
+        "kind": "Panel",
+        "spec": {
+          "id": 146,
+          "title": "Avg CPU by SNMP Group",
+          "description": "Average of each device's CPU, grouped by tags_snmp_group (location/vendor family boundary).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "sort_desc(avg by (tags_snmp_group) (max by(device_name, tags_snmp_group) (kentik_snmp_CPU{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"})))",
+                        "instant": true,
+                        "legendFormat": "{{tags_snmp_group}}",
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "reduce",
+                  "spec": {
+                    "options": {
+                      "mode": "seriesToRows",
+                      "reducers": [
+                        "lastNotNull"
+                      ]
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "barchart",
+            "version": "13.2.0-30402795349",
+            "spec": {
+              "options": {
+                "barRadius": 0,
+                "barWidth": 0.97,
+                "fullHighlight": false,
+                "groupWidth": 0.7,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                },
+                "orientation": "horizontal",
+                "showValue": "auto",
+                "stacking": "none",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                },
+                "xTickLabelRotation": 0,
+                "xTickLabelSpacing": 0
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "min": 0,
+                  "max": 100,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 50,
+                        "color": "yellow"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "fillOpacity": 80,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "lineWidth": 1,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-147": {
+        "kind": "Panel",
+        "spec": {
+          "id": 147,
+          "title": "Total Traffic by SNMP Group",
+          "description": "Sum of inbound + outbound bits/sec, grouped by tags_snmp_group.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "sort_desc(sum by (tags_snmp_group) (kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} * 8 / 60) + sum by (tags_snmp_group) (kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} * 8 / 60))",
+                        "instant": true,
+                        "legendFormat": "{{tags_snmp_group}}",
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "reduce",
+                  "spec": {
+                    "options": {
+                      "mode": "seriesToRows",
+                      "reducers": [
+                        "lastNotNull"
+                      ]
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "barchart",
+            "version": "13.2.0-30402795349",
+            "spec": {
+              "options": {
+                "barRadius": 0,
+                "barWidth": 0.97,
+                "fullHighlight": false,
+                "groupWidth": 0.7,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                },
+                "orientation": "horizontal",
+                "showValue": "auto",
+                "stacking": "none",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                },
+                "xTickLabelRotation": 0,
+                "xTickLabelSpacing": 0
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bps",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "blue"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "fixed",
+                    "fixedColor": "blue"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "fillOpacity": 80,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "lineWidth": 1,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-148": {
+        "kind": "Panel",
+        "spec": {
+          "id": 148,
+          "title": "Interfaces Down by SNMP Group",
+          "description": "Count of oper-down interfaces (admin-up only), grouped by tags_snmp_group.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "sort_desc((count by(tags_snmp_group) (kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 2)) OR (count by (tags_snmp_group) (kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 0))",
+                        "instant": true,
+                        "legendFormat": "{{tags_snmp_group}}",
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "reduce",
+                  "spec": {
+                    "options": {
+                      "mode": "seriesToRows",
+                      "reducers": [
+                        "lastNotNull"
+                      ]
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "barchart",
+            "version": "13.2.0-30402795349",
+            "spec": {
+              "options": {
+                "barRadius": 0,
+                "barWidth": 0.97,
+                "fullHighlight": false,
+                "groupWidth": 0.7,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                },
+                "orientation": "horizontal",
+                "showValue": "auto",
+                "stacking": "none",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                },
+                "xTickLabelRotation": 0,
+                "xTickLabelSpacing": 0
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 1,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "fillOpacity": 80,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "lineWidth": 1,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
       "panel-16": {
         "kind": "Panel",
         "spec": {
@@ -4630,10 +5027,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "max by(device_name, provider) (last_over_time(kentik_snmp_CPU{provider=~\"$provider\",device_name=~\"$device_name\"}[1h]))",
+                        "app": "grafana-assistant-app",
+                        "expr": "max by(device_name, provider, tags_snmp_group) (last_over_time(kentik_snmp_CPU{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}[1h]))",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
+                        "queryType": "instant",
                         "range": false
                       }
                     },
@@ -4652,10 +5051,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "max by(device_name, provider) (kentik_snmp_PollingHealth{provider=~\"$provider\",device_name=~\"$device_name\"})",
+                        "app": "grafana-assistant-app",
+                        "expr": "max by(device_name, provider) (kentik_snmp_PollingHealth{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"})",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
+                        "queryType": "instant",
                         "range": false
                       }
                     },
@@ -4674,10 +5075,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count by(device_name, provider) (last_over_time(kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"}[1h]) == 2)",
+                        "app": "grafana-assistant-app",
+                        "expr": "count by(device_name, provider) (last_over_time(kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"}[1h]) == 2)",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "{{device_name}} {{if_Description}}",
+                        "queryType": "instant",
                         "range": false
                       }
                     },
@@ -4696,10 +5099,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "sum by(device_name, provider) (increase(kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\"}[$__range]))",
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by(device_name, provider) (increase(kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}[$__range]))",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
+                        "queryType": "instant",
                         "range": false
                       }
                     },
@@ -4718,10 +5123,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "sum by(device_name, provider) (increase(kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\"}[$__range]))",
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by(device_name, provider) (increase(kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}[$__range]))",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
+                        "queryType": "instant",
                         "range": false
                       }
                     },
@@ -4740,10 +5147,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "max by(device_name, provider) (100 * last_over_time(kentik_snmp_MemoryUsed{provider=~\"$provider\",device_name=~\"$device_name\"}[1h])) / on(device_name, provider) (max by(device_name, provider) (last_over_time(kentik_snmp_MemoryUsed{provider=~\"$provider\",device_name=~\"$device_name\"}[1h])) + max by(device_name, provider) (last_over_time(kentik_snmp_MemoryAvailable{provider=~\"$provider\",device_name=~\"$device_name\"}[1h])))",
+                        "app": "grafana-assistant-app",
+                        "expr": "max by(device_name, provider) (100 * last_over_time(kentik_snmp_MemoryUsed{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}[1h])) / on(device_name, provider) (max by(device_name, provider) (last_over_time(kentik_snmp_MemoryUsed{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}[1h])) + max by(device_name, provider) (last_over_time(kentik_snmp_MemoryAvailable{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}[1h])))",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
+                        "queryType": "instant",
                         "range": false
                       }
                     },
@@ -4762,10 +5171,12 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "count by(device_name, provider) (last_over_time(kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\"}[1h]))",
+                        "app": "grafana-assistant-app",
+                        "expr": "count by(device_name, provider) (last_over_time(kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}[1h]))",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "{{device_name}} {{if_Description}}",
+                        "queryType": "instant",
                         "range": false
                       }
                     },
@@ -4808,14 +5219,15 @@
                         "provider 7": true
                       },
                       "indexByName": {
-                        "Value #A": 2,
-                        "Value #B": 1,
-                        "Value #C": 5,
-                        "Value #D": 6,
-                        "Value #E": 7,
-                        "Value #F": 3,
-                        "Value #G": 4,
-                        "device_name": 0
+                        "Value #A": 3,
+                        "Value #B": 2,
+                        "Value #C": 6,
+                        "Value #D": 7,
+                        "Value #E": 8,
+                        "Value #F": 4,
+                        "Value #G": 5,
+                        "device_name": 0,
+                        "tags_snmp_group": 1
                       },
                       "renameByName": {
                         "Value #A": "cpu",
@@ -4824,7 +5236,8 @@
                         "Value #D": "traffic_in",
                         "Value #E": "traffic_out",
                         "Value #F": "memory",
-                        "Value #G": "total_interfaces"
+                        "Value #G": "total_interfaces",
+                        "tags_snmp_group": "SNMP Group"
                       }
                     }
                   }
@@ -5155,9 +5568,9 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sort_desc((count by(device_name) (kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 2)) OR (max by(device_name) (kentik_snmp_CPU{provider=~\"$provider\",device_name=~\"$device_name\"}) * 0))",
+                        "expr": "sort_desc((count by(device_name, tags_snmp_group) (kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 2)) OR (max by(device_name, tags_snmp_group) (kentik_snmp_CPU{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 0))",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -5254,9 +5667,9 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sort_desc(\n  count by(device_name) (kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 1)\n  /\n  count by(device_name) (kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"})\n  * 100\n)",
+                        "expr": "sort_desc(\n  count by(device_name, tags_snmp_group) (kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 1)\n  /\n  count by(device_name, tags_snmp_group) (kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"})\n  * 100\n)",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -5355,11 +5768,11 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sort_desc(max by(device_name) (kentik_snmp_CPU{provider=~\"$provider\",device_name=~\"$device_name\"}))",
-                        "instant": true,
-                        "legendFormat": "{{device_name}}",
-                        "queryType": "instant",
-                        "range": false
+                        "expr": "sort_desc(max by(device_name, tags_snmp_group) (kentik_snmp_CPU{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "instant": false,
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
+                        "queryType": "range",
+                        "range": true
                       }
                     },
                     "refId": "A",
@@ -5452,13 +5865,13 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "$datasource"
+                        "name": "grafanacloud-prom"
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "topk(10, max by(device_name) (kentik_snmp_CPU{provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "expr": "topk(10, max by(device_name, tags_snmp_group) (kentik_snmp_CPU{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -5579,13 +5992,13 @@
                       "group": "prometheus",
                       "version": "v0",
                       "datasource": {
-                        "name": "$datasource"
+                        "name": "grafanacloud-prom"
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "(sum by(device_name) ((kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\"})) + sum by(device_name) ((kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\"}))) * 8 / 60",
+                        "expr": "(sum by(device_name, tags_snmp_group) ((kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"})) + sum by(device_name, tags_snmp_group) ((kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))) * 8 / 60",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -5713,7 +6126,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "count(count by(device_name) (kentik_snmp_PollingHealth{provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "expr": "count(count by(device_name) (kentik_snmp_PollingHealth{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
                         "instant": false,
                         "legendFormat": "Total Devices",
                         "queryType": "range",
@@ -5797,7 +6210,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "(count(kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 2)) OR vector(0)",
+                        "expr": "(count(kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 2)) OR vector(0)",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -5883,7 +6296,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "avg(max by(device_name) (kentik_snmp_CPU{provider=~\"$provider\",device_name=~\"$device_name\"}))",
+                        "expr": "avg(max by(device_name) (kentik_snmp_CPU{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -5975,7 +6388,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum((kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60) + sum((kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60)",
+                        "expr": "sum((kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60) + sum((kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60)",
                         "instant": true,
                         "queryType": "instant",
                         "range": false
@@ -6062,7 +6475,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "count(count by(device_name) (kentik_snmp_PollingHealth{provider=~\"$provider\",device_name=~\"$device_name\"}))\n- (\n  count(count by(device_name) (kentik_snmp_PollingHealth{provider=~\"$provider\",device_name=~\"$device_name\"} offset 24h))\n  or\n  count(count by(device_name) (kentik_snmp_PollingHealth{provider=~\"$provider\",device_name=~\"$device_name\"}))\n)",
+                        "expr": "count(count by(device_name) (kentik_snmp_PollingHealth{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))\n- (\n  count(count by(device_name) (kentik_snmp_PollingHealth{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} offset 24h))\n  or\n  count(count by(device_name) (kentik_snmp_PollingHealth{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))\n)",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -6148,7 +6561,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "(count(kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 2) or vector(0))\n- (\n  (count(kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} offset 24h == 2) or vector(0))\n  or\n  (count(kentik_snmp_if_OperStatus{provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 2) or vector(0))\n)",
+                        "expr": "(count(kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 2) or vector(0))\n- (\n  (count(kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} offset 24h == 2) or vector(0))\n  or\n  (count(kentik_snmp_if_OperStatus{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_AdminStatus!=\"down\"} == 2) or vector(0))\n)",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -6234,7 +6647,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "avg(max by(device_name) (kentik_snmp_CPU{provider=~\"$provider\",device_name=~\"$device_name\"}))\n- (\n  avg(max by(device_name) (kentik_snmp_CPU{provider=~\"$provider\",device_name=~\"$device_name\"} offset 24h))\n  or\n  avg(max by(device_name) (kentik_snmp_CPU{provider=~\"$provider\",device_name=~\"$device_name\"}))\n)",
+                        "expr": "avg(max by(device_name) (kentik_snmp_CPU{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))\n- (\n  avg(max by(device_name) (kentik_snmp_CPU{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} offset 24h))\n  or\n  avg(max by(device_name) (kentik_snmp_CPU{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}))\n)",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -6326,7 +6739,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "(sum((kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60) + sum((kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))\n- (\n  (sum((kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\"} offset 24h) * 8 / 60) + sum((kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\"} offset 24h) * 8 / 60))\n  or\n  (sum((kentik_snmp_ifHCInOctets{provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60) + sum((kentik_snmp_ifHCOutOctets{provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))\n)",
+                        "expr": "(sum((kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60) + sum((kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))\n- (\n  (sum((kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} offset 24h) * 8 / 60) + sum((kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} offset 24h) * 8 / 60))\n  or\n  (sum((kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60) + sum((kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))\n)",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -6567,6 +6980,74 @@
                     {
                       "kind": "RowsLayoutRow",
                       "spec": {
+                        "title": "Fleet by SNMP Group",
+                        "collapse": false,
+                        "hideHeader": false,
+                        "fillScreen": false,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "x": 0,
+                                  "y": 0,
+                                  "width": 6,
+                                  "height": 8,
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-135"
+                                  }
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "x": 6,
+                                  "y": 0,
+                                  "width": 6,
+                                  "height": 8,
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-146"
+                                  }
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "x": 12,
+                                  "y": 0,
+                                  "width": 6,
+                                  "height": 8,
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-147"
+                                  }
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "x": 18,
+                                  "y": 0,
+                                  "width": 6,
+                                  "height": 8,
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-148"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "kind": "RowsLayoutRow",
+                      "spec": {
                         "title": "Fleet Inventory",
                         "collapse": false,
                         "hideHeader": false,
@@ -6674,21 +7155,8 @@
                                 "spec": {
                                   "x": 12,
                                   "y": 0,
-                                  "width": 12,
-                                  "height": 8,
-                                  "element": {
-                                    "kind": "ElementReference",
-                                    "name": "panel-135"
-                                  }
-                                }
-                              },
-                              {
-                                "kind": "GridLayoutItem",
-                                "spec": {
-                                  "x": 0,
-                                  "y": 8,
                                   "width": 6,
-                                  "height": 5,
+                                  "height": 4,
                                   "element": {
                                     "kind": "ElementReference",
                                     "name": "panel-101"
@@ -6698,10 +7166,10 @@
                               {
                                 "kind": "GridLayoutItem",
                                 "spec": {
-                                  "x": 6,
-                                  "y": 8,
+                                  "x": 18,
+                                  "y": 0,
                                   "width": 6,
-                                  "height": 5,
+                                  "height": 4,
                                   "element": {
                                     "kind": "ElementReference",
                                     "name": "panel-102"
@@ -6712,9 +7180,9 @@
                                 "kind": "GridLayoutItem",
                                 "spec": {
                                   "x": 12,
-                                  "y": 8,
+                                  "y": 4,
                                   "width": 6,
-                                  "height": 5,
+                                  "height": 4,
                                   "element": {
                                     "kind": "ElementReference",
                                     "name": "panel-103"
@@ -6725,9 +7193,9 @@
                                 "kind": "GridLayoutItem",
                                 "spec": {
                                   "x": 18,
-                                  "y": 8,
+                                  "y": 4,
                                   "width": 6,
-                                  "height": 5,
+                                  "height": 4,
                                   "element": {
                                     "kind": "ElementReference",
                                     "name": "panel-104"
@@ -7073,7 +7541,7 @@
                                   "x": 0,
                                   "y": 0,
                                   "width": 6,
-                                  "height": 5,
+                                  "height": 4,
                                   "element": {
                                     "kind": "ElementReference",
                                     "name": "panel-110"
@@ -7085,24 +7553,24 @@
                                 "spec": {
                                   "x": 6,
                                   "y": 0,
-                                  "width": 6,
-                                  "height": 5,
+                                  "width": 18,
+                                  "height": 8,
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-111"
+                                    "name": "panel-109"
                                   }
                                 }
                               },
                               {
                                 "kind": "GridLayoutItem",
                                 "spec": {
-                                  "x": 12,
-                                  "y": 0,
-                                  "width": 12,
-                                  "height": 8,
+                                  "x": 0,
+                                  "y": 4,
+                                  "width": 6,
+                                  "height": 4,
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-109"
+                                    "name": "panel-111"
                                   }
                                 }
                               }
@@ -7222,7 +7690,7 @@
                                   "x": 18,
                                   "y": 0,
                                   "width": 6,
-                                  "height": 8,
+                                  "height": 5,
                                   "element": {
                                     "kind": "ElementReference",
                                     "name": "panel-115"
@@ -7544,6 +8012,44 @@
       {
         "kind": "QueryVariable",
         "spec": {
+          "name": "snmp_group",
+          "current": {
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
+          },
+          "label": "SNMP group",
+          "hide": "dontHide",
+          "refresh": "onTimeRangeChanged",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "prometheus",
+            "version": "v0",
+            "datasource": {
+              "name": "$datasource"
+            },
+            "spec": {
+              "qryType": 1,
+              "query": "label_values(kentik_snmp_PollingHealth,tags_snmp_group)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "alphabeticalAsc",
+          "definition": "label_values(kentik_snmp_PollingHealth,tags_snmp_group)",
+          "options": [],
+          "multi": true,
+          "includeAll": true,
+          "allValue": ".*",
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
           "name": "provider",
           "current": {
             "text": "All",
@@ -7605,6 +8111,11 @@
               "label": "device_name",
               "labelFilters": [
                 {
+                  "label": "snmp_group",
+                  "op": "=~",
+                  "value": "$snmp_group"
+                },
+                {
                   "label": "provider",
                   "op": "=~",
                   "value": "$provider"
@@ -7612,7 +8123,7 @@
               ],
               "metric": "kentik_snmp_PollingHealth",
               "qryType": 1,
-              "query": "label_values(kentik_snmp_PollingHealth{provider=~\"$provider\"},device_name)",
+              "query": "label_values(kentik_snmp_PollingHealth{snmp_group=~\"$snmp_group\",provider=~\"$provider\"},device_name)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             }
           },

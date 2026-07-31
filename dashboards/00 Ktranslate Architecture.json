@@ -11,10 +11,10 @@
     "annotations": {
       "grafana.app/createdBy": "service-account:afseqskqsbtvka",
       "grafana.app/folder": "network-lab",
-      "grafana.app/message": "Synced to KtransToGrafana main: credential groups, catalog.yaml, onboarding flow",
+      "grafana.app/message": "Add snmp_group credential-group filter (KtransToGrafana global.user_tags)",
       "grafana.app/saved-from-ui": "Grafana Cloud",
       "grafana.app/updatedBy": "service-account:afseqskqsbtvka",
-      "grafana.app/updatedTimestamp": "2026-07-26T03:54:31Z"
+      "grafana.app/updatedTimestamp": "2026-07-31T17:10:22Z"
     }
   },
   "spec": {
@@ -554,6 +554,46 @@
       "fiscalYearStartMonth": 0
     },
     "title": "00. Ktranslate Architecture",
-    "variables": []
+    "variables": [
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "snmp_group",
+          "current": {
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
+          },
+          "label": "SNMP group",
+          "hide": "dontHide",
+          "refresh": "onTimeRangeChanged",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "prometheus",
+            "version": "v0",
+            "datasource": {
+              "name": "grafanacloud-prom"
+            },
+            "spec": {
+              "label": "snmp_group",
+              "metric": "kentik_snmp_PollingHealth",
+              "qryType": 1,
+              "query": "label_values(kentik_snmp_PollingHealth,snmp_group)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "alphabeticalAsc",
+          "options": [],
+          "multi": true,
+          "includeAll": true,
+          "allValue": ".*",
+          "allowCustomValue": true
+        }
+      }
+    ]
   }
 }

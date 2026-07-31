@@ -193,7 +193,7 @@ Traffic, utilization, errors, drops, error %, unicast/broadcast/multicast, queue
 
 Always hide collector/metadata labels, including **`deployment_host`** (ktranslate host — not the network device):
 
-`Time`, `Index`, `__name__`, `device_name`, `deployment_host`, `job`, `instrumentation_name`, `eventType`, `entity_serial`, `entity_model`, `mib_name`, `mib_table`, `objectIdentifier`, `poll_duration_sec`, `provider`, `service_name`, `src_addr`, `tags_container_service`, `tags_kentik_model`
+`Time`, `Index`, `__name__`, `device_name`, `deployment_host`, `job`, `instrumentation_name`, `eventType`, `entity_serial`, `entity_model`, `mib_name`, `mib_table`, `objectIdentifier`, `poll_duration_sec`, `provider`, `service_name`, `tags_snmp_group`, `src_addr`, `tags_container_service`, `tags_kentik_model`
 
 Prefer **string state labels** on series when ktranslate emits them alongside numeric values.
 

@@ -11,9 +11,10 @@
     "annotations": {
       "grafana.app/createdBy": "service-account:afseqskqsbtvka",
       "grafana.app/folder": "network-lab",
+      "grafana.app/message": "Add snmp_group credential-group filter (KtransToGrafana global.user_tags)",
       "grafana.app/saved-from-ui": "Grafana Cloud",
-      "grafana.app/updatedBy": "user:be0hf1vuhjcowf",
-      "grafana.app/updatedTimestamp": "2026-07-30T23:07:01Z"
+      "grafana.app/updatedBy": "service-account:afseqskqsbtvka",
+      "grafana.app/updatedTimestamp": "2026-07-31T17:05:15Z"
     }
   },
   "spec": {
@@ -149,7 +150,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "max by(device_name, src_addr, service_name) (last_over_time(kentik_snmp_PollingHealth[$__range]))",
+                        "expr": "max by(device_name, src_addr, service_name) (last_over_time(kentik_snmp_PollingHealth{snmp_group=~\"$snmp_group\"}[$__range]))",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "{{device_name}} ({{service_name}})",
@@ -265,7 +266,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "max by(device_name, src_addr, SysName, service_name) (last_over_time(kentik_snmp_Uptime[$__range]))",
+                        "expr": "max by(device_name, src_addr, SysName, service_name) (last_over_time(kentik_snmp_Uptime{snmp_group=~\"$snmp_group\"}[$__range]))",
                         "format": "table",
                         "instant": true,
                         "legendFormat": "{{device_name}} ({{service_name}})",
@@ -1333,7 +1334,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "max by(device_name, service_name) (last_over_time(kentik_snmp_PollingStatus[$__range]))",
+                        "expr": "max by(device_name, service_name) (last_over_time(kentik_snmp_PollingStatus{snmp_group=~\"$snmp_group\"}[$__range]))",
                         "instant": true,
                         "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "instant",
@@ -3789,7 +3790,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "count by(service_name) (count by(device_name, service_name) (kentik_snmp_PollingHealth))",
+                        "expr": "count by(service_name) (count by(device_name, service_name) (kentik_snmp_PollingHealth{snmp_group=~\"$snmp_group\"}))",
                         "instant": false,
                         "legendFormat": "{{service_name}}",
                         "queryType": "range",
@@ -6163,6 +6164,45 @@
     },
     "title": "01. Ktranslate Health",
     "variables": [
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "snmp_group",
+          "current": {
+            "text": "All",
+            "value": [
+              "$__all"
+            ]
+          },
+          "label": "SNMP group",
+          "hide": "dontHide",
+          "refresh": "onTimeRangeChanged",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "prometheus",
+            "version": "v0",
+            "datasource": {
+              "name": "grafanacloud-prom"
+            },
+            "spec": {
+              "label": "snmp_group",
+              "metric": "kentik_snmp_PollingHealth",
+              "qryType": 1,
+              "query": "label_values(kentik_snmp_PollingHealth,snmp_group)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "alphabeticalAsc",
+          "options": [],
+          "multi": true,
+          "includeAll": true,
+          "allValue": ".*",
+          "allowCustomValue": true
+        }
+      },
       {
         "kind": "QueryVariable",
         "spec": {

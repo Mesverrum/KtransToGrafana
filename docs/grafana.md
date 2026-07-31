@@ -4,17 +4,23 @@
 
 Within a couple minutes of ktranslate polling your devices there should be data in your Grafana Cloud's default Prometheus data source. Metrics start with `kentik_snmp_*` and carry labels like `device_name` and `if_interface_name` based on the SNMP profile assigned during discovery.
 
-Each poller stamps its own `service.name` (a label identifying which collector produced the data — `ktranslate-snmp-cisco`, `ktranslate-snmp-palo`, etc. — plus a `-<host>` suffix when `KTRANS_HOST` is set) so you can split dashboards by credential group, and by host across multiple deployments. Discovery containers use `ktranslate-discover-<group>` for the same reason — distinguishable in logs without polluting the poller's data. See [operations.md § Telling multiple deployments apart](operations.md#telling-multiple-deployments-apart).
+Each poller stamps its own `service.name` (a label identifying which collector produced the data — `ktranslate-snmp-cisco`, `ktranslate-snmp-palo`, etc. — plus a `-<host>` suffix when `KTRANS_HOST` is set). SNMP metrics also carry **`tags_snmp_group`** (from `GROUP=` in `groups/*.env` via `global.user_tags.snmp_group` in the poller config, exported through OTLP). **Use `tags_snmp_group` / `$snmp_group` to filter fleet dashboards by credential group** — it is stable across hosts. Use `service_name` or `deployment_host` when you need to distinguish collectors or hosts. Discovery containers use `ktranslate-discover-<group>` for the same reason — distinguishable in logs without polluting the poller's data. See [operations.md § Telling multiple deployments apart](operations.md#telling-multiple-deployments-apart).
 
 ## Quick verification
 
 Open Grafana Cloud → Explore → your default Prometheus data source, and paste this query (written in PromQL, Grafana's metrics query language):
 
 ```
-count by (device_name, service_name) (kentik_snmp_DeviceMetrics)
+count by (tags_snmp_group, device_name) (kentik_snmp_DeviceMetrics)
 ```
 
-You should get one row per polled device, grouped by which credential group is polling it. If the table is empty after a couple minutes, check `make logs` for discovery activity and confirm `snmpwalk` works from the Docker host to one of your devices (see `troubleshooting/snmp.md`).
+You should get one row per polled device, grouped by credential group (`tags_snmp_group`). To also see which collector instance produced the data:
+
+```
+count by (tags_snmp_group, device_name, service_name) (kentik_snmp_DeviceMetrics)
+```
+
+If the table is empty after a couple minutes, check `make logs` for discovery activity and confirm `snmpwalk` works from the Docker host to one of your devices (see `troubleshooting/snmp.md`). After changing `groups/*.env`, run `make generate` and restart the affected SNMP poller so `tags_snmp_group` updates on new scrapes.
 
 Network gear cardinality — the number of distinct metric time series, which is what Grafana Cloud usage is measured in — is all over the place: a UPS might emit ~50 active series, a large core switch or load balancer might emit 10,000. Plan accordingly.
 
@@ -43,12 +49,21 @@ What this means in practice:
 
 The repo ships a set of assets to get you started:
 
-- **`dashboards/`** — v2 Grafana manifests (import via UI or gcx v2 — **not** legacy `POST /api/dashboards/db` on tabbed boards):
+- **`dashboards/`** — v2 Grafana manifests (import via UI, `python3 scripts/push-dashboards.py`, or gcx v2 — **not** legacy `POST /api/dashboards/db` on tabbed boards):
   - **`00 Ktranslate Architecture`** — deployment guide and links
-  - **`01 Ktranslate Health`** — collector CHF / jchf health by `service_name`
-  - **`02 Network Flow Summary`** — NetFlow/sFlow rollups (`network_io_by_flow_bytes`)
-  - **`03 Network Device Summary`** — fleet overview (TabsLayout)
-  - **`04 Network Device Details`** — per-device drill-down (TabsLayout)
+  - **`01 Ktranslate Health`** — collector CHF / jchf health; filter by `$snmp_group` and `service_name`
+  - **`02 Network Flow Summary`** — NetFlow/sFlow rollups (`network_io_by_flow_bytes`; no `snmp_group` — flow catalog is shared)
+  - **`03 Network Device Summary`** — fleet overview (TabsLayout); `$snmp_group` scopes all SNMP panels
+  - **`04 Network Device Details`** — per-device drill-down (TabsLayout); `$snmp_group` + `$instance`
   - Legacy/auxiliary: `Ktranslate Flow Summary`, `ktranslate network fleet overview`, `ktranslate snmp device view`
+
+**Push to Grafana Cloud** (from repo root, with `GRAFANA_URL` + `GRAFANA_TOKEN` in `.env`):
+
+```bash
+python3 scripts/push-dashboards.py
+```
+
+Uses the v2 dashboard API (`GRAFANA_DASHBOARD_NAMESPACE` defaults to `stacks-<GC_OTLP_ACCOUNT>`). Skips `02 Network Flow Summary.json` by default unless you clear `KTRANS_PUSH_SKIP`.
+
 - **`alerts/`** — example alert rules, a contact point, and a notification template you can adapt.
 - **`skills/`** — portable guides for network dashboard design and onboarding new hardware ([`skills/README.md`](../skills/README.md)). Copy into Grafana Cloud Assistant or use as agent context when extending dashboards.

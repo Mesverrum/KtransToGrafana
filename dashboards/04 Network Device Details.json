@@ -13,7 +13,7 @@
       "grafana.app/folder": "network-lab",
       "grafana.app/saved-from-ui": "Grafana Cloud",
       "grafana.app/updatedBy": "user:be0hf1vuhjcowf",
-      "grafana.app/updatedTimestamp": "2026-07-26T21:17:17Z"
+      "grafana.app/updatedTimestamp": "2026-07-30T22:50:02Z"
     }
   },
   "spec": {
@@ -84,7 +84,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -475,7 +475,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -603,7 +603,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -718,7 +718,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -892,7 +892,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1020,7 +1020,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1144,7 +1144,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1268,7 +1268,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1392,7 +1392,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1539,7 +1539,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1664,7 +1664,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1788,7 +1788,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1912,7 +1912,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2037,7 +2037,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2162,7 +2162,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2286,7 +2286,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2410,7 +2410,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -5682,7 +5682,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -5835,7 +5835,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -6125,7 +6125,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -6481,7 +6481,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -6592,7 +6592,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -6684,7 +6684,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -6750,41 +6750,15 @@
                       "spec": {
                         "app": "grafana-assistant-app",
                         "editorMode": "code",
-                        "exemplar": false,
-                        "expr": "kentik_snmp_PollingHealth{device_name=~\"$instance\"}",
+                        "expr": "max by (device_name) (\n  kentik_snmp_PollingHealth{device_name=~\"$instance\", PollingHealth=\"GOOD\"} * 1\n  or\n  kentik_snmp_PollingHealth{device_name=~\"$instance\", PollingHealth=\"BAD\"} * 0\n)",
                         "instant": false,
-                        "legendFormat": "{{PollingHealth}}",
+                        "legendFormat": "{{device_name}}",
                         "queryType": "range",
                         "range": true
                       }
                     },
                     "refId": "A",
                     "hidden": false
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "${datasource}"
-                      },
-                      "spec": {
-                        "app": "grafana-assistant-app",
-                        "editorMode": "code",
-                        "exemplar": false,
-                        "expr": "kentik_snmp_PollingHealth{device_name=~\"$instance\", PollingHealth=\"BAD\"}",
-                        "instant": false,
-                        "legendFormat": "{{PollingHealthReason}}",
-                        "queryType": "range",
-                        "range": true
-                      }
-                    },
-                    "refId": "B",
-                    "hidden": true
                   }
                 }
               ],
@@ -6795,7 +6769,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -6811,42 +6785,43 @@
                   "values": false
                 },
                 "showPercentChange": false,
-                "textMode": "name",
+                "textMode": "value_and_name",
                 "wideLayout": true
               },
               "fieldConfig": {
                 "defaults": {
+                  "mappings": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "0": {
+                          "text": "BAD"
+                        },
+                        "1": {
+                          "text": "GOOD"
+                        }
+                      }
+                    }
+                  ],
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
                       {
                         "value": 0,
                         "color": "red"
+                      },
+                      {
+                        "value": 1,
+                        "color": "green"
                       }
                     ]
                   },
                   "color": {
-                    "mode": "fixed",
+                    "mode": "thresholds",
                     "fixedColor": "red"
                   }
                 },
-                "overrides": [
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "GOOD"
-                    },
-                    "properties": [
-                      {
-                        "id": "color",
-                        "value": {
-                          "fixedColor": "green",
-                          "mode": "fixed"
-                        }
-                      }
-                    ]
-                  }
-                ]
+                "overrides": []
               }
             }
           }
@@ -6894,7 +6869,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -6959,37 +6934,15 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "kentik_snmp_PollingHealth{device_name=~\"$instance\", PollingHealth=\"GOOD\"}",
+                        "editorMode": "code",
+                        "expr": "max by (device_name) (\n  kentik_snmp_PollingHealth{device_name=~\"$instance\", PollingHealth=\"GOOD\"} * 1\n  or\n  kentik_snmp_PollingHealth{device_name=~\"$instance\", PollingHealth=\"BAD\"} * 0\n)",
                         "instant": false,
-                        "legendFormat": "GOOD",
+                        "legendFormat": "{{device_name}}",
                         "queryType": "range",
                         "range": true
                       }
                     },
                     "refId": "A",
-                    "hidden": false
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "${datasource}"
-                      },
-                      "spec": {
-                        "app": "grafana-assistant-app",
-                        "expr": "kentik_snmp_PollingHealth{device_name=~\"$instance\", PollingHealth=\"BAD\"}",
-                        "instant": false,
-                        "legendFormat": "BAD",
-                        "queryType": "range",
-                        "range": true
-                      }
-                    },
-                    "refId": "B",
                     "hidden": false
                   }
                 }
@@ -7001,7 +6954,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "state-timeline",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "alignValue": "left",
@@ -7030,8 +6983,14 @@
                     {
                       "type": "value",
                       "options": {
+                        "0": {
+                          "text": "BAD",
+                          "color": "red",
+                          "index": 1
+                        },
                         "1": {
-                          "text": "",
+                          "text": "GOOD",
+                          "color": "green",
                           "index": 0
                         }
                       }
@@ -7042,6 +7001,10 @@
                     "steps": [
                       {
                         "value": 0,
+                        "color": "red"
+                      },
+                      {
+                        "value": 1,
                         "color": "green"
                       }
                     ]
@@ -7063,38 +7026,7 @@
                     "spanNulls": false
                   }
                 },
-                "overrides": [
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "GOOD"
-                    },
-                    "properties": [
-                      {
-                        "id": "color",
-                        "value": {
-                          "fixedColor": "green",
-                          "mode": "fixed"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "BAD"
-                    },
-                    "properties": [
-                      {
-                        "id": "color",
-                        "value": {
-                          "fixedColor": "red",
-                          "mode": "fixed"
-                        }
-                      }
-                    ]
-                  }
-                ]
+                "overrides": []
               }
             }
           }
@@ -7183,7 +7115,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -7310,7 +7242,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -7402,7 +7334,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background_solid",
@@ -7486,7 +7418,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -7614,7 +7546,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -7742,7 +7674,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -7867,7 +7799,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -7992,7 +7924,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -8076,7 +8008,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -8183,7 +8115,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -8286,7 +8218,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -8458,7 +8390,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -8586,7 +8518,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -8673,7 +8605,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -8845,7 +8777,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -10222,7 +10154,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -10377,7 +10309,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -10540,7 +10472,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -10670,7 +10602,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -11514,7 +11446,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -11640,7 +11572,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -11766,7 +11698,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "displayLabels": [],
@@ -11884,7 +11816,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -12039,7 +11971,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -12195,7 +12127,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -12349,7 +12281,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "displayLabels": [],
@@ -12449,7 +12381,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -12575,7 +12507,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "displayLabels": [],
@@ -12674,7 +12606,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -12819,7 +12751,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -12955,7 +12887,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "displayLabels": [],
@@ -13074,7 +13006,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -13228,7 +13160,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -13354,7 +13286,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "displayLabels": [],
@@ -13453,7 +13385,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -13598,7 +13530,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -13734,7 +13666,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "displayLabels": [],
@@ -13853,7 +13785,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -13988,7 +13920,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "label_replace(kentik_snmp_if_OperStatus{device_name=~\"$instance\", if_Address!=\"\"}, \"if_Alias\", \"—\", \"if_Alias\", \"^$\")",
+                        "expr": "label_replace(kentik_snmp_if_OperStatus{device_name=~\"$instance\", if_Address!=\"\"}, \"if_Alias\", \"—\", \"if_Alias\", \"^$\") or label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(vector(0), \"if_Address\", \"__no_data__\", \"\", \"\"), \"if_AdminStatus\", \"__no_data__\", \"\", \"\"), \"if_Description\", \"__no_data__\", \"\", \"\"), \"if_Netmask\", \"__no_data__\", \"\", \"\"), \"if_OperStatus\", \"__no_data__\", \"\", \"\"), \"if_Alias\", \"__no_data__\", \"\", \"\")",
                         "instant": true,
                         "legendFormat": "{{device_name}} {{if_Description}}",
                         "queryType": "instant",
@@ -14080,7 +14012,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expression": "SELECT A.if_Address, A.if_AdminStatus, A.if_Description, A.if_Netmask, A.if_OperStatus, A.if_Alias, CASE WHEN B.device_name IS NOT NULL AND C.network_local_address IS NOT NULL AND D.network_peer_address IS NOT NULL THEN 'Exporter / Local / Peer' WHEN B.device_name IS NOT NULL AND C.network_local_address IS NOT NULL THEN 'Exporter / Local' WHEN B.device_name IS NOT NULL AND D.network_peer_address IS NOT NULL THEN 'Exporter / Peer' WHEN C.network_local_address IS NOT NULL AND D.network_peer_address IS NOT NULL THEN 'Local / Peer' WHEN B.device_name IS NOT NULL THEN 'Exporter' WHEN C.network_local_address IS NOT NULL THEN 'Local' WHEN D.network_peer_address IS NOT NULL THEN 'Peer' ELSE '' END AS flow_role FROM A LEFT JOIN B ON A.if_Address = B.device_name LEFT JOIN C ON A.if_Address = C.network_local_address LEFT JOIN D ON A.if_Address = D.network_peer_address WHERE (B.device_name IS NOT NULL OR C.network_local_address IS NOT NULL OR D.network_peer_address IS NOT NULL) LIMIT 200",
+                        "expression": "SELECT A.if_Address, A.if_AdminStatus, A.if_Description, A.if_Netmask, A.if_OperStatus, A.if_Alias, CASE WHEN B.device_name IS NOT NULL AND C.network_local_address IS NOT NULL AND D.network_peer_address IS NOT NULL THEN 'Exporter / Local / Peer' WHEN B.device_name IS NOT NULL AND C.network_local_address IS NOT NULL THEN 'Exporter / Local' WHEN B.device_name IS NOT NULL AND D.network_peer_address IS NOT NULL THEN 'Exporter / Peer' WHEN C.network_local_address IS NOT NULL AND D.network_peer_address IS NOT NULL THEN 'Local / Peer' WHEN B.device_name IS NOT NULL THEN 'Exporter' WHEN C.network_local_address IS NOT NULL THEN 'Local' WHEN D.network_peer_address IS NOT NULL THEN 'Peer' ELSE '' END AS flow_role FROM A LEFT JOIN B ON A.if_Address = B.device_name LEFT JOIN C ON A.if_Address = C.network_local_address LEFT JOIN D ON A.if_Address = D.network_peer_address WHERE A.if_Address != '__no_data__' AND (B.device_name IS NOT NULL OR C.network_local_address IS NOT NULL OR D.network_peer_address IS NOT NULL) LIMIT 200",
                         "type": "sql"
                       }
                     },
@@ -14136,7 +14068,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -14378,7 +14310,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -14644,7 +14576,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -14981,7 +14913,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -15152,7 +15084,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "state-timeline",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "alignValue": "left",
@@ -15284,7 +15216,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -15388,7 +15320,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -15470,7 +15402,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -15529,7 +15461,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "alertlist",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "alertInstanceLabelFilter": "device_name=\"$instance\"",
@@ -15616,7 +15548,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -15709,7 +15641,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -15839,7 +15771,7 @@
         "spec": {
           "id": 327,
           "title": "Ktranslate Logs",
-          "description": "All ktranslate log lines referencing this device. Filter by severity or keyword using the search bar.",
+          "description": "All ktranslate log lines mentioning this device (syslog JSON, trap JSON, and internal plain-text). Use the Syslog and SNMP Traps rows above for typed views.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -15857,7 +15789,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "{service_name=\"ktranslate\"} |= \"$instance\"",
+                        "expr": "{service_name=~\"ktranslate.*\"} |= \"$instance\"",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -15875,7 +15807,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "logs",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "dedupStrategy": "none",
@@ -15943,7 +15875,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -16030,7 +15962,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -16203,7 +16135,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -16334,7 +16266,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -16426,7 +16358,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -16592,7 +16524,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -16742,7 +16674,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -16826,7 +16758,7 @@
         "spec": {
           "id": 335,
           "title": "Syslog Events (range)",
-          "description": "Count of ktranslate syslog log lines referencing this device within the selected time range.",
+          "description": "Structured device syslog (instrumentation_name=ktranslate-syslog) for this device.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -16844,7 +16776,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=\"ktranslate\"} |= \"$instance\" |= \"ktranslate-syslog\" [$__range]))",
+                        "expr": "sum(count_over_time({service_name=~\"ktranslate.*\"} | json | instrumentation_name=\"ktranslate-syslog\" | device_name=~\"$instance\" [$__range]))",
                         "instant": true,
                         "queryType": "instant",
                         "range": false
@@ -16862,7 +16794,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -16908,7 +16840,7 @@
         "spec": {
           "id": 336,
           "title": "Recent Syslog",
-          "description": "ktranslate syslog stream for this device (device-name matched, ktranslate-syslog plugin lines).",
+          "description": "Device syslog JSON events for this device — not collector internal logs.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -16926,7 +16858,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "{service_name=\"ktranslate\"} |= \"$instance\" |= \"ktranslate-syslog\"",
+                        "expr": "{service_name=~\"ktranslate.*\"} | json | instrumentation_name=\"ktranslate-syslog\" | device_name=~\"$instance\"",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -16944,7 +16876,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "logs",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "dedupStrategy": "none",
@@ -16976,7 +16908,7 @@
         "spec": {
           "id": 337,
           "title": "Trap Events (range)",
-          "description": "Count of ktranslate SNMP trap log lines for this device within the selected time range.",
+          "description": "Structured SNMP traps (eventType=KSnmpTrap) for this device.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -16994,7 +16926,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=\"ktranslate\"} |= \"$instance\" |= \"KSnmpTrap\" [$__range]))",
+                        "expr": "sum(count_over_time({service_name=~\"ktranslate.*\"} | json | eventType=\"KSnmpTrap\" | device_name=~\"$instance\" [$__range]))",
                         "instant": true,
                         "queryType": "instant",
                         "range": false
@@ -17012,7 +16944,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -17057,8 +16989,8 @@
         "kind": "Panel",
         "spec": {
           "id": 338,
-          "title": "Trap Types",
-          "description": "Breakdown of standard SNMP trap types seen for this device within the selected time range.",
+          "title": "Trap Types (range)",
+          "description": "SNMP trap events for this device (json eventType=KSnmpTrap, grouped by TrapName).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -17076,9 +17008,9 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=\"ktranslate\"} |= \"$instance\" |= \"linkDown\" [$__range]))",
+                        "expr": "sum by (TrapName) (count_over_time({service_name=~\"ktranslate.*\"} | json | eventType=\"KSnmpTrap\" | device_name=~\"$instance\" | TrapName != \"\" [$__range]))",
                         "instant": true,
-                        "legendFormat": "linkDown",
+                        "legendFormat": "{{TrapName}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -17086,108 +17018,31 @@
                     "refId": "A",
                     "hidden": false
                   }
-                },
+                }
+              ],
+              "transformations": [
                 {
-                  "kind": "PanelQuery",
+                  "kind": "Transformation",
+                  "group": "partitionByValues",
                   "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "loki",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "grafanacloud-logs"
-                      },
-                      "spec": {
-                        "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=\"ktranslate\"} |= \"$instance\" |= \"linkUp\" [$__range]))",
-                        "instant": true,
-                        "legendFormat": "linkUp",
-                        "queryType": "instant",
-                        "range": false
+                    "options": {
+                      "fields": [
+                        "TrapName"
+                      ],
+                      "naming": {
+                        "asLabels": true
                       }
-                    },
-                    "refId": "B",
-                    "hidden": false
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "loki",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "grafanacloud-logs"
-                      },
-                      "spec": {
-                        "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=\"ktranslate\"} |= \"$instance\" |= \"coldStart\" [$__range]))",
-                        "instant": true,
-                        "legendFormat": "coldStart",
-                        "queryType": "instant",
-                        "range": false
-                      }
-                    },
-                    "refId": "C",
-                    "hidden": false
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "loki",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "grafanacloud-logs"
-                      },
-                      "spec": {
-                        "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=\"ktranslate\"} |= \"$instance\" |= \"warmStart\" [$__range]))",
-                        "instant": true,
-                        "legendFormat": "warmStart",
-                        "queryType": "instant",
-                        "range": false
-                      }
-                    },
-                    "refId": "D",
-                    "hidden": false
-                  }
-                },
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "loki",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "grafanacloud-logs"
-                      },
-                      "spec": {
-                        "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=\"ktranslate\"} |= \"$instance\" |= \"authenticationFailure\" [$__range]))",
-                        "instant": true,
-                        "legendFormat": "authenticationFailure",
-                        "queryType": "instant",
-                        "range": false
-                      }
-                    },
-                    "refId": "E",
-                    "hidden": false
+                    }
                   }
                 }
               ],
-              "transformations": [],
               "queryOptions": {}
             }
           },
           "vizConfig": {
             "kind": "VizConfig",
             "group": "piechart",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "legend": {
@@ -17216,6 +17071,7 @@
               },
               "fieldConfig": {
                 "defaults": {
+                  "displayName": "${__field.labels.TrapName}",
                   "unit": "short",
                   "color": {
                     "mode": "palette-classic",
@@ -17240,7 +17096,7 @@
         "spec": {
           "id": 339,
           "title": "Recent SNMP Traps",
-          "description": "ktranslate trap OTLP log lines for this device (KSnmpTrap events, standard trap OIDs).",
+          "description": "Structured SNMP trap JSON for this device (eventType=KSnmpTrap).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -17258,7 +17114,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "{service_name=\"ktranslate\"} |= \"$instance\" |= \"KSnmpTrap\"",
+                        "expr": "{service_name=~\"ktranslate.*\"} | json | eventType=\"KSnmpTrap\" | device_name=~\"$instance\"",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -17276,7 +17132,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "logs",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "dedupStrategy": "none",
@@ -17308,7 +17164,7 @@
         "spec": {
           "id": 340,
           "title": "Syslog Events Over Time",
-          "description": "",
+          "description": "Device syslog volume over time (instrumentation_name=ktranslate-syslog).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -17326,7 +17182,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=\"ktranslate\"} |= \"$instance\" |= \"ktranslate-syslog\" [$__interval]))",
+                        "expr": "sum(count_over_time({service_name=~\"ktranslate.*\"} | json | instrumentation_name=\"ktranslate-syslog\" | device_name=~\"$instance\" [$__interval]))",
                         "instant": false,
                         "legendFormat": "Syslog events",
                         "queryType": "range",
@@ -17345,7 +17201,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -17431,7 +17287,7 @@
         "spec": {
           "id": 341,
           "title": "Trap Events Over Time",
-          "description": "",
+          "description": "SNMP trap volume over time (eventType=KSnmpTrap).",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -17449,7 +17305,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=\"ktranslate\"} |= \"$instance\" |= \"KSnmpTrap\" [$__interval]))",
+                        "expr": "sum(count_over_time({service_name=~\"ktranslate.*\"} | json | eventType=\"KSnmpTrap\" | device_name=~\"$instance\" [$__interval]))",
                         "instant": false,
                         "legendFormat": "Trap events",
                         "queryType": "range",
@@ -17468,7 +17324,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -17591,7 +17447,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -17729,7 +17585,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -17952,7 +17808,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -18274,7 +18130,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -18406,7 +18262,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -18493,7 +18349,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -18630,7 +18486,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -18758,7 +18614,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -18887,7 +18743,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -18981,7 +18837,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -19164,7 +19020,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -19318,7 +19174,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "value",
@@ -19832,7 +19688,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -19926,7 +19782,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -20286,7 +20142,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",

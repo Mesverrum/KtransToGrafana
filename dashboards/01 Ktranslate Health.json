@@ -11,10 +11,9 @@
     "annotations": {
       "grafana.app/createdBy": "service-account:afseqskqsbtvka",
       "grafana.app/folder": "network-lab",
-      "grafana.app/message": "OTLP CHF relabel: service_name per container; flow rollups use integration label",
       "grafana.app/saved-from-ui": "Grafana Cloud",
-      "grafana.app/updatedBy": "service-account:afseqskqsbtvka",
-      "grafana.app/updatedTimestamp": "2026-07-26T04:17:37Z"
+      "grafana.app/updatedBy": "user:be0hf1vuhjcowf",
+      "grafana.app/updatedTimestamp": "2026-07-30T23:07:01Z"
     }
   },
   "spec": {
@@ -58,10 +57,14 @@
                       "kind": "DataQuery",
                       "group": "loki",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"failed to upload metrics\" [$__range]))",
+                        "expr": "sum by(deployment_host) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"failed to upload metrics\" [$__range]))",
                         "instant": true,
+                        "legendFormat": "{{deployment_host}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -78,7 +81,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -91,7 +94,7 @@
                     "sum"
                   ],
                   "fields": "",
-                  "values": false
+                  "values": true
                 },
                 "showPercentChange": false,
                 "textMode": "auto",
@@ -141,12 +144,16 @@
                       "kind": "DataQuery",
                       "group": "prometheus",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "max by(device_name, src_addr) (last_over_time(kentik_snmp_PollingHealth[$__range]))",
+                        "expr": "max by(device_name, src_addr, service_name) (last_over_time(kentik_snmp_PollingHealth[$__range]))",
                         "format": "table",
                         "instant": true,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
+                        "queryType": "instant",
                         "range": false
                       }
                     },
@@ -165,9 +172,10 @@
                         "Time": true
                       },
                       "indexByName": {
-                        "Polling Health": 2,
+                        "Polling Health": 3,
                         "device_name": 0,
-                        "src_addr": 1
+                        "service_name": 1,
+                        "src_addr": 2
                       },
                       "renameByName": {
                         "Value": "Polling Health"
@@ -182,7 +190,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -238,7 +246,7 @@
         "kind": "Panel",
         "spec": {
           "id": 11,
-          "title": "Device Uptime & Status (Prometheus)",
+          "title": "Device Uptime and Status (Prometheus)",
           "description": "Device uptime and polling status from Prometheus. Devices missing here are not sending any metrics.",
           "links": [],
           "data": {
@@ -252,12 +260,16 @@
                       "kind": "DataQuery",
                       "group": "prometheus",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "max by(device_name, src_addr, SysName) (last_over_time(kentik_snmp_Uptime[$__range]))",
+                        "expr": "max by(device_name, src_addr, SysName, service_name) (last_over_time(kentik_snmp_Uptime[$__range]))",
                         "format": "table",
                         "instant": true,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
+                        "queryType": "instant",
                         "range": false
                       }
                     },
@@ -276,10 +288,11 @@
                         "Time": true
                       },
                       "indexByName": {
-                        "SysName": 2,
-                        "Uptime (sec)": 3,
+                        "SysName": 3,
+                        "Uptime (sec)": 4,
                         "device_name": 0,
-                        "src_addr": 1
+                        "service_name": 1,
+                        "src_addr": 2
                       },
                       "renameByName": {
                         "Value": "Uptime (sec)"
@@ -294,7 +307,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -364,7 +377,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "code": {
@@ -402,7 +415,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "code": {
@@ -440,7 +453,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "code": {
@@ -478,7 +491,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "code": {
@@ -540,7 +553,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -662,7 +675,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -767,7 +780,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "last_over_time(kentik_ktranslate_chf_kkc_jchfq[$__range])",
                         "instant": true,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{service_name}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -784,7 +797,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -854,7 +867,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "last_over_time(kentik_ktranslate_chf_kkc_syslog_queue[$__range])",
                         "instant": true,
-                        "legendFormat": "syslog queue",
+                        "legendFormat": "{{service_name}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -871,7 +884,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -934,10 +947,14 @@
                       "kind": "DataQuery",
                       "group": "loki",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"ResourceExhausted\" [$__range]))",
+                        "expr": "sum by(deployment_host) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"ResourceExhausted\" [$__range]))",
                         "instant": true,
+                        "legendFormat": "{{deployment_host}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -954,7 +971,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -967,7 +984,7 @@
                     "sum"
                   ],
                   "fields": "",
-                  "values": false
+                  "values": true
                 },
                 "showPercentChange": false,
                 "textMode": "auto",
@@ -1017,7 +1034,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "code": {
@@ -1093,7 +1110,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -1174,7 +1191,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1273,7 +1290,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "code": {
@@ -1316,9 +1333,9 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "max by(device_name) (last_over_time(kentik_snmp_PollingStatus[$__range]))",
+                        "expr": "max by(device_name, service_name) (last_over_time(kentik_snmp_PollingStatus[$__range]))",
                         "instant": true,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "instant",
                         "range": false
                       }
@@ -1328,23 +1345,57 @@
                   }
                 }
               ],
-              "transformations": [],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "labelsToFields",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "merge",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "indexByName": {
+                        "Value": 1,
+                        "device_name": 0
+                      },
+                      "renameByName": {
+                        "Value": "Polling Status",
+                        "device_name": "Device"
+                      }
+                    }
+                  }
+                }
+              ],
               "queryOptions": {}
             }
           },
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
-                "frameIndex": 2,
+                "frameIndex": 0,
                 "showHeader": true,
                 "sortBy": [
                   {
                     "desc": false,
-                    "displayName": "device_name"
+                    "displayName": "Device"
                   }
                 ]
               },
@@ -1355,11 +1406,11 @@
                     "steps": [
                       {
                         "value": 0,
-                        "color": "green"
+                        "color": "red"
                       },
                       {
                         "value": 0.5,
-                        "color": "red"
+                        "color": "green"
                       }
                     ]
                   },
@@ -1374,7 +1425,42 @@
                     "inspect": false
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Polling Status"
+                    },
+                    "properties": [
+                      {
+                        "id": "custom.cellOptions",
+                        "value": {
+                          "type": "color-background"
+                        }
+                      },
+                      {
+                        "id": "mappings",
+                        "value": [
+                          {
+                            "options": {
+                              "0": {
+                                "color": "red",
+                                "index": 1,
+                                "text": "Not Polling"
+                              },
+                              "1": {
+                                "color": "green",
+                                "index": 0,
+                                "text": "Polling OK"
+                              }
+                            },
+                            "type": "value"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -1405,7 +1491,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "kentik_ktranslate_chf_kkc_snmp_errors",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -1422,7 +1508,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1528,7 +1614,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "kentik_ktranslate_chf_kkc_snmp_fail",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -1545,7 +1631,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1651,7 +1737,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "kentik_ktranslate_chf_kkc_snmp_missing",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -1668,7 +1754,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1774,7 +1860,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "kentik_ktranslate_chf_kkc_device_metrics",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -1791,7 +1877,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -1897,7 +1983,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "kentik_ktranslate_chf_kkc_interface_metrics",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -1914,7 +2000,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2020,7 +2106,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "kentik_ktranslate_chf_kkc_snmp_traps",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -2037,7 +2123,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2143,7 +2229,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "kentik_ktranslate_chf_kkc_syslog_messages",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -2160,7 +2246,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2266,7 +2352,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "kentik_ktranslate_chf_kkc_syslog_errors",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -2283,7 +2369,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2405,7 +2491,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "logs",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "dedupStrategy": "none",
@@ -2473,7 +2559,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2596,7 +2682,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -2695,10 +2781,14 @@
                       "kind": "DataQuery",
                       "group": "loki",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"found metrics for 0 interfaces\" [$__range]))",
+                        "expr": "sum by(deployment_host) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"found metrics for 0 interfaces\" [$__range]))",
                         "instant": true,
+                        "legendFormat": "{{deployment_host}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -2715,7 +2805,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -2728,7 +2818,7 @@
                     "sum"
                   ],
                   "fields": "",
-                  "values": false
+                  "values": true
                 },
                 "showPercentChange": false,
                 "textMode": "auto",
@@ -2839,7 +2929,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -2995,7 +3085,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -3112,7 +3202,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -3207,7 +3297,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -3346,7 +3436,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -3402,7 +3492,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "code": {
@@ -3439,7 +3529,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "code": {
@@ -3476,9 +3566,14 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
                 "content": "## Metrics Pipeline — what data is landing in Prometheus?\n\nSNMP (`device_metrics`), syslog (`syslog_messages`), and flow (`netflow_flows` CHF + `network_io_by_flow_bytes{integration=\"ktranslate-netflow\"}` rollup). Use the **role stat row** on Overview and the flow/syslog panels below. Empty CHF with healthy SNMP usually means `--metrics=jchf` missing on that container or OTLP delivery gap — check **Queues & Delivery**.",
                 "mode": "markdown"
               },
@@ -3508,9 +3603,14 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "text",
-            "version": "",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
+                "code": {
+                  "language": "plaintext",
+                  "showLineNumbers": false,
+                  "showMiniMap": false
+                },
                 "content": "## Queues & Delivery — is ktranslate keeping up, and are batches reaching the backend?\n\nTracks internal backpressure (input/output/JCHF/syslog queue depths, message and delivery rates) and upload/delivery failures (gRPC ResourceExhausted, per-container and per-error-type breakdowns). Rising queue depth or non-zero upload errors mean ktranslate is falling behind or being rejected downstream — even if polling and collection upstream look fine.",
                 "mode": "markdown"
               },
@@ -3585,7 +3685,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -3684,10 +3784,14 @@
                       "kind": "DataQuery",
                       "group": "prometheus",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "count(count by(device_name) (kentik_snmp_PollingHealth))",
+                        "expr": "count by(service_name) (count by(device_name, service_name) (kentik_snmp_PollingHealth))",
                         "instant": false,
+                        "legendFormat": "{{service_name}}",
                         "queryType": "range",
                         "range": true
                       }
@@ -3704,7 +3808,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -3774,7 +3878,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "kentik_ktranslate_chf_kkc_snmp_missing_meta",
                         "instant": false,
-                        "legendFormat": "{{device_name}}",
+                        "legendFormat": "{{device_name}} ({{service_name}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -3791,7 +3895,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -3913,7 +4017,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -4016,8 +4120,10 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "sum(kentik_ktranslate_chf_kkc_netflow_flows{service_name=~\"ktranslate-flow.*|ktranslate-sflow.*\"})",
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by(service_name) (kentik_ktranslate_chf_kkc_netflow_flows{service_name=~\"ktranslate-flow.*|ktranslate-sflow.*\"})",
                         "instant": true,
+                        "legendFormat": "{{service_name}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -4034,7 +4140,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -4101,8 +4207,10 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "sum(kentik_ktranslate_chf_kkc_syslog_messages{service_name=~\"ktranslate-syslog.*\"})",
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by(service_name) (kentik_ktranslate_chf_kkc_syslog_messages{service_name=~\"ktranslate-syslog.*\"})",
                         "instant": true,
+                        "legendFormat": "{{service_name}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -4119,7 +4227,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -4186,8 +4294,10 @@
                         "name": "grafanacloud-prom"
                       },
                       "spec": {
-                        "expr": "sum(kentik_ktranslate_chf_kkc_device_metrics{service_name=~\"ktranslate-snmp.*\"})",
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by(service_name) (kentik_ktranslate_chf_kkc_device_metrics{service_name=~\"ktranslate-snmp.*\"})",
                         "instant": true,
+                        "legendFormat": "{{service_name}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -4204,7 +4314,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -4289,7 +4399,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "stat",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "colorMode": "background",
@@ -4397,7 +4507,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -4541,7 +4651,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -4640,11 +4750,14 @@
                       "kind": "DataQuery",
                       "group": "loki",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"ResourceExhausted\" [$__auto]))",
+                        "expr": "sum by(deployment_host) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"ResourceExhausted\" [$__auto]))",
                         "instant": false,
-                        "legendFormat": "ResourceExhausted (batch too large)",
+                        "legendFormat": "{{deployment_host}} ResourceExhausted",
                         "queryType": "range",
                         "range": true
                       }
@@ -4660,11 +4773,14 @@
                       "kind": "DataQuery",
                       "group": "loki",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum(count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"invalid UTF-8\" [$__auto]))",
+                        "expr": "sum by(deployment_host) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"invalid UTF-8\" [$__auto]))",
                         "instant": false,
-                        "legendFormat": "Invalid UTF-8 (encoding error)",
+                        "legendFormat": "{{deployment_host}} Invalid UTF-8",
                         "queryType": "range",
                         "range": true
                       }
@@ -4681,7 +4797,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -4779,11 +4895,15 @@
                       "kind": "DataQuery",
                       "group": "loki",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum by(service_name) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} | service_name=~\"$service_name\" |= \"failed to upload metrics\" [$__auto]))",
+                        "editorMode": "code",
+                        "expr": "sum by(deployment_host) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} | service_name=~\"$service_name\" |= \"failed to upload metrics\" [$__auto]))",
                         "instant": false,
-                        "legendFormat": "{{host_name}}",
+                        "legendFormat": "{{deployment_host}}",
                         "queryType": "range",
                         "range": true
                       }
@@ -4800,7 +4920,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -4898,11 +5018,16 @@
                       "kind": "DataQuery",
                       "group": "loki",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum by(service_name) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} | service_name=~\"$service_name\" |= \"SNMP interface metric poll\" [$__auto]))",
+                        "direction": "backward",
+                        "editorMode": "code",
+                        "expr": "sum by(deployment_host) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} | service_name=~\"$service_name\" |= \"SNMP interface metric poll\" [$__auto]))",
                         "instant": false,
-                        "legendFormat": "{{host_name}}",
+                        "legendFormat": "{{deployment_host}}",
                         "queryType": "range",
                         "range": true
                       }
@@ -4919,7 +5044,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "timeseries",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "annotations": {
@@ -5017,9 +5142,12 @@
                       "kind": "DataQuery",
                       "group": "loki",
                       "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "sum by(device) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"found metrics for 0 interfaces\" | regexp \"KTranslate>(?P<device>[^ ]+) SNMP\" [$__range]))",
+                        "expr": "sum by(device, deployment_host) (count_over_time({service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"found metrics for 0 interfaces\" | regexp \"KTranslate>(?P<device>[^ ]+) SNMP\" [$__range]))",
                         "instant": true,
                         "queryType": "instant",
                         "range": false
@@ -5052,7 +5180,7 @@
           "vizConfig": {
             "kind": "VizConfig",
             "group": "table",
-            "version": "13.2.0-29854286369",
+            "version": "13.2.0-30402795349",
             "spec": {
               "options": {
                 "cellHeight": "sm",
@@ -5218,7 +5346,7 @@
                                 "kind": "GridLayoutItem",
                                 "spec": {
                                   "x": 0,
-                                  "y": 23,
+                                  "y": 25,
                                   "width": 24,
                                   "height": 6,
                                   "element": {
@@ -5231,7 +5359,7 @@
                                 "kind": "GridLayoutItem",
                                 "spec": {
                                   "x": 0,
-                                  "y": 29,
+                                  "y": 31,
                                   "width": 6,
                                   "height": 4,
                                   "element": {
@@ -5244,7 +5372,7 @@
                                 "kind": "GridLayoutItem",
                                 "spec": {
                                   "x": 6,
-                                  "y": 29,
+                                  "y": 31,
                                   "width": 6,
                                   "height": 4,
                                   "element": {
@@ -5257,7 +5385,7 @@
                                 "kind": "GridLayoutItem",
                                 "spec": {
                                   "x": 12,
-                                  "y": 29,
+                                  "y": 31,
                                   "width": 6,
                                   "height": 4,
                                   "element": {
@@ -5270,7 +5398,7 @@
                                 "kind": "GridLayoutItem",
                                 "spec": {
                                   "x": 18,
-                                  "y": 29,
+                                  "y": 31,
                                   "width": 6,
                                   "height": 4,
                                   "element": {
@@ -5500,6 +5628,19 @@
                                 "kind": "GridLayoutItem",
                                 "spec": {
                                   "x": 0,
+                                  "y": 36,
+                                  "width": 24,
+                                  "height": 8,
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-50"
+                                  }
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "x": 0,
                                   "y": 44,
                                   "width": 24,
                                   "height": 6,
@@ -5532,19 +5673,6 @@
                                   "element": {
                                     "kind": "ElementReference",
                                     "name": "panel-44"
-                                  }
-                                }
-                              },
-                              {
-                                "kind": "GridLayoutItem",
-                                "spec": {
-                                  "x": 0,
-                                  "y": 36,
-                                  "width": 24,
-                                  "height": 8,
-                                  "element": {
-                                    "kind": "ElementReference",
-                                    "name": "panel-50"
                                   }
                                 }
                               }
@@ -6015,7 +6143,7 @@
     ],
     "timeSettings": {
       "timezone": "browser",
-      "from": "now-6h",
+      "from": "now-1h",
       "to": "now",
       "autoRefresh": "",
       "autoRefreshIntervals": [

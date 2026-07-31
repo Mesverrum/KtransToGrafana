@@ -108,7 +108,17 @@ count by (tags_snmp_group, device_name) (kentik_snmp_DeviceMetrics)
 
 One row per polled device means it's working. `tags_snmp_group` matches the `GROUP=` name from your `groups/*.env` file. First check what discovery actually claimed — `state/devices-onboarding.yaml` lists each device it found and the credential that worked; anything that didn't answer simply isn't there (wrong creds, an ACL blocking the host, non-SNMP, or unreachable) and is your follow-up list. Still empty in Grafana after a couple minutes? Check `make logs` and confirm `snmpwalk` reaches a device from the host (`troubleshooting/snmp.md`).
 
-Then import a dashboard from `dashboards/` (e.g. `ktranslate snmp device view`) to get a real view.
+Then import the bundled dashboards or push them to your stack:
+
+```
+# Option A: push all 00–04 (except flow, skipped by default) via v2 API
+# Add GRAFANA_URL + GRAFANA_TOKEN to .env first — see docs/grafana.md
+python3 scripts/push-dashboards.py
+
+# Option B: import 00 Ktranslate Architecture via Grafana UI (Dashboards → Import)
+```
+
+See [docs/grafana.md](docs/grafana.md) for the full dashboard set, `$snmp_group` filtering, and TabsLayout-safe update rules.
 
 **Want flow data immediately, before any router is exporting it?** Run `make detect-net && make up-demo` to add a local sflow source. See [operations.md](docs/operations.md#instant-flow-data-with-the-sflow-demo-overlay).
 

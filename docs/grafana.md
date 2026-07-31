@@ -42,28 +42,36 @@ The flow pipeline is aligned with the [official Grafana Cloud ktranslate-netflow
 What this means in practice:
 
 - You can import the **Netflow overview** dashboard from the official integration page and it will light up against this pipeline.
-- The bundled `dashboards/Ktranslate Flow Summary.json` queries the new OTEL semconv metric and label names.
+- The bundled **`02 Network Flow Summary`** dashboard queries the OTEL semconv metric and label names.
 - SNMP and discovery containers set their own `OTEL_SERVICE_NAME` (a label identifying which collector produced the data — `ktranslate-snmp-<group>` / `ktranslate-discover-<group>`, plus the `-<host>` suffix when `KTRANS_HOST` is set) so the preprocessing transform's `service.name` rewrite skips them.
 
 ## Dashboards, alerts, and skills
 
 The repo ships a set of assets to get you started:
 
-- **`dashboards/`** — v2 Grafana manifests (import via UI, `python3 scripts/push-dashboards.py`, or gcx v2 — **not** legacy `POST /api/dashboards/db` on tabbed boards):
+- **`dashboards/`** — v2 Grafana manifests (source of truth for this repo; import via `python3 scripts/push-dashboards.py`, gcx v2, or Grafana UI — **not** legacy `POST /api/dashboards/db` on tabbed boards):
   - **`00 Ktranslate Architecture`** — deployment guide and links
   - **`01 Ktranslate Health`** — collector CHF / jchf health; filter by `$snmp_group` and `service_name`
-  - **`02 Network Flow Summary`** — NetFlow/sFlow rollups (`network_io_by_flow_bytes`; no `snmp_group` — flow catalog is shared)
-  - **`03 Network Device Summary`** — fleet overview (TabsLayout); `$snmp_group` scopes all SNMP panels
+  - **`02 Network Flow Summary`** — NetFlow/sFlow rollups (`network_io_by_flow_bytes`; shared flow catalog — no `tags_snmp_group`)
+  - **`03 Network Device Summary`** — fleet overview (TabsLayout); `$snmp_group` scopes SNMP panels via `tags_snmp_group=~"$snmp_group"`
   - **`04 Network Device Details`** — per-device drill-down (TabsLayout); `$snmp_group` + `$instance`
-  - Legacy/auxiliary: `Ktranslate Flow Summary`, `ktranslate network fleet overview`, `ktranslate snmp device view`
 
-**Push to Grafana Cloud** (from repo root, with `GRAFANA_URL` + `GRAFANA_TOKEN` in `.env`):
+**Push to Grafana Cloud** (from repo root; add to `.env`):
+
+| Variable | Purpose |
+|----------|---------|
+| `GRAFANA_URL` | `https://<stack>.grafana.net` |
+| `GRAFANA_TOKEN` | Service account token with dashboard write (`glsa_…`) |
+| `GRAFANA_DASHBOARD_FOLDER` | Optional; default `network-lab` |
+| `GRAFANA_DASHBOARD_NAMESPACE` | Optional; default `stacks-<GC_OTLP_ACCOUNT>` |
 
 ```bash
 python3 scripts/push-dashboards.py
 ```
 
-Uses the v2 dashboard API (`GRAFANA_DASHBOARD_NAMESPACE` defaults to `stacks-<GC_OTLP_ACCOUNT>`). Skips `02 Network Flow Summary.json` by default unless you clear `KTRANS_PUSH_SKIP`.
+Uses the v2 dashboard API. Skips `02 Network Flow Summary.json` by default (`KTRANS_PUSH_SKIP` can override).
+
+**Updating tabbed dashboards:** use gcx or HTTP v2 `GET`/`PUT` — never legacy `POST /api/dashboards/db` on `TabsLayout` boards (flattens tabs). See [configuration.md § snmp_group](configuration.md#snmp_group-on-metrics) for PromQL label naming (`tags_snmp_group` on OTLP series).
 
 - **`alerts/`** — example alert rules, a contact point, and a notification template you can adapt.
 - **`skills/`** — portable guides for network dashboard design and onboarding new hardware ([`skills/README.md`](../skills/README.md)). Copy into Grafana Cloud Assistant or use as agent context when extending dashboards.

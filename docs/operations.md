@@ -98,3 +98,17 @@ make up            # also prints "deployment.host = <value>" as it starts
 ```
 
 The resolution logic lives in `scripts/host-id.sh` and is shared by `make` and the discovery cron job, so long-running and scheduled containers always agree. A raw `docker compose up` (bypassing `make`) reads `KTRANS_HOST` from `.env` verbatim and does **not** apply the hostname fallback — set the variable explicitly if you don't drive the stack through the Makefile.
+
+## Credential groups on SNMP metrics (`tags_snmp_group`)
+
+Each `groups/<name>.env` file sets `GROUP=<name>`. The generator renders `global.user_tags.snmp_group: <GROUP>` into `config/poller-<group>.yaml`. ktranslate copies those tags onto every SNMP series from that poller.
+
+When Alloy forwards metrics to Grafana Cloud over OTLP, the label appears as **`tags_snmp_group`** on series. The bundled dashboards (`01`–`04`) expose template variable **`$snmp_group`**; PromQL filters use `tags_snmp_group=~"$snmp_group"`.
+
+Verify after discovery:
+
+```
+count by (tags_snmp_group, device_name) (kentik_snmp_PollingHealth)
+```
+
+Use **`tags_snmp_group`** for fleet scoping; use **`deployment_host`** (from `KTRANS_HOST`) to distinguish multiple collector hosts; use **`service_name`** for the specific poller container. Flow and syslog receivers share a catalog with `user_tags: {}` — flow metrics are not tagged with `tags_snmp_group`. See [configuration.md § snmp_group on metrics](configuration.md#snmp_group-on-metrics).

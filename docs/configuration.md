@@ -18,10 +18,30 @@ Copy only the ones you need, and copy additional sample files to define more gro
 
 Every variable is documented inline in the sample. The important ones:
 
-- **`GROUP`** — short identifier (`cisco`, `palo`, etc.). Used in container names, file paths, and the OTEL `service.name` (a label identifying which collector produced the data) so dashboards can split by group.
+- **`GROUP`** — short identifier (`cisco`, `palo`, etc.). Used in container names, file paths, the OTEL `service.name` (a label identifying which collector produced the data), and stamped on every SNMP metric as the **`snmp_group`** label via `global.user_tags` in the generated poller config. Prefer **`snmp_group`** over `service_name` when filtering fleet dashboards by credential group — `service_name` also varies with `KTRANS_HOST` when you run multiple deployments.
 - **`SNMP_VERSION`** — `v2c`, `v3`, or `mixed`. The other credential fields are only required for the matching version; `mixed` lets one group carry both v2c and v3 candidates (see [Multiple candidate credentials](#multiple-candidate-credentials-unknown-mapping)).
 - **`DISCOVERY_SOURCE`** — where this group's device list comes from: `cidr` or `netbox` (defaults to `cidr` if unset).
 - **`METALISTEN_PORT` / `TRAP_PORT`** — host ports for this group. Must be unique across groups and must not collide with the static services (9995, 9996, 9998, 4317, 12346, 1514). The generator refuses to run if it finds a collision.
+
+### `snmp_group` on metrics
+
+Each poller's generated `config/poller-<group>.yaml` sets:
+
+```yaml
+global:
+  user_tags:
+    snmp_group: <GROUP>
+```
+
+ktranslate copies `global.user_tags` onto every SNMP series from that poller. When metrics are exported via **OTLP** to Grafana Cloud (the default in this stack), the label appears as **`tags_snmp_group`** on series — the dashboard variable is still named `$snmp_group`, but PromQL filters use `tags_snmp_group=~"$snmp_group"`. After discovery, verify in Grafana Explore:
+
+```
+count by (tags_snmp_group, device_name) (kentik_snmp_PollingHealth)
+```
+
+You should see one `tags_snmp_group` value per credential group (`cisco`, `palo`, …). The bundled dashboards (`01`–`04`) expose a **`$snmp_group`** template variable. Flow and syslog receivers use a shared catalog with `user_tags: {}` — flow metrics are not tagged with `tags_snmp_group`; use `device_name` or flow attributes instead.
+
+For site- or region-scoped groups, give each group a distinct `GROUP` name (e.g. `hq`, `branch1`) and unique ports — one poller per group. Deeper inventory attributes (site, role, tenant) belong in NetBox/CMDB enrichment later; `snmp_group` is intentionally just the credential-group key.
 
 ## Discovery source: `cidr`
 

@@ -103,10 +103,10 @@ make discover GROUP=onboarding   # scan the range, match credentials, hand devic
 In Grafana Cloud → **Explore** → your default Prometheus data source:
 
 ```
-count by (device_name, service_name) (kentik_snmp_DeviceMetrics)
+count by (tags_snmp_group, device_name) (kentik_snmp_DeviceMetrics)
 ```
 
-One row per polled device means it's working. First check what discovery actually claimed — `state/devices-onboarding.yaml` lists each device it found and the credential that worked; anything that didn't answer simply isn't there (wrong creds, an ACL blocking the host, non-SNMP, or unreachable) and is your follow-up list. Still empty in Grafana after a couple minutes? Check `make logs` and confirm `snmpwalk` reaches a device from the host (`troubleshooting/snmp.md`).
+One row per polled device means it's working. `tags_snmp_group` matches the `GROUP=` name from your `groups/*.env` file. First check what discovery actually claimed — `state/devices-onboarding.yaml` lists each device it found and the credential that worked; anything that didn't answer simply isn't there (wrong creds, an ACL blocking the host, non-SNMP, or unreachable) and is your follow-up list. Still empty in Grafana after a couple minutes? Check `make logs` and confirm `snmpwalk` reaches a device from the host (`troubleshooting/snmp.md`).
 
 Then import a dashboard from `dashboards/` (e.g. `ktranslate snmp device view`) to get a real view.
 

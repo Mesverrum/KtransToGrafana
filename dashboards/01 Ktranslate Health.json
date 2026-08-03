@@ -386,7 +386,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "## KTranslate Health Dashboard\n\nMonitors **ktranslate** collector containers polling SNMP devices in this lab. Use the **Container** dropdown to filter panels to a specific container.\n\n**Reading the stats above:** all four error counters should be zero. Work top-to-bottom — upload failures drop entire batches before they reach Prometheus; 0-interface counts mean individual devices are reachable but returning nothing useful.\n\n> Container IDs change on every recycle. The **Container** variable auto-discovers active containers from Loki logs.",
+                "content": "## KTranslate Health Dashboard\n\nMonitors **ktranslate** collector containers polling SNMP devices in this lab. Use the **Container** dropdown to filter panels to a specific container.\n\n**Reading the stats above:** all four error counters should be zero. Work top-to-bottom \u2014 upload failures drop entire batches before they reach Prometheus; 0-interface counts mean individual devices are reachable but returning nothing useful.\n\n> Container IDs change on every recycle. The **Container** variable auto-discovers active containers from Loki logs.",
                 "mode": "markdown"
               },
               "fieldConfig": {
@@ -424,7 +424,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "### ResourceExhausted — batch too large\nktranslate packed too many metrics into one gRPC call and the Alloy receiver rejected it (default 4 MB limit). Devices with hundreds of interfaces blow up batch sizes fast.\n\n**Fix — choose one:**\n1. **Increase Alloy limit** → set `max_recv_msg_size_mib = 16` in the `otelcol.receiver.otlp` block.\n2. **Reduce ktranslate batch size** → lower `--max_flows_per_message` in the container command.\n3. **Split large devices** → move high-interface-count devices into a dedicated low-device-count container.\n\n---\n### Invalid UTF-8 — bad encoding in a device field\nA device OID (often `sysDescr`, `ifAlias`, or `sysContact`) returned a non-UTF-8 byte sequence. ktranslate cannot JSON-marshal it and drops the metric.\n\n**Fix:**\n1. Find the device → search Loki: `{service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"invalid UTF-8\"` — the device name usually appears in the same log line.\n2. Identify the field → look for the OID or field name preceding the error.\n3. Exclude that OID in the ktranslate SNMP profile for that device type, or sanitise it with a `string_strip` transform in the profile.",
+                "content": "### ResourceExhausted \u2014 batch too large\nktranslate packed too many metrics into one gRPC call and the Alloy receiver rejected it (default 4 MB limit). Devices with hundreds of interfaces blow up batch sizes fast.\n\n**Fix \u2014 choose one:**\n1. **Increase Alloy limit** \u2192 set `max_recv_msg_size_mib = 16` in the `otelcol.receiver.otlp` block.\n2. **Reduce ktranslate batch size** \u2192 lower `--max_flows_per_message` in the container command.\n3. **Split large devices** \u2192 move high-interface-count devices into a dedicated low-device-count container.\n\n---\n### Invalid UTF-8 \u2014 bad encoding in a device field\nA device OID (often `sysDescr`, `ifAlias`, or `sysContact`) returned a non-UTF-8 byte sequence. ktranslate cannot JSON-marshal it and drops the metric.\n\n**Fix:**\n1. Find the device \u2192 search Loki: `{service_name=~\"ktranslate.*|integrations/ktranslate-netflow\"} |= \"invalid UTF-8\"` \u2014 the device name usually appears in the same log line.\n2. Identify the field \u2192 look for the OID or field name preceding the error.\n3. Exclude that OID in the ktranslate SNMP profile for that device type, or sanitise it with a `string_strip` transform in the profile.",
                 "mode": "markdown"
               },
               "fieldConfig": {
@@ -462,7 +462,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "### 🔴 Devices returning 0 interfaces\nktranslate reached the device via SNMP (it didn't time out) but `IF-MIB::ifTable` came back empty. The device is up; the problem is access control or profile selection.\n\n**Common causes and fixes:**\n\n| Cause | Fix |\n|---|---|\n| Wrong SNMP community or v3 credentials | Re-check `snmp-devices.yaml` for the device entry; test with `snmpget -v2c -c <community> <ip> sysDescr.0` |\n| Device ACL blocks `ifTable` OID range | Add `1.3.6.1.2.1.2` to the device's SNMP allowed-OID list |\n| Wrong ktranslate profile for device type | Check container logs for `\"matched profile\"` lines; compare against [kentik/snmp-profiles](https://github.com/kentik/snmp-profiles/tree/main/profiles/kentik_snmp) |\n| Interface table lives under a vendor MIB, not IF-MIB | Add a `table` override in the device's ktranslate profile pointing to the vendor OID |\n\n**Quick manual test:** `snmpwalk -v2c -c <community> <device_ip> IF-MIB::ifTable` — if this returns nothing, the problem is on the device side.",
+                "content": "### \ud83d\udd34 Devices returning 0 interfaces\nktranslate reached the device via SNMP (it didn't time out) but `IF-MIB::ifTable` came back empty. The device is up; the problem is access control or profile selection.\n\n**Common causes and fixes:**\n\n| Cause | Fix |\n|---|---|\n| Wrong SNMP community or v3 credentials | Re-check `snmp-devices.yaml` for the device entry; test with `snmpget -v2c -c <community> <ip> sysDescr.0` |\n| Device ACL blocks `ifTable` OID range | Add `1.3.6.1.2.1.2` to the device's SNMP allowed-OID list |\n| Wrong ktranslate profile for device type | Check container logs for `\"matched profile\"` lines; compare against [kentik/snmp-profiles](https://github.com/kentik/snmp-profiles/tree/main/profiles/kentik_snmp) |\n| Interface table lives under a vendor MIB, not IF-MIB | Add a `table` override in the device's ktranslate profile pointing to the vendor OID |\n\n**Quick manual test:** `snmpwalk -v2c -c <community> <device_ip> IF-MIB::ifTable` \u2014 if this returns nothing, the problem is on the device side.",
                 "mode": "markdown"
               },
               "fieldConfig": {
@@ -500,7 +500,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "### Reading the Prometheus tables\n\n**Device Polling Health** — lists every device with `kentik_snmp_PollingHealth = 1` currently reaching Prometheus. A device absent from this table has a complete pipeline break somewhere upstream.\n\n**Device Uptime & Status** — SNMP uptime confirms the device is reachable. Cross-reference with Polling Health:\n- **High uptime + in Polling Health** → healthy ✅\n- **High uptime + missing from Polling Health** → device is up but ktranslate is not delivering its metrics (check Upload Failures panels for the container that polls this device)\n- **Missing from both tables** → ktranslate may not be polling it at all, or polls are failing silently\n\n### Tracing a missing device end-to-end\n1. Find the container → search Loki for the device name to see which `host_name` emits logs for it.\n2. Check that container's upload failure rate in the **Upload Failures by Container** panel.\n3. If ResourceExhausted errors are spiking on that container, the entire batch (including this device) is being dropped before Alloy.\n4. Fix the batch size issue first — once uploads succeed, the device should appear in the Polling Health table within one poll interval.",
+                "content": "### Reading the Prometheus tables\n\n**Device Polling Health** \u2014 lists every device with `kentik_snmp_PollingHealth = 1` currently reaching Prometheus. A device absent from this table has a complete pipeline break somewhere upstream.\n\n**Device Uptime & Status** \u2014 SNMP uptime confirms the device is reachable. Cross-reference with Polling Health:\n- **High uptime + in Polling Health** \u2192 healthy \u2705\n- **High uptime + missing from Polling Health** \u2192 device is up but ktranslate is not delivering its metrics (check Upload Failures panels for the container that polls this device)\n- **Missing from both tables** \u2192 ktranslate may not be polling it at all, or polls are failing silently\n\n### Tracing a missing device end-to-end\n1. Find the container \u2192 search Loki for the device name to see which `host_name` emits logs for it.\n2. Check that container's upload failure rate in the **Upload Failures by Container** panel.\n3. If ResourceExhausted errors are spiking on that container, the entire batch (including this device) is being dropped before Alloy.\n4. Fix the batch size issue first \u2014 once uploads succeed, the device should appear in the Polling Health table within one poll interval.",
                 "mode": "markdown"
               },
               "fieldConfig": {
@@ -761,7 +761,7 @@
         "spec": {
           "id": 18,
           "title": "JCHF Buffer Depth",
-          "description": "Compact flow header queue capacity. Value of 8000 means the buffer is saturated — flow data may be dropped. Lower values indicate data flowing freely.",
+          "description": "Compact flow header queue capacity. Value of 8000 means the buffer is saturated \u2014 flow data may be dropped. Lower values indicate data flowing freely.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -935,7 +935,7 @@
         "spec": {
           "id": 2,
           "title": "ResourceExhausted Errors",
-          "description": "Batch too large — gRPC message exceeds 4 MB receiver limit.",
+          "description": "Batch too large \u2014 gRPC message exceeds 4 MB receiver limit.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1043,7 +1043,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "### Processing Queues — OTLP label: `service_name`\n\nMaps [New Relic ktranslate health metrics](https://docs.newrelic.com/docs/network-performance-monitoring/advanced/ktranslate-container-health/) to **OTLP/Prometheus** (`kentik_ktranslate_chf_kkc_*`) with `--metrics=jchf --sinks=otel`:\n\n| NR / ktranslate CHF | Grafana (OTLP) | What to watch |\n|---|---|---|\n| `baseserver_healthcheck_execution_total` | `..._baseserver_healthcheck_execution_total` | Must be > 0 |\n| `inputq` / `inputq_len` | `..._inputq` / `..._inputq_len` | Arrival rate; backlog ≈ 0 |\n| `jchfq` | `..._jchfq` | Buffer headroom (~8000 max) |\n| `device_metrics` | `..._device_metrics` | SNMP pollers only |\n| `netflow.flows` | `..._netflow_flows` | Flow/sFlow containers |\n| `syslog_*` | `..._syslog_queue/messages/errors` | Syslog container |\n| `delivery_logs_otel` | `..._delivery_logs_otel` | Logs/sec to Alloy |\n\n**Facet by `service_name`:** `ktranslate-snmp-*`, `ktranslate-syslog-*`, `ktranslate-flow-*`, `ktranslate-sflow-*`. Flow rollups use datapoint label `integration=ktranslate-netflow` (not `service_name`).\n\n**Logs:** `--tee_logs=true` → Loki with the same `service_name` labels.",
+                "content": "### Processing Queues \u2014 OTLP label: `service_name`\n\nMaps [New Relic ktranslate health metrics](https://docs.newrelic.com/docs/network-performance-monitoring/advanced/ktranslate-container-health/) to **OTLP/Prometheus** (`kentik_ktranslate_chf_kkc_*`) with `--metrics=jchf --sinks=otel`:\n\n| NR / ktranslate CHF | Grafana (OTLP) | What to watch |\n|---|---|---|\n| `baseserver_healthcheck_execution_total` | `..._baseserver_healthcheck_execution_total` | Must be > 0 |\n| `inputq` / `inputq_len` | `..._inputq` / `..._inputq_len` | Arrival rate; backlog \u2248 0 |\n| `jchfq` | `..._jchfq` | Buffer headroom (~8000 max) |\n| `device_metrics` | `..._device_metrics` | SNMP pollers only |\n| `netflow.flows` | `..._netflow_flows` | Flow/sFlow containers |\n| `syslog_*` | `..._syslog_queue/messages/errors` | Syslog container |\n| `delivery_logs_otel` | `..._delivery_logs_otel` | Logs/sec to Alloy |\n\n**Facet by `service_name`:** `ktranslate-snmp-*`, `ktranslate-syslog-*`, `ktranslate-flow-*`, `ktranslate-sflow-*`. Flow rollups use datapoint label `integration=ktranslate-netflow` (not `service_name`).\n\n**Logs:** `--tee_logs=true` \u2192 Loki with the same `service_name` labels.",
                 "mode": "markdown"
               },
               "fieldConfig": {
@@ -1299,7 +1299,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "### Healthcheck Performance — reading the signals\n\nThe **baseserver healthcheck** is ktranslate's internal liveness loop — a recurring self-test that confirms the core goroutines are alive and the pipeline is moving data.\n\n| Signal | Healthy | Investigate |\n|---|---|---|\n| **execution_time (mean)** | Stable, low ms | Sustained upward drift → CPU/IO bottleneck |\n| **execution_time (p99 / max)** | Close to mean | Spiky excursions → GC pauses or lock contention |\n| **execution_rate** | Flat, consistent | Falling or zero → container loop has stalled or crashed |\n\nThe time series uses the labels exposed directly by ktranslate: `min`, `mean`, `max`, `five_minute`, `fifteen_minute`, `key_99_percentile`. If mean climbs while p99 stays flat, the load is uniformly high; if p99 spikes while mean stays low, you have bursty delays.",
+                "content": "### Healthcheck Performance \u2014 reading the signals\n\nThe **baseserver healthcheck** is ktranslate's internal liveness loop \u2014 a recurring self-test that confirms the core goroutines are alive and the pipeline is moving data.\n\n| Signal | Healthy | Investigate |\n|---|---|---|\n| **execution_time (mean)** | Stable, low ms | Sustained upward drift \u2192 CPU/IO bottleneck |\n| **execution_time (p99 / max)** | Close to mean | Spiky excursions \u2192 GC pauses or lock contention |\n| **execution_rate** | Flat, consistent | Falling or zero \u2192 container loop has stalled or crashed |\n\nThe time series uses the labels exposed directly by ktranslate: `min`, `mean`, `max`, `five_minute`, `fifteen_minute`, `key_99_percentile`. If mean climbs while p99 stays flat, the load is uniformly high; if p99 spikes while mean stays low, you have bursty delays.",
                 "mode": "markdown"
               },
               "fieldConfig": {
@@ -1316,7 +1316,7 @@
         "spec": {
           "id": 28,
           "title": "Device Polling Status",
-          "description": "PollingStatus per device — complements PollingHealth. Non-1 values indicate the device is not being polled successfully.",
+          "description": "PollingStatus per device \u2014 complements PollingHealth. Non-1 values indicate the device is not being polled successfully.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1718,7 +1718,7 @@
         "spec": {
           "id": 31,
           "title": "SNMP Missing Responses by Device",
-          "description": "SNMP requests sent with no corresponding response per device. Distinct from fail/error — indicates dropped requests or unreachable OIDs.",
+          "description": "SNMP requests sent with no corresponding response per device. Distinct from fail/error \u2014 indicates dropped requests or unreachable OIDs.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -2333,7 +2333,7 @@
         "spec": {
           "id": 36,
           "title": "Syslog Errors by Device",
-          "description": "Syslog processing errors per device — parsing/ingest failures on the syslog pipeline, separate from metric upload failures.",
+          "description": "Syslog processing errors per device \u2014 parsing/ingest failures on the syslog pipeline, separate from metric upload failures.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -2523,7 +2523,7 @@
         "spec": {
           "id": 38,
           "title": "Input Message Rate by Container",
-          "description": "Top-level input throughput per container — messages/sec received from all SNMP, flow, and syslog inputs combined. Distinct from Input Queue Depth (backlog); this is the arrival rate.",
+          "description": "Top-level input throughput per container \u2014 messages/sec received from all SNMP, flow, and syslog inputs combined. Distinct from Input Queue Depth (backlog); this is the arrival rate.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -2769,7 +2769,7 @@
         "spec": {
           "id": 4,
           "title": "Devices Returning 0 Interfaces",
-          "description": "Devices that polled successfully but returned no interface metrics — likely an SNMP auth or profile mismatch.",
+          "description": "Devices that polled successfully but returned no interface metrics \u2014 likely an SNMP auth or profile mismatch.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -3129,7 +3129,7 @@
         "spec": {
           "id": 42,
           "title": "SNMP Polling Health (per container)",
-          "description": "Equivalent to: FROM Metric SELECT latest(device_metrics), latest(interface_metrics) FACET host, svc WHERE provider='kentik-agent' AND instrumentation.name='heartbeat'. SNMP polling throughput per container — zero or dropping values mean that container has stopped polling devices.",
+          "description": "Equivalent to: FROM Metric SELECT latest(device_metrics), latest(interface_metrics) FACET host, svc WHERE provider='kentik-agent' AND instrumentation.name='heartbeat'. SNMP polling throughput per container \u2014 zero or dropping values mean that container has stopped polling devices.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -3246,7 +3246,7 @@
         "spec": {
           "id": 43,
           "title": "Devices Failing SNMP Polling",
-          "description": "Devices with snmp_fail > 1 (failure codes 3–9) in the last 6h. Value 1 means healthy; see ktranslate SNMP_GOOD/SNMP_BAD_* constants.",
+          "description": "Devices with snmp_fail > 1 (failure codes 3\u20139) in the last 6h. Value 1 means healthy; see ktranslate SNMP_GOOD/SNMP_BAD_* constants.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -3538,7 +3538,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "## Device Polling — are containers actively polling devices via SNMP?\n\nCovers per-device and per-container SNMP poll activity: poll rate, errors, timeouts, missing responses, and devices returning zero interfaces. Use this tab to diagnose devices that are unreachable or misconfigured — wrong community string/credentials, an ACL blocking the poller, or the wrong device profile.",
+                "content": "## Device Polling \u2014 are containers actively polling devices via SNMP?\n\nCovers per-device and per-container SNMP poll activity: poll rate, errors, timeouts, missing responses, and devices returning zero interfaces. Use this tab to diagnose devices that are unreachable or misconfigured \u2014 wrong community string/credentials, an ACL blocking the poller, or the wrong device profile.",
                 "mode": "markdown"
               },
               "fieldConfig": {
@@ -3575,7 +3575,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "## Metrics Pipeline — what data is landing in Prometheus?\n\nSNMP (`device_metrics`), syslog (`syslog_messages`), and flow (`netflow_flows` CHF + `network_io_by_flow_bytes{integration=\"ktranslate-netflow\"}` rollup). Use the **role stat row** on Overview and the flow/syslog panels below. Empty CHF with healthy SNMP usually means `--metrics=jchf` missing on that container or OTLP delivery gap — check **Queues & Delivery**.",
+                "content": "## Metrics Pipeline \u2014 what data is landing in Prometheus?\n\nSNMP (`device_metrics`), syslog (`syslog_messages`), and flow (`netflow_flows` CHF + `network_io_by_flow_bytes{integration=\"ktranslate-netflow\"}` rollup). Use the **role stat row** on Overview and the flow/syslog panels below. Empty CHF with healthy SNMP usually means `--metrics=jchf` missing on that container or OTLP delivery gap \u2014 check **Queues & Delivery**.",
                 "mode": "markdown"
               },
               "fieldConfig": {
@@ -3612,7 +3612,7 @@
                   "showLineNumbers": false,
                   "showMiniMap": false
                 },
-                "content": "## Queues & Delivery — is ktranslate keeping up, and are batches reaching the backend?\n\nTracks internal backpressure (input/output/JCHF/syslog queue depths, message and delivery rates) and upload/delivery failures (gRPC ResourceExhausted, per-container and per-error-type breakdowns). Rising queue depth or non-zero upload errors mean ktranslate is falling behind or being rejected downstream — even if polling and collection upstream look fine.",
+                "content": "## Queues & Delivery \u2014 is ktranslate keeping up, and are batches reaching the backend?\n\nTracks internal backpressure (input/output/JCHF/syslog queue depths, message and delivery rates) and upload/delivery failures (gRPC ResourceExhausted, per-container and per-error-type breakdowns). Rising queue depth or non-zero upload errors mean ktranslate is falling behind or being rejected downstream \u2014 even if polling and collection upstream look fine.",
                 "mode": "markdown"
               },
               "fieldConfig": {
@@ -4450,7 +4450,7 @@
         "spec": {
           "id": 56,
           "title": "Syslog Pipeline (CHF ingest vs OTLP delivery)",
-          "description": "syslog_messages = listener ingest; delivery_logs_otel = logs/sec handed to Alloy. Flat delivery with rising messages ⇒ downstream OTLP/Loki issue.",
+          "description": "syslog_messages = listener ingest; delivery_logs_otel = logs/sec handed to Alloy. Flat delivery with rising messages \u21d2 downstream OTLP/Loki issue.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -5270,7 +5270,7 @@
                     {
                       "kind": "RowsLayoutRow",
                       "spec": {
-                        "title": "KTranslate Status — is it running?",
+                        "title": "KTranslate Status \u2014 is it running?",
                         "collapse": false,
                         "hideHeader": false,
                         "fillScreen": false,
@@ -5416,7 +5416,7 @@
                     {
                       "kind": "RowsLayoutRow",
                       "spec": {
-                        "title": "Healthcheck Performance — is the core loop healthy?",
+                        "title": "Healthcheck Performance \u2014 is the core loop healthy?",
                         "collapse": false,
                         "hideHeader": false,
                         "fillScreen": false,
@@ -5513,7 +5513,7 @@
                     {
                       "kind": "RowsLayoutRow",
                       "spec": {
-                        "title": "Poll Activity — are containers actively polling?",
+                        "title": "Poll Activity \u2014 are containers actively polling?",
                         "collapse": false,
                         "hideHeader": false,
                         "fillScreen": false,
@@ -5727,7 +5727,7 @@
                     {
                       "kind": "RowsLayoutRow",
                       "spec": {
-                        "title": "Metrics Pipeline — what is landing in Prometheus?",
+                        "title": "Metrics Pipeline \u2014 what is landing in Prometheus?",
                         "collapse": false,
                         "hideHeader": false,
                         "fillScreen": false,
@@ -5915,7 +5915,7 @@
                     {
                       "kind": "RowsLayoutRow",
                       "spec": {
-                        "title": "Processing Queues — is ktranslate keeping up?",
+                        "title": "Processing Queues \u2014 is ktranslate keeping up?",
                         "collapse": false,
                         "hideHeader": false,
                         "fillScreen": false,
@@ -6022,7 +6022,7 @@
                     {
                       "kind": "RowsLayoutRow",
                       "spec": {
-                        "title": "Upload Failures — are batches being dropped?",
+                        "title": "Upload Failures \u2014 are batches being dropped?",
                         "collapse": false,
                         "hideHeader": false,
                         "fillScreen": false,

@@ -260,7 +260,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "max by(cpu_core)(kentik_snmp_multiProcUserTime{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"})",
                         "instant": false,
-                        "legendFormat": "User – {{cpu_core}}",
+                        "legendFormat": "User \u2013 {{cpu_core}}",
                         "queryType": "range",
                         "range": true
                       }
@@ -283,7 +283,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "max by(cpu_core)(kentik_snmp_multiProcSystemTime{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"})",
                         "instant": false,
-                        "legendFormat": "System – {{cpu_core}}",
+                        "legendFormat": "System \u2013 {{cpu_core}}",
                         "queryType": "range",
                         "range": true
                       }
@@ -306,7 +306,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "max by(cpu_core)(kentik_snmp_multiProcIdleTime{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"})",
                         "instant": false,
-                        "legendFormat": "Idle – {{cpu_core}}",
+                        "legendFormat": "Idle \u2013 {{cpu_core}}",
                         "queryType": "range",
                         "range": true
                       }
@@ -983,7 +983,7 @@
         "spec": {
           "id": 155,
           "title": "Traffic In",
-          "description": "Inbound traffic rate per interface (ifHCInOctets). Top 25 interfaces. Use `match_attributes` in snmp-base.yaml to filter which interfaces ktranslate collects (e.g. `if_interface_name: \"^Ten.*|^Gig.*\"`), reducing series at the source.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets × 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
+          "description": "Inbound traffic rate per interface (ifHCInOctets). Top 25 interfaces. Use `match_attributes` in snmp-base.yaml to filter which interfaces ktranslate collects (e.g. `if_interface_name: \"^Ten.*|^Gig.*\"`), reducing series at the source.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets \u00d7 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1107,7 +1107,7 @@
         "spec": {
           "id": 156,
           "title": "Traffic Out",
-          "description": "Outbound traffic rate per interface (ifHCOutOctets). Top 25 interfaces. Use `match_attributes` in snmp-base.yaml to filter which interfaces ktranslate collects (e.g. `if_interface_name: \"^Ten.*|^Gig.*\"`), reducing series at the source.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets × 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
+          "description": "Outbound traffic rate per interface (ifHCOutOctets). Top 25 interfaces. Use `match_attributes` in snmp-base.yaml to filter which interfaces ktranslate collects (e.g. `if_interface_name: \"^Ten.*|^Gig.*\"`), reducing series at the source.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets \u00d7 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -5751,7 +5751,7 @@
         "kind": "Panel",
         "spec": {
           "id": 198,
-          "title": "Interface Status Δ 24h",
+          "title": "Interface Status \u0394 24h",
           "description": "Absolute change vs 24h ago. Zero indicates no change or data unavailable for that window.",
           "links": [],
           "data": {
@@ -5772,7 +5772,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "count(max by(if_interface_name)(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\",if_interface_name=~\"$interface_name\",if_AdminStatus!=\"down\"})) - (count(max by(if_interface_name)(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\",if_interface_name=~\"$interface_name\",if_AdminStatus!=\"down\"} offset 24h)) or count(max by(if_interface_name)(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\",if_interface_name=~\"$interface_name\",if_AdminStatus!=\"down\"})))",
                         "instant": true,
-                        "legendFormat": "Δ Polled",
+                        "legendFormat": "\u0394 Polled",
                         "queryType": "instant",
                         "range": false
                       }
@@ -5795,7 +5795,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\",if_interface_name=~\"$interface_name\",if_AdminStatus!=\"down\"} == 1) - (count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\",if_interface_name=~\"$interface_name\",if_AdminStatus!=\"down\"} offset 24h == 1) or count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\",if_interface_name=~\"$interface_name\",if_AdminStatus!=\"down\"} == 1))",
                         "instant": true,
-                        "legendFormat": "Δ Oper Up",
+                        "legendFormat": "\u0394 Oper Up",
                         "queryType": "instant",
                         "range": false
                       }
@@ -5818,7 +5818,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\",if_interface_name=~\"$interface_name\",if_AdminStatus!=\"down\"} == 2) - (count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\",if_interface_name=~\"$interface_name\",if_AdminStatus!=\"down\"} offset 24h == 2) or count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\",if_interface_name=~\"$interface_name\",if_AdminStatus!=\"down\"} == 2))",
                         "instant": true,
-                        "legendFormat": "Δ Oper Down",
+                        "legendFormat": "\u0394 Oper Down",
                         "queryType": "instant",
                         "range": false
                       }
@@ -6041,7 +6041,7 @@
         "spec": {
           "id": 200,
           "title": "IPSLA RTT Operations",
-          "description": "Current state of all IP SLA RTT operations — completion time, oper state, last sense code, timeouts, and threshold violations.",
+          "description": "Current state of all IP SLA RTT operations \u2014 completion time, oper state, last sense code, timeouts, and threshold violations.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -6059,7 +6059,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "kentik_snmp_rttMonLatestRttOperCompletionTime{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(label_replace(label_replace(label_replace(vector(0), \"device_name\", \"__no_ipsla__\", \"\", \"\"), \"Index\", \"__no_ipsla__\", \"\", \"\"), \"rtt_operation_type\", \"—\", \"\", \"\"), \"rtt_echo_source_address\", \"—\", \"\", \"\"), \"rtt_echo_target_ip\", \"—\", \"\", \"\")",
+                        "expr": "kentik_snmp_rttMonLatestRttOperCompletionTime{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(label_replace(label_replace(label_replace(vector(0), \"device_name\", \"__no_ipsla__\", \"\", \"\"), \"Index\", \"__no_ipsla__\", \"\", \"\"), \"rtt_operation_type\", \"\u2014\", \"\", \"\"), \"rtt_echo_source_address\", \"\u2014\", \"\", \"\"), \"rtt_echo_target_ip\", \"\u2014\", \"\", \"\")",
                         "instant": true,
                         "queryType": "instant",
                         "range": false
@@ -6424,7 +6424,7 @@
         "spec": {
           "id": 202,
           "title": "Active MIBs",
-          "description": "Active series per MIB and table — shows which protocols drive this device's billable series footprint in Grafana Cloud.\n\n**To reduce series count (ktranslate `snmp-base.yaml`):**\n\n• **`global.mibs_enabled`** — the primary control. Remove any MIB from this list to stop polling it across all devices. Scope to a single table using `MIB-NAME.tableName` syntax (e.g. `HOST-RESOURCES-MIB.hrProcessorTable`) to avoid pulling the full MIB.\n\n• **`match_attributes`** — regex-based allowlist applied before shipping data. Use at the device or global level to restrict which interfaces or metrics are collected (e.g. keep only `^Ten.*|^Gig.*` interfaces).\n\n• **`flow_only: true`** — disables all SNMP polling for a device; use when you only need flow data from that device.\n\nSee: https://github.com/kentik/ktranslate/wiki/Advanced-Ktranslate-Configuration",
+          "description": "Active series per MIB and table \u2014 shows which protocols drive this device's billable series footprint in Grafana Cloud.\n\n**To reduce series count (ktranslate `snmp-base.yaml`):**\n\n\u2022 **`global.mibs_enabled`** \u2014 the primary control. Remove any MIB from this list to stop polling it across all devices. Scope to a single table using `MIB-NAME.tableName` syntax (e.g. `HOST-RESOURCES-MIB.hrProcessorTable`) to avoid pulling the full MIB.\n\n\u2022 **`match_attributes`** \u2014 regex-based allowlist applied before shipping data. Use at the device or global level to restrict which interfaces or metrics are collected (e.g. keep only `^Ten.*|^Gig.*` interfaces).\n\n\u2022 **`flow_only: true`** \u2014 disables all SNMP polling for a device; use when you only need flow data from that device.\n\nSee: https://github.com/kentik/ktranslate/wiki/Advanced-Ktranslate-Configuration",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -6647,7 +6647,7 @@
         "spec": {
           "id": 204,
           "title": "Series by Poll Interval",
-          "description": "Active series by poll cadence (seconds). Series count is the same regardless of interval — but faster polling increases DPM (data points per minute), which can affect Grafana Cloud billing in higher usage tiers.",
+          "description": "Active series by poll cadence (seconds). Series count is the same regardless of interval \u2014 but faster polling increases DPM (data points per minute), which can affect Grafana Cloud billing in higher usage tiers.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -6916,7 +6916,7 @@
         "spec": {
           "id": 207,
           "title": "Polling Health History",
-          "description": "History of polling health state transitions — green=GOOD, red=BAD. Gaps indicate no data collected.",
+          "description": "History of polling health state transitions \u2014 green=GOOD, red=BAD. Gaps indicate no data collected.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -7036,7 +7036,7 @@
         "kind": "Panel",
         "spec": {
           "id": 208,
-          "title": "Polling Health — Bad Events",
+          "title": "Polling Health \u2014 Bad Events",
           "description": "Each data point where PollingHealth=BAD within the selected time range. Each row = one scrape interval where polling failed.",
           "links": [],
           "data": {
@@ -8710,7 +8710,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "kentik_snmp_ospfNbrState{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(label_replace(vector(0), \"neighbor_ip\", \"__no_ospf__\", \"\", \"\"), \"neighbor_id\", \"—\", \"\", \"\"), \"ospfNbrState\", \"—\", \"\", \"\")",
+                        "expr": "kentik_snmp_ospfNbrState{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(label_replace(vector(0), \"neighbor_ip\", \"__no_ospf__\", \"\", \"\"), \"neighbor_id\", \"\u2014\", \"\", \"\"), \"ospfNbrState\", \"\u2014\", \"\", \"\")",
                         "instant": true,
                         "queryType": "instant",
                         "range": false
@@ -8883,7 +8883,7 @@
         "spec": {
           "id": 240,
           "title": "Queue Drops In",
-          "description": "Per-interface IOS input queue drop rate (cieIfInputQueueDrops). Distinct from ifInDiscards — these are drops at the IOS input queue level. Use `match_attributes` in snmp-base.yaml to filter which interfaces ktranslate collects (e.g. `if_interface_name: \"^Ten.*|^Gig.*\"`), reducing series at the source.",
+          "description": "Per-interface IOS input queue drop rate (cieIfInputQueueDrops). Distinct from ifInDiscards \u2014 these are drops at the IOS input queue level. Use `match_attributes` in snmp-base.yaml to filter which interfaces ktranslate collects (e.g. `if_interface_name: \"^Ten.*|^Gig.*\"`), reducing series at the source.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -9003,7 +9003,7 @@
         "spec": {
           "id": 241,
           "title": "Queue Drops Out",
-          "description": "Per-interface IOS output queue drop rate (cieIfOutputQueueDrops). Distinct from ifOutDiscards — these are drops at the IOS output queue level. Use `match_attributes` in snmp-base.yaml to filter which interfaces ktranslate collects (e.g. `if_interface_name: \"^Ten.*|^Gig.*\"`), reducing series at the source.",
+          "description": "Per-interface IOS output queue drop rate (cieIfOutputQueueDrops). Distinct from ifOutDiscards \u2014 these are drops at the IOS output queue level. Use `match_attributes` in snmp-base.yaml to filter which interfaces ktranslate collects (e.g. `if_interface_name: \"^Ten.*|^Gig.*\"`), reducing series at the source.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -9352,7 +9352,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "kentik_snmp_temp_value{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(label_replace(label_replace(label_replace(vector(0), \"temp_descr\", \"__no_temp__\", \"\", \"\"), \"entity_name\", \"—\", \"\", \"\"), \"entity_class\", \"—\", \"\", \"\"), \"temp_threshold\", \"—\", \"\", \"\"), \"Index\", \"__no_temp__\", \"\", \"\")",
+                        "expr": "kentik_snmp_temp_value{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(label_replace(label_replace(label_replace(vector(0), \"temp_descr\", \"__no_temp__\", \"\", \"\"), \"entity_name\", \"\u2014\", \"\", \"\"), \"entity_class\", \"\u2014\", \"\", \"\"), \"temp_threshold\", \"\u2014\", \"\", \"\"), \"Index\", \"__no_temp__\", \"\", \"\")",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
                         "queryType": "instant",
@@ -9375,7 +9375,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "kentik_snmp_temp_state{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(vector(0), \"Index\", \"__no_temp__\", \"\", \"\"), \"temp_state\", \"—\", \"\", \"\")",
+                        "expr": "kentik_snmp_temp_state{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(vector(0), \"Index\", \"__no_temp__\", \"\", \"\"), \"temp_state\", \"\u2014\", \"\", \"\")",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
                         "queryType": "instant",
@@ -9398,7 +9398,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expression": "SELECT A.temp_descr AS \"Sensor\", A.entity_name AS \"Entity\", A.entity_class AS \"Class\", A.__value__ AS \"Temp (°C)\", A.temp_threshold AS \"Threshold (°C)\", B.temp_state AS \"State\" FROM A LEFT JOIN B ON A.`Index` = B.`Index` WHERE A.temp_descr != '__no_temp__' ORDER BY A.temp_descr LIMIT 200",
+                        "expression": "SELECT A.temp_descr AS \"Sensor\", A.entity_name AS \"Entity\", A.entity_class AS \"Class\", A.__value__ AS \"Temp (\u00b0C)\", A.temp_threshold AS \"Threshold (\u00b0C)\", B.temp_state AS \"State\" FROM A LEFT JOIN B ON A.`Index` = B.`Index` WHERE A.temp_descr != '__no_temp__' ORDER BY A.temp_descr LIMIT 200",
                         "type": "sql"
                       }
                     },
@@ -10015,7 +10015,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "kentik_snmp_cefcFanSpeed{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(vector(0), \"entity_name\", \"__no_fan__\", \"\", \"\"), \"entity_description\", \"—\", \"\", \"\")",
+                        "expr": "kentik_snmp_cefcFanSpeed{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} or label_replace(label_replace(vector(0), \"entity_name\", \"__no_fan__\", \"\", \"\"), \"entity_description\", \"\u2014\", \"\", \"\")",
                         "instant": true,
                         "legendFormat": "{{device_name}}",
                         "queryType": "instant",
@@ -11310,7 +11310,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expression": "SELECT A.sensor_name AS \"Sensor\", A.__value__ AS \"Temp (°C)\", B.__value__ AS \"Status\" FROM A LEFT JOIN B ON A.Index = B.Index WHERE A.sensor_name != '__no_temp__' ORDER BY A.sensor_name LIMIT 100",
+                        "expression": "SELECT A.sensor_name AS \"Sensor\", A.__value__ AS \"Temp (\u00b0C)\", B.__value__ AS \"Status\" FROM A LEFT JOIN B ON A.Index = B.Index WHERE A.sensor_name != '__no_temp__' ORDER BY A.sensor_name LIMIT 100",
                         "type": "sql"
                       }
                     },
@@ -11555,7 +11555,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "sum by(device_name, network_protocol_name)(network_io_by_flow_bytes{device_name=~\"${flow_device_ips:pipe}|$instance\"})",
                         "instant": false,
-                        "legendFormat": "{{device_name}} — {{network_protocol_name}}",
+                        "legendFormat": "{{device_name}} \u2014 {{network_protocol_name}}",
                         "queryType": "range",
                         "range": true
                       }
@@ -12070,7 +12070,7 @@
         "spec": {
           "id": 287,
           "title": "Top Flow Conversations",
-          "description": "Top 25 local → peer address pairs ranked by total bytes from flow records. Flow conversation totals will not match SNMP interface byte counters — they measure different things.",
+          "description": "Top 25 local \u2192 peer address pairs ranked by total bytes from flow records. Flow conversation totals will not match SNMP interface byte counters \u2014 they measure different things.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -12264,7 +12264,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "topk(10, sum by(device_name, network_local_address, network_peer_address)(max_over_time(network_io_by_flow_bytes{device_name=~\"${flow_device_ips:pipe}|$instance\"}[$__range])))",
                         "instant": true,
-                        "legendFormat": "{{device_name}}: {{network_local_address}} → {{network_peer_address}}",
+                        "legendFormat": "{{device_name}}: {{network_local_address}} \u2192 {{network_peer_address}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -12589,7 +12589,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "sum by(network_local_address, network_protocol_name)(network_io_by_flow_bytes{network_local_address=~\"${flow_device_ips:pipe}\"})",
                         "instant": false,
-                        "legendFormat": "{{network_local_address}} — {{network_protocol_name}}",
+                        "legendFormat": "{{network_local_address}} \u2014 {{network_protocol_name}}",
                         "queryType": "range",
                         "range": true
                       }
@@ -12870,7 +12870,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "topk(10, sum by(network_local_address, network_peer_address)(max_over_time(network_io_by_flow_bytes{network_local_address=~\"${flow_device_ips:pipe}\"}[$__range])))",
                         "instant": true,
-                        "legendFormat": "{{network_local_address}} → {{network_peer_address}}",
+                        "legendFormat": "{{network_local_address}} \u2192 {{network_peer_address}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -12950,7 +12950,7 @@
         "spec": {
           "id": 306,
           "title": "Top Flow Conversations",
-          "description": "Top 25 local → peer conversations where this device appears as the local address.",
+          "description": "Top 25 local \u2192 peer conversations where this device appears as the local address.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -13368,7 +13368,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "sum by(network_peer_address, network_protocol_name)(network_io_by_flow_bytes{network_peer_address=~\"${flow_device_ips:pipe}\"})",
                         "instant": false,
-                        "legendFormat": "{{network_peer_address}} — {{network_protocol_name}}",
+                        "legendFormat": "{{network_peer_address}} \u2014 {{network_protocol_name}}",
                         "queryType": "range",
                         "range": true
                       }
@@ -13649,7 +13649,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "topk(10, sum by(network_local_address, network_peer_address)(max_over_time(network_io_by_flow_bytes{network_peer_address=~\"${flow_device_ips:pipe}\"}[$__range])))",
                         "instant": true,
-                        "legendFormat": "{{network_local_address}} → {{network_peer_address}}",
+                        "legendFormat": "{{network_local_address}} \u2192 {{network_peer_address}}",
                         "queryType": "instant",
                         "range": false
                       }
@@ -13729,7 +13729,7 @@
         "spec": {
           "id": 312,
           "title": "Top Flow Conversations",
-          "description": "Top 25 local → peer conversations where this device appears as the peer address.",
+          "description": "Top 25 local \u2192 peer conversations where this device appears as the peer address.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -13902,7 +13902,7 @@
         "spec": {
           "id": 313,
           "title": "Interface IP Addresses & Flow Roles",
-          "description": "SNMP-discovered IP addresses (IF-MIB if_Address) that appear in flow records within the selected time range, annotated with their OTel flow role — Exporter (device_name), Local (network_local_address), or Peer (network_peer_address). IPs with no flow activity are hidden.",
+          "description": "SNMP-discovered IP addresses (IF-MIB if_Address) that appear in flow records within the selected time range, annotated with their OTel flow role \u2014 Exporter (device_name), Local (network_local_address), or Peer (network_peer_address). IPs with no flow activity are hidden.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -13920,7 +13920,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "label_replace(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\", if_Address!=\"\"}, \"if_Alias\", \"—\", \"if_Alias\", \"^$\") or label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(vector(0), \"if_Address\", \"__no_data__\", \"\", \"\"), \"if_AdminStatus\", \"__no_data__\", \"\", \"\"), \"if_Description\", \"__no_data__\", \"\", \"\"), \"if_Netmask\", \"__no_data__\", \"\", \"\"), \"if_OperStatus\", \"__no_data__\", \"\", \"\"), \"if_Alias\", \"__no_data__\", \"\", \"\")",
+                        "expr": "label_replace(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\", if_Address!=\"\"}, \"if_Alias\", \"\u2014\", \"if_Alias\", \"^$\") or label_replace(label_replace(label_replace(label_replace(label_replace(label_replace(vector(0), \"if_Address\", \"__no_data__\", \"\", \"\"), \"if_AdminStatus\", \"__no_data__\", \"\", \"\"), \"if_Description\", \"__no_data__\", \"\", \"\"), \"if_Netmask\", \"__no_data__\", \"\", \"\"), \"if_OperStatus\", \"__no_data__\", \"\", \"\"), \"if_Alias\", \"__no_data__\", \"\", \"\")",
                         "instant": true,
                         "legendFormat": "{{device_name}} {{if_Description}}",
                         "queryType": "instant",
@@ -14426,7 +14426,7 @@
         "spec": {
           "id": 315,
           "title": "Interface Summary",
-          "description": "Per-interface status, metadata, and current traffic rate. Sorted by highest inbound. in_bps/out_bps are current rates in bits/sec.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets × 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
+          "description": "Per-interface status, metadata, and current traffic rate. Sorted by highest inbound. in_bps/out_bps are current rates in bits/sec.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets \u00d7 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -14445,7 +14445,7 @@
                       "spec": {
                         "app": "grafana-assistant-app",
                         "editorMode": "code",
-                        "expr": "label_replace(\n  max by(if_interface_name, if_Alias, if_OperStatus, if_Speed)(\n    kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\", if_interface_name=~\"$interface_name\"}\n  ),\n  \"if_Alias\", \"—\", \"if_Alias\", \"^$\"\n)",
+                        "expr": "label_replace(\n  max by(if_interface_name, if_Alias, if_OperStatus, if_Speed)(\n    kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\", if_interface_name=~\"$interface_name\"}\n  ),\n  \"if_Alias\", \"\u2014\", \"if_Alias\", \"^$\"\n)",
                         "instant": true,
                         "legendFormat": "{{if_interface_name}}",
                         "queryType": "instant",
@@ -15180,7 +15180,7 @@
                         "app": "grafana-assistant-app",
                         "direction": "backward",
                         "editorMode": "code",
-                        "expr": "{from=\"state-history\"} | json | labels_device_name=~\"$instance\" | line_format \"{{.ruleTitle}} | {{.previous}} → {{.current}}\"",
+                        "expr": "{from=\"state-history\"} | json | labels_device_name=~\"$instance\" | line_format \"{{.ruleTitle}} | {{.previous}} \u2192 {{.current}}\"",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -15602,7 +15602,7 @@
         "spec": {
           "id": 326,
           "title": "Polling Failures Over Time",
-          "description": "Overlay of zero-interface poll failures (orange) and alert firing/pending transitions (red). A poll failure appearing 5–25 min before a mass alert spike indicates the polling gap may have preceded or masked the real event.",
+          "description": "Overlay of zero-interface poll failures (orange) and alert firing/pending transitions (red). A poll failure appearing 5\u201325 min before a mass alert spike indicates the polling gap may have preceded or masked the real event.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -16840,7 +16840,7 @@
         "spec": {
           "id": 336,
           "title": "Recent Syslog",
-          "description": "Device syslog JSON events for this device — not collector internal logs.",
+          "description": "Device syslog JSON events for this device \u2014 not collector internal logs.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -17903,7 +17903,7 @@
         "spec": {
           "id": 58,
           "title": "Interface Summary",
-          "description": "Per-interface status, metadata, and current traffic rate. Sorted by highest inbound. in_bps/out_bps are current rates in bits/sec.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets × 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
+          "description": "Per-interface status, metadata, and current traffic rate. Sorted by highest inbound. in_bps/out_bps are current rates in bits/sec.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets \u00d7 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -17922,7 +17922,7 @@
                       "spec": {
                         "app": "grafana-assistant-app",
                         "editorMode": "code",
-                        "expr": "label_replace(\n  max by(if_interface_name, if_Alias, if_OperStatus, if_Speed)(\n    kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"}\n  ),\n  \"if_Alias\", \"—\", \"if_Alias\", \"^$\"\n)",
+                        "expr": "label_replace(\n  max by(if_interface_name, if_Alias, if_OperStatus, if_Speed)(\n    kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"}\n  ),\n  \"if_Alias\", \"\u2014\", \"if_Alias\", \"^$\"\n)",
                         "instant": true,
                         "legendFormat": "{{if_interface_name}}",
                         "queryType": "instant",
@@ -19338,7 +19338,7 @@
         "kind": "Panel",
         "spec": {
           "id": 78,
-          "title": "Interface Status Δ 24h",
+          "title": "Interface Status \u0394 24h",
           "description": "Absolute change vs 24h ago. Zero indicates no change or data unavailable for that window.",
           "links": [],
           "data": {
@@ -19360,7 +19360,7 @@
                         "editorMode": "code",
                         "expr": "count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"}) - (count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} offset 24h) or count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"}))",
                         "instant": true,
-                        "legendFormat": "Δ Polled",
+                        "legendFormat": "\u0394 Polled",
                         "queryType": "instant",
                         "range": false
                       }
@@ -19383,7 +19383,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} == 1) - (count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} offset 24h == 1) or count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} == 1))",
                         "instant": true,
-                        "legendFormat": "Δ Oper Up",
+                        "legendFormat": "\u0394 Oper Up",
                         "queryType": "instant",
                         "range": false
                       }
@@ -19406,7 +19406,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} == 2) - (count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} offset 24h == 2) or count(kentik_snmp_if_OperStatus{snmp_group=~\"$snmp_group\",device_name=~\"$instance\"} == 2))",
                         "instant": true,
-                        "legendFormat": "Δ Oper Down",
+                        "legendFormat": "\u0394 Oper Down",
                         "queryType": "instant",
                         "range": false
                       }
@@ -20127,7 +20127,7 @@
         "spec": {
           "id": 87,
           "title": "CPU Utilization",
-          "description": "Max core CPU usage via multiProcUsage. Red ≥ 90%, yellow ≥ 70%.",
+          "description": "Max core CPU usage via multiProcUsage. Red \u2265 90%, yellow \u2265 70%.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -22063,7 +22063,7 @@
                     {
                       "kind": "RowsLayoutRow",
                       "spec": {
-                        "title": "Temperature (°C)",
+                        "title": "Temperature (\u00b0C)",
                         "collapse": false,
                         "hideHeader": false,
                         "fillScreen": false,

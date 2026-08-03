@@ -584,7 +584,7 @@
                       },
                       {
                         "id": "noValue",
-                        "value": "—"
+                        "value": "\u2014"
                       },
                       {
                         "id": "custom.width",
@@ -1075,7 +1075,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "topk(10, sum by(network_local_address, network_peer_address, src_host, dst_host) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\", network_local_address=~\"${src_addr:pipe}\", network_peer_address=~\"${dst_addr:pipe}\", src_host=~\"${src_host:pipe}\", dst_host=~\"${dst_host:pipe}\"}[$__range])))",
                         "instant": true,
-                        "legendFormat": "{{src_host}} ({{network_local_address}}) → {{dst_host}} ({{network_peer_address}})",
+                        "legendFormat": "{{src_host}} ({{network_local_address}}) \u2192 {{dst_host}} ({{network_peer_address}})",
                         "queryType": "instant",
                         "range": false
                       }
@@ -1625,7 +1625,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "topk(25, sum by(device_name, network_local_address, network_peer_address, src_host, dst_host) (max_over_time(network_io_by_flow_bytes{device_name=~\"${device_name:pipe}\",network_local_address=~\"${src_addr:pipe}\",network_peer_address=~\"${dst_addr:pipe}\",src_host=~\"${src_host:pipe}\",dst_host=~\"${dst_host:pipe}\",network_protocol_name=~\"${application:pipe}\"}[$__rate_interval])))",
                         "instant": false,
-                        "legendFormat": "{{src_host}} ({{network_local_address}}) → {{dst_host}} ({{network_peer_address}})",
+                        "legendFormat": "{{src_host}} ({{network_local_address}}) \u2192 {{dst_host}} ({{network_peer_address}})",
                         "queryType": "range",
                         "range": true
                       }

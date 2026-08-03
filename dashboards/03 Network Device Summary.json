@@ -13,7 +13,7 @@
       "grafana.app/folder": "network-lab",
       "grafana.app/saved-from-ui": "Grafana Cloud",
       "grafana.app/updatedBy": "user:be0hf1vuhjcowf",
-      "grafana.app/updatedTimestamp": "2026-07-31T17:45:39Z"
+      "grafana.app/updatedTimestamp": "2026-08-03T19:22:37Z"
     }
   },
   "spec": {
@@ -39,7 +39,7 @@
       }
     ],
     "cursorSync": "Off",
-    "description": "Fleet-level overview of all SNMP-monitored network devices. Aligns to the same metric naming and query patterns as the Network Device Detail dashboard.\n\nNetwork lab dashboard (03). Interface bps uses ktranslate delta gauges: `(octets) * 8 / 60`.\n\nFleet tabs: Routing, Interfaces, Hardware, Resources, Events; drill links → ktranslate-device-details.",
+    "description": "Fleet-level overview of all SNMP-monitored network devices. Aligns to the same metric naming and query patterns as the Network Device Detail dashboard.\n\nNetwork lab dashboard (03). Interface bps uses ktranslate delta gauges: `(octets) * 8 / 60`.\n\nFleet tabs: Routing, Interfaces, Hardware, Resources, Events; drill links \u2192 ktranslate-device-details.",
     "editable": true,
     "elements": {
       "panel-101": {
@@ -471,7 +471,14 @@
                   },
                   "color": {
                     "mode": "thresholds"
-                  }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "View Device Details \u2192",
+                      "url": "/d/ktranslate-device-details?var-instance=${__field.labels.device_name}&dtab=Overview&${__url_time_range}"
+                    }
+                  ]
                 },
                 "overrides": []
               }
@@ -483,7 +490,7 @@
         "kind": "Panel",
         "spec": {
           "id": 106,
-          "title": "Memory Utilization — Top 10",
+          "title": "Memory Utilization \u2014 Top 10",
           "description": "Memory % trend for hottest devices.",
           "links": [],
           "data": {
@@ -529,22 +536,28 @@
                   "multiLane": false
                 },
                 "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
+                  "calcs": [
+                    "min",
+                    "mean",
+                    "max"
+                  ],
+                  "displayMode": "table",
                   "enableFacetedFilter": false,
                   "overflow": "ellipsis",
-                  "placement": "bottom",
+                  "placement": "right",
                   "showLegend": true
                 },
                 "tooltip": {
                   "hideZeros": false,
                   "mode": "multi",
-                  "sort": "desc"
+                  "sort": "none"
                 }
               },
               "fieldConfig": {
                 "defaults": {
                   "unit": "percent",
+                  "min": 0,
+                  "max": 100,
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -579,14 +592,14 @@
                     },
                     "insertNulls": false,
                     "lineInterpolation": "linear",
-                    "lineWidth": 1,
+                    "lineWidth": 2,
                     "pointSize": 5,
                     "scaleDistribution": {
                       "type": "linear"
                     },
-                    "showPoints": "never",
+                    "showPoints": "auto",
                     "showValues": false,
-                    "spanNulls": false,
+                    "spanNulls": 600000,
                     "stacking": {
                       "group": "A",
                       "mode": "none"
@@ -626,9 +639,9 @@
                       "spec": {
                         "app": "grafana-assistant-app",
                         "expr": "topk(20, sum by(device_name, if_interface_name, tags_snmp_group) (kentik_snmp_ifInErrors{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} / 60) + sum by(device_name, if_interface_name, tags_snmp_group) (kentik_snmp_ifOutErrors{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} / 60))",
-                        "instant": false,
-                        "queryType": "range",
-                        "range": true
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
                       }
                     },
                     "refId": "A",
@@ -736,7 +749,26 @@
                     "inspect": false
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Device"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "View Device Details \u2192",
+                            "url": "/d/ktranslate-device-details?var-instance=${__data.fields.Device}&var-interface_name=${__data.fields.Interface}&dtab=Interfaces&${__url_time_range}"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -766,9 +798,9 @@
                       "spec": {
                         "app": "grafana-assistant-app",
                         "expr": "topk(20, sum by(device_name, if_interface_name, tags_snmp_group) (kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} * 8 / 60) + sum by(device_name, if_interface_name, tags_snmp_group) (kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"} * 8 / 60))",
-                        "instant": false,
-                        "queryType": "range",
-                        "range": true
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
                       }
                     },
                     "refId": "A",
@@ -877,7 +909,26 @@
                     "inspect": false
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Device"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "View Device Details \u2192",
+                            "url": "/d/ktranslate-device-details?var-instance=${__data.fields.Device}&var-interface_name=${__data.fields.Interface}&dtab=Interfaces&${__url_time_range}"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -976,7 +1027,14 @@
                   },
                   "color": {
                     "mode": "thresholds"
-                  }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "View Device Details \u2192",
+                      "url": "/d/ktranslate-device-details?var-instance=${__field.labels.device_name}&dtab=Connections&${__url_time_range}"
+                    }
+                  ]
                 },
                 "overrides": []
               }
@@ -1361,6 +1419,24 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Device"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "View Device Details \u2192",
+                            "url": "/d/ktranslate-device-details?var-instance=${__data.fields.Device}&dtab=Connections&${__url_time_range}"
+                          }
+                        ]
+                      }
+                    ]
                   }
                 ]
               }
@@ -1586,7 +1662,7 @@
         "spec": {
           "id": 115,
           "title": "Max Temperature by Device",
-          "description": "Highest chassis/sensor temperature (°C) per device.",
+          "description": "Highest chassis/sensor temperature (\u00b0C) per device.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -1673,7 +1749,14 @@
                   },
                   "color": {
                     "mode": "thresholds"
-                  }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "View Device Details \u2192",
+                      "url": "/d/ktranslate-device-details?var-instance=${__field.labels.device_name}&dtab=Hardware%20Sensors&${__url_time_range}"
+                    }
+                  ]
                 },
                 "overrides": []
               }
@@ -2006,6 +2089,24 @@
                         "value": {
                           "type": "color-background"
                         }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Device"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "View Device Details \u2192",
+                            "url": "/d/ktranslate-device-details?var-instance=${__data.fields.Device}&dtab=Hardware%20Sensors&${__url_time_range}"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -2376,7 +2477,7 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "{service_name=~\"ktranslate.*\"} | json | eventType=\"KSnmpTrap\"",
+                        "expr": "{service_name=~\"ktranslate.*\"} | json | eventType=\"KSnmpTrap\" | device_name=~\"$device_name\"",
                         "instant": false,
                         "queryType": "range",
                         "range": true
@@ -2426,7 +2527,7 @@
         "spec": {
           "id": 125,
           "title": "Trap Types (range)",
-          "description": "Count of SNMP trap events (json TrapName field) over the selected range, grouped dynamically — supports any trap type, not just a fixed list.",
+          "description": "Count of SNMP trap events (json TrapName field) over the selected range, grouped dynamically \u2014 supports any trap type, not just a fixed list.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -2552,10 +2653,10 @@
                       },
                       "spec": {
                         "app": "grafana-assistant-app",
-                        "expr": "topk(20, sum by(device_name, if_Alias, if_Description, tags_snmp_group) (kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60) + sum by(device_name, if_Alias, if_Description, tags_snmp_group) (kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60))",
-                        "instant": false,
-                        "queryType": "range",
-                        "range": true
+                        "expr": "topk(20, sum by(device_name, if_interface_name, if_Alias, if_Description, tags_snmp_group) (kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60) + sum by(device_name, if_interface_name, if_Alias, if_Description, tags_snmp_group) (kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
                       }
                     },
                     "refId": "A",
@@ -2587,16 +2688,18 @@
                         "Time": true
                       },
                       "indexByName": {
-                        "Value": 3,
+                        "Value": 4,
                         "device_name": 0,
-                        "if_Alias": 1,
-                        "if_Description": 2
+                        "if_Alias": 2,
+                        "if_Description": 3,
+                        "if_interface_name": 1
                       },
                       "renameByName": {
                         "Value": "bps",
                         "device_name": "Device",
                         "if_Alias": "Alias",
-                        "if_Description": "Interface"
+                        "if_Description": "Description",
+                        "if_interface_name": "Interface"
                       }
                     }
                   }
@@ -2667,7 +2770,26 @@
                     "wrapText": true
                   }
                 },
-                "overrides": []
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Device"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "View Interface on Device \u2192",
+                            "url": "/d/ktranslate-device-details?var-instance=${__data.fields.Device}&var-interface_name=${__data.fields.Interface}&dtab=Interfaces&${__url_time_range}"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
               }
             }
           }
@@ -2698,7 +2820,7 @@
                         "app": "grafana-assistant-app",
                         "expr": "sum by(device_name, if_Alias, tags_snmp_group) (kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60) + sum by(device_name, if_Alias, tags_snmp_group) (kentik_snmp_ifHCOutOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\",if_Alias=~\".*WAN.*\"} * 8 / 60)",
                         "instant": false,
-                        "legendFormat": "{{device_name}} — {{if_Alias}} ({{tags_snmp_group}})",
+                        "legendFormat": "{{device_name}} \u2014 {{if_Alias}} ({{tags_snmp_group}})",
                         "queryType": "range",
                         "range": true
                       }
@@ -2981,7 +3103,7 @@
         "spec": {
           "id": 131,
           "title": "Fan Issues",
-          "description": "Fans not in service — Device, slot, oper status.",
+          "description": "Fans not in service \u2014 Device, slot, oper status.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -3185,6 +3307,24 @@
                         "value": {
                           "type": "color-background"
                         }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Device"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "View Device Details \u2192",
+                            "url": "/d/ktranslate-device-details?var-instance=${__data.fields.Device}&dtab=Hardware%20Sensors&${__url_time_range}"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -3403,6 +3543,24 @@
                         "value": {
                           "type": "color-background"
                         }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Device"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "View Device Details \u2192",
+                            "url": "/d/ktranslate-device-details?var-instance=${__data.fields.Device}&dtab=Hardware%20Sensors&${__url_time_range}"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -3687,7 +3845,7 @@
         "spec": {
           "id": 137,
           "title": "SNMP Trap Volume",
-          "description": "SNMP trap event volume over time (json eventType=KSnmpTrap) — matches the Trap Types breakdown 1:1.",
+          "description": "SNMP trap event volume over time (json eventType=KSnmpTrap) \u2014 matches the Trap Types breakdown 1:1.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -3874,8 +4032,8 @@
         "kind": "Panel",
         "spec": {
           "id": 140,
-          "title": "Traffic Out — Top 10 Devices (Stacked)",
-          "description": "Outbound traffic (bps) over time for the top 10 devices by volume\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets × 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
+          "title": "Traffic Out \u2014 Top 10 Devices (Stacked)",
+          "description": "Outbound traffic (bps) over time for the top 10 devices by volume\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets \u00d7 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -3984,129 +4142,6 @@
                     "showPoints": "auto",
                     "showValues": false,
                     "spanNulls": 600000,
-                    "stacking": {
-                      "group": "A",
-                      "mode": "normal"
-                    },
-                    "thresholdsStyle": {
-                      "mode": "off"
-                    }
-                  }
-                },
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-141": {
-        "kind": "Panel",
-        "spec": {
-          "id": 141,
-          "title": "Traffic In — Top 10 Devices (Stacked)",
-          "description": "Highest inbound bps per device (ktranslate delta gauge / 60s).",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "prometheus",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "grafanacloud-prom"
-                      },
-                      "spec": {
-                        "app": "grafana-assistant-app",
-                        "expr": "topk(10, sum by(device_name, tags_snmp_group) ((kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))",
-                        "instant": false,
-                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
-                        "queryType": "range",
-                        "range": true
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "timeseries",
-            "version": "13.2.0-30402795349",
-            "spec": {
-              "options": {
-                "annotations": {
-                  "clustering": -1,
-                  "multiLane": false
-                },
-                "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
-                  "enableFacetedFilter": false,
-                  "overflow": "ellipsis",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "tooltip": {
-                  "hideZeros": false,
-                  "mode": "multi",
-                  "sort": "desc"
-                }
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "bps",
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "axisBorderShow": false,
-                    "axisCenteredZero": false,
-                    "axisColorMode": "text",
-                    "axisLabel": "",
-                    "axisPlacement": "auto",
-                    "barAlignment": 0,
-                    "barWidthFactor": 0.6,
-                    "drawStyle": "bars",
-                    "fillOpacity": 80,
-                    "gradientMode": "none",
-                    "hideFrom": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": false
-                    },
-                    "insertNulls": false,
-                    "lineInterpolation": "linear",
-                    "lineWidth": 1,
-                    "pointSize": 5,
-                    "scaleDistribution": {
-                      "type": "linear"
-                    },
-                    "showPoints": "never",
-                    "showValues": false,
-                    "spanNulls": false,
                     "stacking": {
                       "group": "A",
                       "mode": "normal"
@@ -4371,7 +4406,7 @@
         "spec": {
           "id": 143,
           "title": "KTranslate Internal Logs",
-          "description": "All ktranslate operational/component logs (snmp-srl, discover-srl, flow, flow-sflow, syslog) — excludes SNMP trap JSON events.",
+          "description": "All ktranslate operational/component logs (snmp-srl, discover-srl, flow, flow-sflow, syslog) \u2014 excludes SNMP trap JSON events.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -4426,198 +4461,6 @@
               },
               "fieldConfig": {
                 "defaults": {},
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-144": {
-        "kind": "Panel",
-        "spec": {
-          "id": 144,
-          "title": "Recent Device Syslog",
-          "description": "Forwarded device syslog (instrumentation_name=ktranslate-syslog). Structured JSON with severity, facility, and message.",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "loki",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "grafanacloud-logs"
-                      },
-                      "spec": {
-                        "app": "grafana-assistant-app",
-                        "expr": "{service_name=~\"ktranslate.*\"} | json | instrumentation_name=\"ktranslate-syslog\"",
-                        "instant": false,
-                        "queryType": "range",
-                        "range": true
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "logs",
-            "version": "13.2.0-30402795349",
-            "spec": {
-              "options": {
-                "dedupStrategy": "none",
-                "enableInfiniteScrolling": false,
-                "enableLogDetails": true,
-                "prettifyLogMessage": false,
-                "showCommonLabels": false,
-                "showControls": false,
-                "showFieldSelector": false,
-                "showLabels": false,
-                "showLevel": true,
-                "showLogAttributes": true,
-                "showTime": true,
-                "sortOrder": "Descending",
-                "timestampResolution": "ms",
-                "unwrappedColumns": false,
-                "wrapLogMessage": false
-              },
-              "fieldConfig": {
-                "defaults": {},
-                "overrides": []
-              }
-            }
-          }
-        }
-      },
-      "panel-145": {
-        "kind": "Panel",
-        "spec": {
-          "id": 145,
-          "title": "Syslog Volume by Severity",
-          "description": "Device syslog volume by RFC5424 severity (instrumentation_name=ktranslate-syslog).",
-          "links": [],
-          "data": {
-            "kind": "QueryGroup",
-            "spec": {
-              "queries": [
-                {
-                  "kind": "PanelQuery",
-                  "spec": {
-                    "query": {
-                      "kind": "DataQuery",
-                      "group": "loki",
-                      "version": "v0",
-                      "datasource": {
-                        "name": "grafanacloud-logs"
-                      },
-                      "spec": {
-                        "app": "grafana-assistant-app",
-                        "expr": "sum by (severity) (count_over_time({service_name=~\"ktranslate.*\"} | json | instrumentation_name=\"ktranslate-syslog\" | severity != \"\" [$__interval]))",
-                        "instant": false,
-                        "legendFormat": "{{TrapName}}",
-                        "queryType": "range",
-                        "range": true
-                      }
-                    },
-                    "refId": "A",
-                    "hidden": false
-                  }
-                }
-              ],
-              "transformations": [],
-              "queryOptions": {}
-            }
-          },
-          "vizConfig": {
-            "kind": "VizConfig",
-            "group": "timeseries",
-            "version": "13.2.0-30402795349",
-            "spec": {
-              "options": {
-                "annotations": {
-                  "clustering": -1,
-                  "multiLane": false
-                },
-                "legend": {
-                  "calcs": [],
-                  "displayMode": "list",
-                  "enableFacetedFilter": false,
-                  "overflow": "ellipsis",
-                  "placement": "bottom",
-                  "showLegend": true
-                },
-                "tooltip": {
-                  "hideZeros": false,
-                  "mode": "multi",
-                  "sort": "desc"
-                }
-              },
-              "fieldConfig": {
-                "defaults": {
-                  "unit": "short",
-                  "min": 0,
-                  "thresholds": {
-                    "mode": "absolute",
-                    "steps": [
-                      {
-                        "value": 0,
-                        "color": "green"
-                      },
-                      {
-                        "value": 80,
-                        "color": "red"
-                      }
-                    ]
-                  },
-                  "color": {
-                    "mode": "palette-classic"
-                  },
-                  "custom": {
-                    "axisBorderShow": false,
-                    "axisCenteredZero": false,
-                    "axisColorMode": "text",
-                    "axisLabel": "",
-                    "axisPlacement": "auto",
-                    "barAlignment": 0,
-                    "barWidthFactor": 0.6,
-                    "drawStyle": "bars",
-                    "fillOpacity": 40,
-                    "gradientMode": "none",
-                    "hideFrom": {
-                      "legend": false,
-                      "tooltip": false,
-                      "viz": false
-                    },
-                    "insertNulls": false,
-                    "lineInterpolation": "linear",
-                    "lineWidth": 2,
-                    "pointSize": 5,
-                    "scaleDistribution": {
-                      "type": "linear"
-                    },
-                    "showPoints": "always",
-                    "showValues": false,
-                    "spanNulls": false,
-                    "stacking": {
-                      "group": "A",
-                      "mode": "normal"
-                    },
-                    "thresholdsStyle": {
-                      "mode": "off"
-                    }
-                  }
-                },
                 "overrides": []
               }
             }
@@ -5005,6 +4848,803 @@
           }
         }
       },
+      "panel-149": {
+        "kind": "Panel",
+        "spec": {
+          "id": 149,
+          "title": "Traffic In \u2014 Top 10 Devices (Stacked)",
+          "description": "Highest inbound bps per device (ktranslate delta gauge / 60s).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-prom"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "topk(10, sum by(device_name, tags_snmp_group) ((kentik_snmp_ifHCInOctets{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\",device_name=~\"$device_name\"}) * 8 / 60))",
+                        "instant": false,
+                        "legendFormat": "{{device_name}} ({{tags_snmp_group}})",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.2.0-30402795349",
+            "spec": {
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "min",
+                    "mean",
+                    "max"
+                  ],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true,
+                  "sortBy": "Max",
+                  "sortDesc": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "bps",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 65,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 2,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "auto",
+                    "showValues": false,
+                    "spanNulls": 600000,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "normal"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-150": {
+        "kind": "Panel",
+        "spec": {
+          "id": 150,
+          "title": "Syslog Volume by Device",
+          "description": "Device syslog rate broken out per device \u2014 spot a single device generating unusual log volume.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by (device_name) (count_over_time({service_name=~\"ktranslate.*\"} | json | instrumentation_name=\"ktranslate-syslog\" | device_name=~\"$device_name\" [$__interval]))",
+                        "instant": false,
+                        "legendFormat": "{{device_name}}",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.2.0-30402795349",
+            "spec": {
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "max",
+                    "sum"
+                  ],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "ops",
+                  "min": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 15,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 2,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "normal"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-151": {
+        "kind": "Panel",
+        "spec": {
+          "id": 151,
+          "title": "SNMP Trap Volume by Device",
+          "description": "SNMP trap rate broken out per device \u2014 spot a single device generating unusual trap volume (e.g. flapping interfaces).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by (device_name) (count_over_time({service_name=~\"ktranslate.*\"} | json | eventType=\"KSnmpTrap\" | device_name=~\"$device_name\" [$__interval]))",
+                        "instant": false,
+                        "legendFormat": "{{device_name}}",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.2.0-30402795349",
+            "spec": {
+              "options": {
+                "legend": {
+                  "calcs": [
+                    "max",
+                    "sum"
+                  ],
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "ops",
+                  "min": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 15,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 2,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "normal"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-152": {
+        "kind": "Panel",
+        "spec": {
+          "id": 152,
+          "title": "Top Devices by Event Volume (range)",
+          "description": "Combined syslog + SNMP trap event counts per device over the dashboard time range, ranked by total \u2014 quickly surfaces a device spiking either event type.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by (device_name) (count_over_time({service_name=~\"ktranslate.*\"} | json | instrumentation_name=\"ktranslate-syslog\" | device_name=~\"$device_name\" [$__range]))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by (device_name) (count_over_time({service_name=~\"ktranslate.*\"} | json | eventType=\"KSnmpTrap\" | device_name=~\"$device_name\" [$__range]))",
+                        "instant": true,
+                        "queryType": "instant",
+                        "range": false
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "labelsToFields",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "joinByField",
+                  "spec": {
+                    "options": {
+                      "byField": "device_name",
+                      "mode": "outer"
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true,
+                        "Time 1": true,
+                        "Time 2": true
+                      },
+                      "renameByName": {
+                        "Value #A": "syslog_events",
+                        "Value #B": "trap_events"
+                      }
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "calculateField",
+                  "spec": {
+                    "options": {
+                      "alias": "total_events",
+                      "binary": {
+                        "left": "syslog_events",
+                        "operator": "+",
+                        "right": "trap_events"
+                      },
+                      "mode": "binary"
+                    }
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "sortBy",
+                  "spec": {
+                    "options": {
+                      "sort": [
+                        {
+                          "desc": true,
+                          "field": "total_events"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "13.2.0-30402795349",
+            "spec": {
+              "options": {
+                "cellHeight": "sm",
+                "showHeader": true,
+                "sortBy": [
+                  {
+                    "desc": true,
+                    "displayName": "total_events"
+                  }
+                ]
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "custom": {
+                    "align": "auto",
+                    "cellOptions": {
+                      "type": "auto"
+                    },
+                    "footer": {
+                      "reducers": []
+                    },
+                    "inspect": false
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "device_name"
+                    },
+                    "properties": [
+                      {
+                        "id": "links",
+                        "value": [
+                          {
+                            "targetBlank": true,
+                            "title": "View Device Details \u2192",
+                            "url": "/d/ktranslate-device-details?var-instance=${__data.fields.device_name}&dtab=Events&${__url_time_range}"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-154": {
+        "kind": "Panel",
+        "spec": {
+          "id": 154,
+          "title": "Syslog Volume by Severity",
+          "description": "Device syslog volume by RFC5424 severity (instrumentation_name=ktranslate-syslog).",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "sum by (severity) (count_over_time({service_name=~\"ktranslate.*\"} | json | instrumentation_name=\"ktranslate-syslog\" | severity != \"\" [$__interval]))",
+                        "instant": false,
+                        "legendFormat": "{{severity}}",
+                        "queryType": "range",
+                        "range": true
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.2.0-30402795349",
+            "spec": {
+              "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "enableFacetedFilter": false,
+                  "overflow": "ellipsis",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "min": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      },
+                      {
+                        "value": 80,
+                        "color": "red"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "bars",
+                    "fillOpacity": 40,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "linear",
+                    "lineWidth": 2,
+                    "pointSize": 5,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "always",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "normal"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "3"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Error"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "4"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Warning"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "5"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Notice"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "6"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Informational"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-155": {
+        "kind": "Panel",
+        "spec": {
+          "id": 155,
+          "title": "Recent Device Syslog",
+          "description": "Forwarded device syslog (instrumentation_name=ktranslate-syslog). Structured JSON with severity, facility, and message.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "loki",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafanacloud-logs"
+                      },
+                      "spec": {
+                        "app": "grafana-assistant-app",
+                        "expr": "{service_name=~\"ktranslate.*\"} | json | instrumentation_name=\"ktranslate-syslog\" | device_name=~\"$device_name\"",
+                        "instant": false,
+                        "queryType": "range",
+                        "range": true
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "logs",
+            "version": "13.2.0-30402795349",
+            "spec": {
+              "options": {
+                "dedupStrategy": "none",
+                "enableInfiniteScrolling": false,
+                "enableLogDetails": true,
+                "prettifyLogMessage": false,
+                "showCommonLabels": false,
+                "showControls": false,
+                "showFieldSelector": false,
+                "showLabels": false,
+                "showLevel": true,
+                "showLogAttributes": true,
+                "showTime": true,
+                "sortOrder": "Descending",
+                "timestampResolution": "ms",
+                "unwrappedColumns": false,
+                "wrapLogMessage": false
+              },
+              "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
       "panel-16": {
         "kind": "Panel",
         "spec": {
@@ -5295,247 +5935,14 @@
                     },
                     "properties": [
                       {
-                        "id": "displayName",
-                        "value": "Device"
-                      },
-                      {
                         "id": "links",
                         "value": [
                           {
-                            "title": "Open Device Detail",
-                            "url": "/d/ktranslate-device-details/04-network-device-details?var-instance=${__data.fields.device_name}&var-datasource=${datasource}&from=${__from}&to=${__to}"
+                            "targetBlank": true,
+                            "title": "View Device Details \u2192",
+                            "url": "/d/ktranslate-device-details?var-instance=${__data.fields.device_name}&dtab=Overview&${__url_time_range}"
                           }
                         ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "polling_health"
-                    },
-                    "properties": [
-                      {
-                        "id": "displayName",
-                        "value": "Polling Health"
-                      },
-                      {
-                        "id": "mappings",
-                        "value": [
-                          {
-                            "options": {
-                              "0": {
-                                "color": "red",
-                                "index": 0,
-                                "text": "No Data"
-                              },
-                              "1": {
-                                "color": "green",
-                                "index": 1,
-                                "text": "Healthy"
-                              },
-                              "6": {
-                                "color": "orange",
-                                "index": 2,
-                                "text": "Poll Timeout"
-                              }
-                            },
-                            "type": "value"
-                          }
-                        ]
-                      },
-                      {
-                        "id": "thresholds",
-                        "value": {
-                          "mode": "absolute",
-                          "steps": [
-                            {
-                              "color": "green",
-                              "value": 0
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "id": "custom.cellOptions",
-                        "value": {
-                          "type": "color-background"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "cpu"
-                    },
-                    "properties": [
-                      {
-                        "id": "displayName",
-                        "value": "CPU %"
-                      },
-                      {
-                        "id": "unit",
-                        "value": "percent"
-                      },
-                      {
-                        "id": "thresholds",
-                        "value": {
-                          "mode": "absolute",
-                          "steps": [
-                            {
-                              "color": "green",
-                              "value": 0
-                            },
-                            {
-                              "color": "yellow",
-                              "value": 70
-                            },
-                            {
-                              "color": "red",
-                              "value": 90
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "id": "custom.cellOptions",
-                        "value": {
-                          "type": "color-background"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "memory"
-                    },
-                    "properties": [
-                      {
-                        "id": "displayName",
-                        "value": "Mem %"
-                      },
-                      {
-                        "id": "unit",
-                        "value": "percent"
-                      },
-                      {
-                        "id": "thresholds",
-                        "value": {
-                          "mode": "absolute",
-                          "steps": [
-                            {
-                              "color": "green",
-                              "value": 0
-                            },
-                            {
-                              "color": "yellow",
-                              "value": 70
-                            },
-                            {
-                              "color": "red",
-                              "value": 90
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "id": "custom.cellOptions",
-                        "value": {
-                          "type": "color-background"
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "total_interfaces"
-                    },
-                    "properties": [
-                      {
-                        "id": "displayName",
-                        "value": "Interfaces"
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "if_down"
-                    },
-                    "properties": [
-                      {
-                        "id": "displayName",
-                        "value": "If Down"
-                      },
-                      {
-                        "id": "unit",
-                        "value": "short"
-                      },
-                      {
-                        "id": "thresholds",
-                        "value": {
-                          "mode": "absolute",
-                          "steps": [
-                            {
-                              "color": "green",
-                              "value": 0
-                            },
-                            {
-                              "color": "red",
-                              "value": 1
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "id": "custom.cellOptions",
-                        "value": {
-                          "type": "color-background"
-                        }
-                      },
-                      {
-                        "id": "links",
-                        "value": [
-                          {
-                            "title": "Open Device Detail",
-                            "url": "/d/ktranslate-device-details/04-network-device-details?var-instance=${__data.fields.device_name}&var-datasource=${datasource}&from=${__from}&to=${__to}&var-datasource=${datasource}&from=${__from}&to=${__to}"
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "traffic_in"
-                    },
-                    "properties": [
-                      {
-                        "id": "displayName",
-                        "value": "Bytes In"
-                      },
-                      {
-                        "id": "unit",
-                        "value": "bytes"
-                      }
-                    ]
-                  },
-                  {
-                    "matcher": {
-                      "id": "byName",
-                      "options": "traffic_out"
-                    },
-                    "properties": [
-                      {
-                        "id": "displayName",
-                        "value": "Bytes Out"
-                      },
-                      {
-                        "id": "unit",
-                        "value": "bytes"
                       }
                     ]
                   }
@@ -5550,7 +5957,7 @@
         "spec": {
           "id": 21,
           "title": "Interfaces Down by Device",
-          "description": "Count of oper-down interfaces per device — high counts may indicate trunk failures or decommissioned ports",
+          "description": "Count of oper-down interfaces per device \u2014 high counts may indicate trunk failures or decommissioned ports",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -5636,7 +6043,14 @@
                   },
                   "color": {
                     "mode": "thresholds"
-                  }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "View Device Details \u2192",
+                      "url": "/d/ktranslate-device-details?var-instance=${__field.labels.device_name}&dtab=Interfaces&${__url_time_range}"
+                    }
+                  ]
                 },
                 "overrides": []
               }
@@ -5737,7 +6151,14 @@
                   },
                   "color": {
                     "mode": "thresholds"
-                  }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "View Device Details \u2192",
+                      "url": "/d/ktranslate-device-details?var-instance=${__field.labels.device_name}&dtab=Interfaces&${__url_time_range}"
+                    }
+                  ]
                 },
                 "overrides": []
               }
@@ -5838,7 +6259,14 @@
                   },
                   "color": {
                     "mode": "thresholds"
-                  }
+                  },
+                  "links": [
+                    {
+                      "targetBlank": true,
+                      "title": "View Device Details \u2192",
+                      "url": "/d/ktranslate-device-details?var-instance=${__field.labels.device_name}&dtab=Overview&${__url_time_range}"
+                    }
+                  ]
                 },
                 "overrides": []
               }
@@ -5850,7 +6278,7 @@
         "kind": "Panel",
         "spec": {
           "id": 24,
-          "title": "CPU Utilization — Top 10 Devices",
+          "title": "CPU Utilization \u2014 Top 10 Devices",
           "description": "CPU utilization over time for the top 10 busiest devices",
           "links": [],
           "data": {
@@ -5916,6 +6344,8 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "percent",
+                  "min": 0,
+                  "max": 100,
                   "thresholds": {
                     "mode": "absolute",
                     "steps": [
@@ -5978,7 +6408,7 @@
         "spec": {
           "id": 33,
           "title": "Total Fleet Traffic by Device (Stacked)",
-          "description": "Combined in+out traffic per device, stacked — use to identify which devices are driving aggregate spikes.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets × 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
+          "description": "Combined in+out traffic per device, stacked \u2014 use to identify which devices are driving aggregate spikes.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets \u00d7 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -6148,7 +6578,7 @@
             "version": "13.2.0-30402795349",
             "spec": {
               "options": {
-                "colorMode": "background_solid",
+                "colorMode": "background",
                 "graphMode": "none",
                 "justifyMode": "center",
                 "orientation": "auto",
@@ -6278,7 +6708,7 @@
         "spec": {
           "id": 36,
           "title": "Avg Fleet CPU",
-          "description": "Average of each device's max CPU — high values indicate broad fleet saturation",
+          "description": "Average of each device's max CPU \u2014 high values indicate broad fleet saturation",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -6370,7 +6800,7 @@
         "spec": {
           "id": 37,
           "title": "Total Fleet Traffic",
-          "description": "Sum of inbound + outbound bits/sec across all device interfaces\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets × 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
+          "description": "Sum of inbound + outbound bits/sec across all device interfaces\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets \u00d7 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -6456,7 +6886,7 @@
         "kind": "Panel",
         "spec": {
           "id": 38,
-          "title": "Total Devices Δ 24h",
+          "title": "Total Devices \u0394 24h",
           "description": "Absolute change in reporting devices vs 24h ago. Negative means devices stopped polling.",
           "links": [],
           "data": {
@@ -6542,7 +6972,7 @@
         "kind": "Panel",
         "spec": {
           "id": 39,
-          "title": "Interfaces Down Δ 24h",
+          "title": "Interfaces Down \u0394 24h",
           "description": "Absolute change in fleet-wide down interface count vs 24h ago. Positive = more outages.",
           "links": [],
           "data": {
@@ -6628,7 +7058,7 @@
         "kind": "Panel",
         "spec": {
           "id": 40,
-          "title": "Avg Fleet CPU Δ 24h",
+          "title": "Avg Fleet CPU \u0394 24h",
           "description": "Change in average fleet CPU vs 24h ago. Positive = fleet is busier than yesterday.",
           "links": [],
           "data": {
@@ -6720,8 +7150,8 @@
         "kind": "Panel",
         "spec": {
           "id": 41,
-          "title": "Fleet Traffic Δ 24h",
-          "description": "Change in total fleet traffic (bps) vs 24h ago. Zero indicates no change or data unavailable.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets × 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
+          "title": "Fleet Traffic \u0394 24h",
+          "description": "Change in total fleet traffic (bps) vs 24h ago. Zero indicates no change or data unavailable.\n\nInterface bps assumes ktranslate delta gauges with a 60s SNMP poll (octets \u00d7 8 / 60). When poll_duration_sec is absent, 60s is assumed.",
           "links": [],
           "data": {
             "kind": "QueryGroup",
@@ -7295,7 +7725,7 @@
                                   "height": 10,
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-141"
+                                    "name": "panel-149"
                                   }
                                 }
                               },
@@ -7802,7 +8232,62 @@
                     {
                       "kind": "RowsLayoutRow",
                       "spec": {
-                        "title": "Device Syslog",
+                        "title": "Overview",
+                        "collapse": false,
+                        "hideHeader": false,
+                        "fillScreen": false,
+                        "layout": {
+                          "kind": "GridLayout",
+                          "spec": {
+                            "items": [
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "x": 0,
+                                  "y": 0,
+                                  "width": 24,
+                                  "height": 8,
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-152"
+                                  }
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "x": 0,
+                                  "y": 8,
+                                  "width": 12,
+                                  "height": 9,
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-150"
+                                  }
+                                }
+                              },
+                              {
+                                "kind": "GridLayoutItem",
+                                "spec": {
+                                  "x": 12,
+                                  "y": 8,
+                                  "width": 12,
+                                  "height": 9,
+                                  "element": {
+                                    "kind": "ElementReference",
+                                    "name": "panel-151"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "kind": "RowsLayoutRow",
+                      "spec": {
+                        "title": "Syslog",
                         "collapse": false,
                         "hideHeader": false,
                         "fillScreen": false,
@@ -7819,7 +8304,7 @@
                                   "height": 7,
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-145"
+                                    "name": "panel-154"
                                   }
                                 }
                               },
@@ -7832,7 +8317,7 @@
                                   "height": 8,
                                   "element": {
                                     "kind": "ElementReference",
-                                    "name": "panel-144"
+                                    "name": "panel-155"
                                   }
                                 }
                               }
@@ -8111,7 +8596,7 @@
               "label": "device_name",
               "labelFilters": [
                 {
-                  "label": "snmp_group",
+                  "label": "tags_snmp_group",
                   "op": "=~",
                   "value": "$snmp_group"
                 },
@@ -8123,7 +8608,7 @@
               ],
               "metric": "kentik_snmp_PollingHealth",
               "qryType": 1,
-              "query": "label_values(kentik_snmp_PollingHealth{snmp_group=~\"$snmp_group\",provider=~\"$provider\"},device_name)",
+              "query": "label_values(kentik_snmp_PollingHealth{tags_snmp_group=~\"$snmp_group\",provider=~\"$provider\"},device_name)",
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             }
           },

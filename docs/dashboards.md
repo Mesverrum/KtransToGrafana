@@ -2,7 +2,7 @@
 
 [← back to README](../README.md) · [Data in Grafana](grafana.md)
 
-This repo ships a small **numbered dashboard set** under [`dashboards/`](../dashboards/). Import **the whole set** (00–07), not a single board in isolation — Summary links into Details, Architecture explains the model, Health tells you whether collectors are alive, and the fleet use-case boards (Inventory / Risk / Capacity) answer focused estate questions.
+This repo ships a small **numbered dashboard set** under [`dashboards/`](../dashboards/). Import **the whole set** (00–10), not a single board in isolation — Summary links into Details, Architecture explains the model, Health tells you whether collectors are alive, and the fleet use-case boards (Inventory / Risk / Capacity / Events / Environment / Adjacency) answer focused estate questions.
 
 | # | File | Role |
 |---|------|------|
@@ -14,8 +14,13 @@ This repo ships a small **numbered dashboard set** under [`dashboards/`](../dash
 | 05 | `05 Network Inventory.json` | Estate census: models, groups, serials, firmware when present |
 | 06 | `06 Network Risk.json` | Hardware faults, interface errors, BGP not-established, unhealthy pollers |
 | 07 | `07 Network Capacity.json` | CPU / memory / interface util & throughput / WAN uplinks |
+| 08 | `08 Network Events.json` | Trap / syslog noise, link-flap traps (Loki) |
+| 09 | `09 Network Environment.json` | Thermal, fans/PSU, optics/UPS probes |
+| 10 | `10 Network Adjacency.json` | BGP + portable OSPF/LLDP/HA/wireless |
 
-Rebuild 05–07 from scripts: `python3 scripts/build-fleet-usecase-dashboards.py` (add `--push` to publish).
+Rebuild 05–07: `python3 scripts/build-fleet-usecase-dashboards.py`  
+Rebuild 08–10: `python3 scripts/build-fleet-usecase-dashboards-ext.py`  
+(add `--push` to publish).
 
 **Push (preferred):** add `GRAFANA_URL` + `GRAFANA_TOKEN` to `.env`, then:
 

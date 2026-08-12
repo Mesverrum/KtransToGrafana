@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pull fleet use-case dashboards 05-07 from live Grafana into dashboards/."""
+"""Pull fleet use-case dashboards 05-10 from live Grafana into dashboards/."""
 from __future__ import annotations
 
 import json
@@ -13,6 +13,9 @@ UIDS = {
     "ktranslate-network-inventory": "05 Network Inventory.json",
     "ktranslate-network-risk": "06 Network Risk.json",
     "ktranslate-network-capacity": "07 Network Capacity.json",
+    "ktranslate-network-events": "08 Network Events.json",
+    "ktranslate-network-environment": "09 Network Environment.json",
+    "ktranslate-network-adjacency": "10 Network Adjacency.json",
 }
 
 

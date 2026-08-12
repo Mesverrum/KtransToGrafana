@@ -111,14 +111,14 @@ One row per polled device means it's working. `tags_snmp_group` matches the `GRO
 Then import the bundled dashboards or push them to your stack:
 
 ```
-# Option A: push all 00–04 (except flow, skipped by default) via v2 API
+# Option A: push all 00–10 (except flow, skipped by default) via v2 API
 # Add GRAFANA_URL + GRAFANA_TOKEN to .env first — see docs/grafana.md
 python3 scripts/push-dashboards.py
 
 # Option B: import 00 Ktranslate Architecture via Grafana UI (Dashboards → Import)
 ```
 
-**Import the full 00–07 set** — not only Device Details. One Details board covers many device types via `has_*` show/hide rows; Summary / Health / Flow / Architecture plus Inventory / Risk / Capacity complete the story. See **[docs/dashboards.md](docs/dashboards.md)**.
+**Import the full 00–10 set** — not only Device Details. One Details board covers many device types via `has_*` show/hide rows; Summary / Health / Flow / Architecture plus Inventory / Risk / Capacity / Events / Environment / Adjacency complete the story. See **[docs/dashboards.md](docs/dashboards.md)**.
 
 See [docs/grafana.md](docs/grafana.md) for verification queries, `$snmp_group` filtering, and TabsLayout-safe update rules.
 
@@ -133,7 +133,7 @@ The quickstart is deliberately minimal. Deeper topics live in `docs/`:
 - **[docs/architecture.md](docs/architecture.md)** — what each container does, the discovery/polling split, and how `.env` interpolation works.
 - **[docs/operations.md](docs/operations.md)** — permissions, memory limits, image pinning, scheduled (cron) discovery, the sflow demo overlay, tagging telemetry across multiple hosts (`KTRANS_HOST`), and the full `make` reference.
 - **[docs/grafana.md](docs/grafana.md)** — verification queries, flow rollups & cardinality, the official netflow-integration compatibility, and the bundled dashboards/alerts/skills.
-- **[docs/dashboards.md](docs/dashboards.md)** — import the 00–04 set; why one Device Details board uses `has_*` hide logic for many device types.
+- **[docs/dashboards.md](docs/dashboards.md)** — import the 00–10 set; why one Device Details board uses `has_*` hide logic; fleet Inventory / Risk / Capacity / Events / Environment / Adjacency.
 - **`troubleshooting/`** — common SNMP and connectivity problems.
 
 Modifying the repo? See [CONTRIBUTING.md](CONTRIBUTING.md) for the conventions (the docs-index rule, the config generator, `.env` quoting).

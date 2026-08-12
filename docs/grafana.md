@@ -47,7 +47,7 @@ What this means in practice:
 
 ## Dashboards, alerts, and skills
 
-**Start here for the dashboard story:** [**docs/dashboards.md**](dashboards.md) — import the full **00–07** set, why **one** Device Details board uses `has_*` hide logic, and the fleet Inventory / Risk / Capacity boards.
+**Start here for the dashboard story:** [**docs/dashboards.md**](dashboards.md) — import the full **00–10** set, why **one** Device Details board uses `has_*` hide logic, and the fleet Inventory / Risk / Capacity / Events / Environment / Adjacency boards.
 
 The repo ships a set of assets to get you started:
 
@@ -60,6 +60,9 @@ The repo ships a set of assets to get you started:
   - **`05 Network Inventory`** — models, SNMP groups, serials, firmware probe
   - **`06 Network Risk`** — hardware / errors / BGP / poller health
   - **`07 Network Capacity`** — CPU, memory, interface util, WAN uplinks
+  - **`08 Network Events`** — traps / syslog noise (Loki)
+  - **`09 Network Environment`** — thermal, optics/UPS probes
+  - **`10 Network Adjacency`** — BGP + portable OSPF/LLDP/HA/wireless
 
 **Push to Grafana Cloud** (from repo root; add to `.env`):
 

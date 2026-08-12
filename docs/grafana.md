@@ -47,6 +47,8 @@ What this means in practice:
 
 ## Dashboards, alerts, and skills
 
+**Start here for the dashboard story:** [**docs/dashboards.md**](dashboards.md) — import the full **00–04** set, and why **one** Device Details board uses `has_*` hide logic instead of per-vendor dashboards.
+
 The repo ships a set of assets to get you started:
 
 - **`dashboards/`** — v2 Grafana manifests (source of truth for this repo; import via `python3 scripts/push-dashboards.py`, gcx v2, or Grafana UI — **not** legacy `POST /api/dashboards/db` on tabbed boards):
@@ -54,7 +56,7 @@ The repo ships a set of assets to get you started:
   - **`01 Ktranslate Health`** — collector CHF / jchf health; filter by `$snmp_group` and `service_name`
   - **`02 Network Flow Summary`** — NetFlow/sFlow rollups (`network_io_by_flow_bytes`; shared flow catalog — no `tags_snmp_group`)
   - **`03 Network Device Summary`** — fleet overview (TabsLayout); `$snmp_group` scopes SNMP panels via `tags_snmp_group=~"$snmp_group"`
-  - **`04 Network Device Details`** — per-device drill-down (TabsLayout); `$snmp_group` + `$instance`
+  - **`04 Network Device Details`** — per-device drill-down (TabsLayout); `$snmp_group` + `$instance`; conditional `has_*` rows (see [dashboards.md](dashboards.md))
 
 **Push to Grafana Cloud** (from repo root; add to `.env`):
 

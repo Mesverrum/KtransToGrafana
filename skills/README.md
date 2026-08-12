@@ -14,6 +14,8 @@ Two companion guides for **ktranslate-based Network Device Details** dashboards 
 - **Dashboard:** Network Device Details style board — **TabsLayout** v2 manifest (not legacy `POST /api/dashboards/db` flattening)
 - **Device identity label:** `device_name` on all series (dashboard variable name may differ — see below)
 
+**Why one Details board + `has_*`:** see [docs/dashboards.md](../docs/dashboards.md) — import the full 00–04 set; conditional rows keep vendor-specific panels hidden until the selected device exports the gate metric.
+
 ## Variable mapping (after import)
 
 Imported dashboards may name the device selector differently. **Do not hardcode hostnames** in queries.

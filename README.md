@@ -118,7 +118,9 @@ python3 scripts/push-dashboards.py
 # Option B: import 00 Ktranslate Architecture via Grafana UI (Dashboards → Import)
 ```
 
-See [docs/grafana.md](docs/grafana.md) for the full dashboard set, `$snmp_group` filtering, and TabsLayout-safe update rules.
+**Import the full 00–04 set** — not only Device Details. One Details board covers many device types via `has_*` show/hide rows; Summary / Health / Flow / Architecture complete the story. See **[docs/dashboards.md](docs/dashboards.md)**.
+
+See [docs/grafana.md](docs/grafana.md) for verification queries, `$snmp_group` filtering, and TabsLayout-safe update rules.
 
 **Want flow data immediately, before any router is exporting it?** Run `make detect-net && make up-demo` to add a local sflow source. See [operations.md](docs/operations.md#instant-flow-data-with-the-sflow-demo-overlay).
 
@@ -130,6 +132,7 @@ The quickstart is deliberately minimal. Deeper topics live in `docs/`:
 - **[docs/architecture.md](docs/architecture.md)** — what each container does, the discovery/polling split, and how `.env` interpolation works.
 - **[docs/operations.md](docs/operations.md)** — permissions, memory limits, image pinning, scheduled (cron) discovery, the sflow demo overlay, tagging telemetry across multiple hosts (`KTRANS_HOST`), and the full `make` reference.
 - **[docs/grafana.md](docs/grafana.md)** — verification queries, flow rollups & cardinality, the official netflow-integration compatibility, and the bundled dashboards/alerts/skills.
+- **[docs/dashboards.md](docs/dashboards.md)** — import the 00–04 set; why one Device Details board uses `has_*` hide logic for many device types.
 - **`troubleshooting/`** — common SNMP and connectivity problems.
 
 Modifying the repo? See [CONTRIBUTING.md](CONTRIBUTING.md) for the conventions (the docs-index rule, the config generator, `.env` quoting).

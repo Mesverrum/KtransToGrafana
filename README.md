@@ -118,7 +118,7 @@ python3 scripts/push-dashboards.py
 # Option B: import 00 Ktranslate Architecture via Grafana UI (Dashboards → Import)
 ```
 
-**Import the full 00–04 set** — not only Device Details. One Details board covers many device types via `has_*` show/hide rows; Summary / Health / Flow / Architecture complete the story. See **[docs/dashboards.md](docs/dashboards.md)**.
+**Import the full 00–07 set** — not only Device Details. One Details board covers many device types via `has_*` show/hide rows; Summary / Health / Flow / Architecture plus Inventory / Risk / Capacity complete the story. See **[docs/dashboards.md](docs/dashboards.md)**.
 
 See [docs/grafana.md](docs/grafana.md) for verification queries, `$snmp_group` filtering, and TabsLayout-safe update rules.
 

@@ -2,7 +2,7 @@
 
 [← back to README](../README.md) · [Data in Grafana](grafana.md)
 
-This repo ships a small **numbered dashboard set** under [`dashboards/`](../dashboards/). Import **the whole set** (00–04), not a single board in isolation — Summary links into Details, Architecture explains the model, and Health tells you whether collectors are alive before you chase empty panels.
+This repo ships a small **numbered dashboard set** under [`dashboards/`](../dashboards/). Import **the whole set** (00–07), not a single board in isolation — Summary links into Details, Architecture explains the model, Health tells you whether collectors are alive, and the fleet use-case boards (Inventory / Risk / Capacity) answer focused estate questions.
 
 | # | File | Role |
 |---|------|------|
@@ -11,6 +11,11 @@ This repo ships a small **numbered dashboard set** under [`dashboards/`](../dash
 | 02 | `02 Network Flow Summary.json` | NetFlow / sFlow rollups |
 | 03 | `03 Network Device Summary.json` | Fleet overview → drill into a device |
 | 04 | `04 Network Device Details.json` | Per-device drill-down (tabs + conditional rows) |
+| 05 | `05 Network Inventory.json` | Estate census: models, groups, serials, firmware when present |
+| 06 | `06 Network Risk.json` | Hardware faults, interface errors, BGP not-established, unhealthy pollers |
+| 07 | `07 Network Capacity.json` | CPU / memory / interface util & throughput / WAN uplinks |
+
+Rebuild 05–07 from scripts: `python3 scripts/build-fleet-usecase-dashboards.py` (add `--push` to publish).
 
 **Push (preferred):** add `GRAFANA_URL` + `GRAFANA_TOKEN` to `.env`, then:
 

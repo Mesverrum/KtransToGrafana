@@ -99,6 +99,10 @@ non-SNMP, or unreachable). Trying many communities across a wide range generates
 a lot of probes — raise `DISCOVERY_THREADS` for speed, but mind device load,
 IDS alerts, and TACACS account lockouts, and validate against a few IPs first.
 
+## SNMPv3 via AWS Secrets Manager (optional)
+
+To keep passphrases out of `groups/*.env` and generated YAML, set **`SNMP_V3_SECRET=aws.sm.<secret-name>`** on a `SNMP_VERSION=v3` group instead of the inline `SNMP_V3_USER` / `*_PASS` fields. Sample: `groups/secure-aws.env.sample`. Full steps (secret JSON shape, IAM, `.env` `AWS_REGION`): **[secrets-aws.md](secrets-aws.md)**.
+
 ## Render the configs
 
 ```

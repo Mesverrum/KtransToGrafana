@@ -101,6 +101,16 @@ for env_file in "${GROUP_FILES[@]}"; do
       done
     }
 
+    # Cloud secret reference (aws.sm.NAME / azure.kv.NAME / gcp.sm.NAME) replaces
+    # inline SNMP_V3_* fields. See docs/secrets-aws.md.
+    _check_v3_secret() {
+      local name="$1" val="$2"
+      if [[ ! "${val}" =~ ^(aws\.sm\.|azure\.kv\.|gcp\.sm\.)[A-Za-z0-9/_+=.@-]+$ ]]; then
+        echo "ERROR: ${env_file}: ${name}='${val}' must look like aws.sm.SecretName (or azure.kv./gcp.sm.)" >&2
+        exit 1
+      fi
+    }
+
     case "${SNMP_VERSION}" in
       v2c)
         # SNMP_V2_COMMUNITY may be a single value or a comma-separated list of
@@ -110,9 +120,21 @@ for env_file in "${GROUP_FILES[@]}"; do
           exit 1
         fi ;;
       v3)
-        _check_v3_set "" ;;
+        if [[ -n "${SNMP_V3_SECRET:-}" ]]; then
+          _check_v3_secret "SNMP_V3_SECRET" "${SNMP_V3_SECRET}"
+          if [[ -n "${SNMP_V3_USER:-}" ]]; then
+            echo "ERROR: ${env_file}: set either SNMP_V3_SECRET or SNMP_V3_USER/… fields, not both" >&2
+            exit 1
+          fi
+        else
+          _check_v3_set ""
+        fi ;;
       mixed)
         # An onboarding group: try any/all provided credentials during discovery.
+        if [[ -n "${SNMP_V3_SECRET:-}" ]]; then
+          echo "ERROR: ${env_file}: SNMP_V3_SECRET is not supported with SNMP_VERSION=mixed (use v3)" >&2
+          exit 1
+        fi
         if [[ -z "${SNMP_V2_COMMUNITY:-}" && -z "${SNMP_V3_USER:-}" ]]; then
           echo "ERROR: ${env_file}: SNMP_VERSION=mixed requires at least one credential (SNMP_V2_COMMUNITY and/or SNMP_V3_USER)" >&2
           exit 1
@@ -121,11 +143,24 @@ for env_file in "${GROUP_FILES[@]}"; do
       *) echo "ERROR: ${env_file}: SNMP_VERSION must be v2c, v3, or mixed, got '${SNMP_VERSION}'" >&2; exit 1 ;;
     esac
 
-    # Any numbered v3 set (SNMP_V3_USER_2, _3, ...) must be complete, in v3/mixed.
+    # Numbered v3 sets: either complete inline fields or SNMP_V3_SECRET_N.
     if [[ "${SNMP_VERSION}" == "v3" || "${SNMP_VERSION}" == "mixed" ]]; then
       for n in 2 3 4 5 6 7 8 9; do
         _u="SNMP_V3_USER_${n}"
-        [[ -n "${!_u:-}" ]] && _check_v3_set "_${n}"
+        _s="SNMP_V3_SECRET_${n}"
+        if [[ -n "${!_s:-}" ]]; then
+          if [[ "${SNMP_VERSION}" != "v3" ]]; then
+            echo "ERROR: ${env_file}: ${_s} requires SNMP_VERSION=v3" >&2
+            exit 1
+          fi
+          _check_v3_secret "${_s}" "${!_s}"
+          if [[ -n "${!_u:-}" ]]; then
+            echo "ERROR: ${env_file}: set either ${_s} or ${_u}/… fields, not both" >&2
+            exit 1
+          fi
+        elif [[ -n "${!_u:-}" ]]; then
+          _check_v3_set "_${n}"
+        fi
       done
     fi
     true  # the loop above can end on a false test; keep the subshell's exit 0
@@ -258,9 +293,19 @@ for env_file in "${GROUP_FILES[@]}"; do
     }
 
     # default_v3 (primary set) + other_v3s (numbered sets _2.._9), for v3/mixed.
+    # SNMP_V3_SECRET=aws.sm.Name renders as a cloud-secret reference (see docs/secrets-aws.md).
     DEFAULT_V3_YAML=" null"
     OTHER_V3S_YAML=""
-    if [[ "${SNMP_VERSION}" == "v3" || "${SNMP_VERSION}" == "mixed" ]] && [[ -n "${SNMP_V3_USER:-}" ]]; then
+    if [[ "${SNMP_VERSION}" == "v3" && -n "${SNMP_V3_SECRET:-}" ]]; then
+      DEFAULT_V3_YAML=" ${SNMP_V3_SECRET}"
+      _others=""
+      for n in 2 3 4 5 6 7 8 9; do
+        _s="SNMP_V3_SECRET_${n}"
+        [[ -z "${!_s:-}" ]] && continue
+        _others+=$'\n      - '"${!_s}"
+      done
+      [[ -n "${_others}" ]] && OTHER_V3S_YAML=$'\n    other_v3s:'"${_others}"
+    elif [[ "${SNMP_VERSION}" == "v3" || "${SNMP_VERSION}" == "mixed" ]] && [[ -n "${SNMP_V3_USER:-}" ]]; then
       DEFAULT_V3_YAML="$(_v3_block '        ' '        ' "${SNMP_V3_USER}" "${SNMP_V3_AUTH_PROTOCOL}" "${SNMP_V3_AUTH_PASS}" "${SNMP_V3_PRIV_PROTOCOL}" "${SNMP_V3_PRIV_PASS}")"
       _others=""
       for n in 2 3 4 5 6 7 8 9; do
@@ -273,6 +318,8 @@ for env_file in "${GROUP_FILES[@]}"; do
     fi
     export DEFAULT_COMMUNITIES_YAML DEFAULT_V3_YAML OTHER_V3S_YAML
 
+    _sec_note=""
+    [[ -n "${SNMP_V3_SECRET:-}" ]] && _sec_note=" secret=${SNMP_V3_SECRET}"
     envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/discovery.yaml.tmpl" \
       > "${CONFIG_DIR}/discovery-${GROUP}.yaml"
     envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/poller.yaml.tmpl" \
@@ -280,7 +327,7 @@ for env_file in "${GROUP_FILES[@]}"; do
     envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/compose-snippet.yaml.tmpl" \
       >> "${COMPOSE_OUT}"
 
-    echo "  rendered ${GROUP}  (discovery=${DISCOVERY_SOURCE}  snmp=${SNMP_VERSION}  ports=${METALISTEN_PORT}/${TRAP_PORT})"
+    echo "  rendered ${GROUP}  (discovery=${DISCOVERY_SOURCE}  snmp=${SNMP_VERSION}${_sec_note}  ports=${METALISTEN_PORT}/${TRAP_PORT})"
   )
 done
 

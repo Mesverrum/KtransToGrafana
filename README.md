@@ -129,6 +129,7 @@ See [docs/grafana.md](docs/grafana.md) for verification queries, `$snmp_group` f
 The quickstart is deliberately minimal. Deeper topics live in `docs/`:
 
 - **[docs/configuration.md](docs/configuration.md)** — multiple groups, `DISCOVERY_SOURCE=cidr|netbox` (including NetBox filters), [onboarding a pile of devices when you don't know which credential fits which](docs/configuration.md#multiple-candidate-credentials-unknown-mapping), adding/removing groups, generator outputs, running without the Makefile.
+- **[docs/secrets-aws.md](docs/secrets-aws.md)** — optional SNMPv3 via AWS Secrets Manager (`SNMP_V3_SECRET=aws.sm.…`) instead of inline passphrases.
 - **[docs/architecture.md](docs/architecture.md)** — what each container does, the discovery/polling split, and how `.env` interpolation works.
 - **[docs/operations.md](docs/operations.md)** — permissions, memory limits, image pinning, scheduled (cron) discovery, the sflow demo overlay, tagging telemetry across multiple hosts (`KTRANS_HOST`), and the full `make` reference.
 - **[docs/grafana.md](docs/grafana.md)** — verification queries, flow rollups & cardinality, the official netflow-integration compatibility, and the bundled dashboards/alerts/skills.

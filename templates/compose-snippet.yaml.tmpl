@@ -10,6 +10,12 @@
       # the same group on two hosts stays separable too.
       - OTEL_SERVICE_NAME=ktranslate-snmp-${GROUP}${KTRANS_HOST:+-}${KTRANS_HOST}
       - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
+      # Optional: resolve SNMP_V3_SECRET=aws.sm.… at runtime (docs/secrets-aws.md).
+      # Prefer an instance/task IAM role; keys below are only needed when not using a role.
+      - AWS_REGION=${AWS_REGION:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
     volumes:
       - type: bind
         source: ${REPO_PATH}/config/poller-${GROUP}.yaml
@@ -48,6 +54,11 @@
       # runtime. Harmless (blank, unused) for cidr groups.
       - NETBOX_HOST=${NETBOX_HOST:-}
       - NETBOX_TOKEN=${NETBOX_TOKEN:-}
+      # AWS Secrets Manager for SNMP_V3_SECRET=aws.sm.… (docs/secrets-aws.md).
+      - AWS_REGION=${AWS_REGION:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
       # Discovery containers are short-lived; export internal metrics sooner than
       # the default 60s so a quick scan still emits health data to Alloy.
       - OTEL_METRIC_EXPORT_INTERVAL=10000

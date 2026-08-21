@@ -21,7 +21,14 @@ make discover-all           # discover every group; reload flow/syslog + all pol
 make flow-dns               # regenerate flow_dns PTR records from device catalog
 make detect-net             # auto-fill HOST_NET in .env (only needed for the sflow demo overlay)
 make host                   # print the deployment.host value this stack will use
+make generate-k8s           # render k8s/generated/ from groups/*.env
+make k8s-up                 # secrets from .env + apply the Kubernetes runtime
+make k8s-down               # delete generated objects; keep the devices PVC
+make k8s-down-wipe          # also delete PVC ktrans-state
+make k8s-discover GROUP=…   # one-shot in-cluster discovery Job
 ```
+
+Kubernetes discovery is a CronJob (default every 6 hours, staggered per group) plus `make k8s-discover`. An empty scan keeps the previous device list — same rule as `scripts/run-discovery.sh`. See [kubernetes.md](kubernetes.md) and [k8s/LIMITATIONS.md](../k8s/LIMITATIONS.md).
 
 `make up` is idempotent — it starts newly-added services without disturbing running ones. Pollers begin polling whatever devices are in their `state/devices-<group>.yaml`; until you've run discovery those are empty stubs (`{}`) and no SNMP traffic goes out. Run `make discover GROUP=<name>` for each group to populate them.
 

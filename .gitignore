@@ -23,9 +23,16 @@ compose-limits.generated.yaml
 state/*.yaml
 !state/.gitkeep
 
+# Kubernetes generator outputs (scripts/generate-k8s.py).
+k8s/generated/*
+!k8s/generated/.gitkeep
+
 # flow_dns generated records (scripts/refresh-flow-dns.sh).
 dnsmasq/hosts.generated.conf
 dnsmasq/upstream.conf
+
+# Python bytecode from generate-k8s.py
+scripts/__pycache__/
 
 # OS and editor noise
 .DS_Store

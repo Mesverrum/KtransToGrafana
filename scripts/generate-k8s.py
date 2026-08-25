@@ -1129,7 +1129,7 @@ def main() -> int:
 
     group_files = sorted((REPO / "groups").glob("*.env"))
     if not group_files:
-        raise SystemExit("no groups/*.env — copy a groups/*.env.sample first")
+        raise SystemExit("no groups/*.env — cp groups/onboarding.env.sample groups/onboarding.env")
     groups = [parse_group_env(p) for p in group_files]
 
     if not args.skip_generate:

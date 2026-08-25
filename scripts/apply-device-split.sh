@@ -26,18 +26,16 @@ for envfile in "${REPO_ROOT}/groups"/*.env; do
 done
 shopt -u nullglob
 
-if [[ -f "${REPO_ROOT}/compose-base.yaml" ]]; then
-  bash "${REPO_ROOT}/scripts/compute-limits.sh" || true
-  compose=(
-    docker compose
-    -f "${REPO_ROOT}/compose-base.yaml"
-    -f "${REPO_ROOT}/compose-groups.generated.yaml"
-    -f "${REPO_ROOT}/compose-catalog.generated.yaml"
-  )
-  if [[ -f "${REPO_ROOT}/compose-limits.generated.yaml" ]]; then
-    compose+=(-f "${REPO_ROOT}/compose-limits.generated.yaml")
-  fi
-  "${compose[@]}" up -d --remove-orphans
-fi
+# shellcheck disable=SC1091
+source "${REPO_ROOT}/scripts/progress.sh"
+# shellcheck disable=SC1091
+source "${REPO_ROOT}/scripts/compose-files.sh"
+ktrans_compose_files "${REPO_ROOT}"
+ktrans_step "sizing container memory"
+ktrans_capture "${REPO_ROOT}/state/last-limits.log" \
+  bash "${REPO_ROOT}/scripts/compute-limits.sh" --quiet || true
+ktrans_step "starting pollers after split"
+ktrans_capture "${REPO_ROOT}/state/last-compose-up.log" \
+  docker compose "${KTRANS_COMPOSE_FILES[@]}" up -d --remove-orphans
 
 bash "${REPO_ROOT}/scripts/reload-ktranslate-devices.sh"

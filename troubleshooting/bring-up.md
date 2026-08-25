@@ -14,14 +14,14 @@ devices  →  ktranslate poller  →  Alloy (local :12346)  →  Grafana Cloud (
 cat state/devices-<group>.yaml
 ```
 
-Replace `<group>` with the `GROUP=` value from your `groups/*.env` (e.g. `onboarding` or `single`).
+Replace `<group>` with the `GROUP=` value from your `groups/*.env` (usually `onboarding`).
 
 | What you see | Meaning |
 |---|---|
 | A `devices:` list with IPs / names | Discovery worked. Go to hop 2. |
 | `{}` or a missing file | Discovery never populated the poller. Run `make discover GROUP=<name>` (that is the **only** make target that honors `GROUP=`). Then `snmpwalk` from this host — [snmp.md](snmp.md). |
 
-`make generate` and `make up` start **every** file matching `groups/*.env`. `GROUP=` does nothing there. Copying both `onboarding.env` and `single.env` starts two pollers. Start with **one** group file until hop 3 is green.
+`make generate` and `make up` start **every** file matching `groups/*.env`. `GROUP=` does nothing there. Start with **one** group file (`groups/onboarding.env`) until hop 3 is green.
 
 Leftover containers from an earlier try:
 
@@ -47,15 +47,12 @@ Counters increasing means ktranslate is handing data to Alloy on this machine. I
 docker logs alloy --tail 80
 ```
 
-Typical Alloy crashes from a copy-paste of older samples:
-
 | Log / symptom | Fix |
 |---|---|
-| Bind-mount missing `config.alloy`, or Alloy running an empty/old config | `compose-base.yaml` must mount `source: ./config.alloy` — **not** a hardcoded `/opt/Grafana/...` path. Re-copy: `cp compose-base.yaml.sample compose-base.yaml` |
-| River parse error near `delete_matching_keys` | Alloy rejects single quotes around that call. Re-copy: `cp config.alloy.sample config.alloy` (backticks). |
+| Alloy crash loop after you used to copy `compose-base.yaml` / `config.alloy` | Delete those gitignored copies so `make up` uses the tracked `.sample` files. A leftover `/opt/Grafana/...` bind-mount or single-quoted `delete_matching_keys` is why those copies existed. |
 | `deployment.host=` / invalid resource attributes | `.env` has blank `KTRANS_HOST` and you started with raw `docker compose up`. Use `make up` (fills hostname) or `export KTRANS_HOST=$(bash scripts/host-id.sh)` first. |
 
-`make preflight` (runs as part of `make up`) fails on the stale mount and the single-quoted River line.
+`make preflight` warns if leftover `compose-base.yaml` / `config.alloy` copies are sitting unused. To fork Alloy on purpose, see [architecture.md § Customizing Alloy and Compose](../docs/architecture.md#customizing-alloy-and-compose).
 
 ## Hop 3 — Grafana Cloud, with the right PromQL
 
@@ -83,19 +80,16 @@ If hop 2 is green and these queries are still empty:
 
 ## Failure modes that look like “the README is wrong”
 
-These are the ones operators hit when following the samples literally (or following an older clone).
+These are the ones operators hit when following the samples literally.
 
 | What you did | What actually happens |
 |---|---|
 | Copied every `groups/*.env.sample` | `make generate` / `make up` start **all** of them. Two SNMP pollers, colliding ports, leftover `ktranslate_snmp_*` containers. |
-| `make generate GROUP=single` or `make up GROUP=single` | `GROUP=` is ignored. Those targets always process every `groups/*.env`. Only `make discover GROUP=…` uses it. |
+| Left `compose-base.yaml` / `config.alloy` in the repo root | Those copies are **unused** on Compose (`make up` uses the `.sample` files). Delete them, or follow [architecture.md § Customizing Alloy and Compose](../docs/architecture.md#customizing-alloy-and-compose). |
+| `make generate GROUP=onboarding` or `make up GROUP=onboarding` | `GROUP=` is ignored. Those targets always process every `groups/*.env`. Only `make discover GROUP=…` uses it. |
 | `chmod +x` on one script at a time after “Permission denied” | Git on Windows / some zip extracts drop `+x`. `make` already runs `bash scripts/…`. One-shot: `chmod a+x scripts/*.sh` (also done by `make preflight`). |
 | `curl` / browser GET on `GC_OTLP_URL` | 404. Use hop 2 (`localhost:12346`) instead. |
 | Queried `kentik_snmp_DeviceMetrics` | Empty on this path even when SNMP is healthy. Use `kentik_snmp_CPU` / `kentik_snmp_PollingHealth`. |
 | `rate(network_io_by_flow_bytes[5m])` | ktranslate flow rollups are **gauges** emitted every `--rollup_interval` (60s). Throughput is `sum(network_io_by_flow_bytes) * 8 / 60`. Use `max_over_time` on dashboards, not `rate()`. |
 | Raw `docker compose up` with blank `KTRANS_HOST` | Compose interpolates `deployment.host=` and Alloy can crash. Prefer `make up`. |
 | Scripts invoked as `./scripts/foo.sh` from cron | Still needs `+x`, or write `bash scripts/foo.sh`. |
-
-## After you change samples
-
-Live copies (`.env`, `config.alloy`, `compose-base.yaml`, `groups/*.env`) are git-ignored. `git pull` does **not** refresh them. If you cloned before the relative Alloy mount / River backticks landed, re-copy the `.sample` files (keep your OTLP values and group TARGETS) and run `make preflight`.

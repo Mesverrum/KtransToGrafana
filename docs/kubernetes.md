@@ -50,7 +50,7 @@ All optional except as noted. Defaults are what we consider the least-surprising
 | `K8S_STORAGE_SIZE` | `1Gi` | PVC request |
 | `K8S_DISCOVER_SCHEDULE` | `0 */6 * * *` | CronJob schedule; groups are staggered by +5 minutes |
 
-`KTRANS_HOST`, `KTRANSLATE_IMAGE`, `ALLOY_IMAGE`, `NF_SOURCE`, `SYSLOG_SOURCE`, `NETBOX_*`, and AWS keys behave as on Compose. OTLP credentials become the `grafana-otlp` Secret and are **not** written into `k8s/generated/`.
+`KTRANS_HOST`, `KTRANSLATE_IMAGE`, `ALLOY_IMAGE`, `NF_SOURCE`, `SYSLOG_SOURCE`, `NETBOX_*`, and AWS keys behave as on Compose. OTLP credentials become the `grafana-otlp` Secret and are **not** written into `k8s/generated/`. Alloy config is `config.alloy.sample`, or gitignored `config.alloy` if you forked it ([architecture.md](architecture.md#customizing-alloy-and-compose)). `compose.override.yaml` is Compose-only.
 
 Poller and discovery ConfigMaps **do** contain SNMP communities / v3 fields, the same way `config/poller-*.yaml` does on the Compose host. Restrict RBAC on the namespace accordingly.
 

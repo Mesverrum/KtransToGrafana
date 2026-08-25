@@ -10,8 +10,8 @@ make split-devices          # vendor family from mib_profile; provisions pollers
 
 Traps, syslog, and flow stay on the catalog listener (`UDP/1620` for traps).
 This directory is the **override** path: static YAML matchers (site CIDR,
-hostname, firmware) and a worked vendor bring-up if you want named buckets
-before the first scan.
+hostname, firmware). Poller `groups/*.env` files are provisioned by
+`make split-devices` — do not copy named vendor samples.
 
 ---
 
@@ -50,18 +50,15 @@ the box.
 Needs **Python 3** and **PyYAML** (`sudo apt install python3-yaml`) in addition
 to the usual `yq` / `envsubst` host tools.
 
-## Bring-up (vendor buckets — the worked example)
+## Bring-up (static mapping override)
 
-Do not also copy `groups/onboarding.env.sample` or `groups/single.env.sample`.
-`make generate` starts every `groups/*.env`.
+Prefer onboarding + `make split-devices` (dynamic vendors). Use this only when
+you want a `ROLE=discover` estate group and a committed `config/device-split.yaml`.
+Do not also copy `groups/onboarding.env`.
 
 ```
 # from the repo root
 cp examples/vendor-split/groups/estate.env.sample  groups/estate.env
-cp examples/vendor-split/groups/cisco.env.sample   groups/cisco.env
-cp examples/vendor-split/groups/palo.env.sample    groups/palo.env
-cp examples/vendor-split/groups/juniper.env.sample groups/juniper.env
-cp examples/vendor-split/groups/other.env.sample   groups/other.env
 cp examples/vendor-split/device-split.yaml         config/device-split.yaml
 
 # edit groups/estate.env: TARGETS + candidate credentials
@@ -72,8 +69,8 @@ make discover GROUP=estate
 ```
 
 `make discover GROUP=estate` scans, publishes `state/devices-estate.yaml`,
-splits into `state/devices-{cisco,palo,juniper,other}.yaml`, then SIGUSR2s the
-pollers (and restarts flow/syslog so the catalog re-reads).
+splits into poller files (provisioning `groups/<vendor>.env` as needed), then
+SIGUSR2s the pollers (and restarts flow/syslog/traps so the catalog re-reads).
 
 Re-run the split after you edit the mapping (estate list unchanged):
 
@@ -114,9 +111,11 @@ First matching rule wins. If that rule's destination is **not** a
 `ROLE=poll` group in `groups/*.env`, the device falls through to the next
 rule, then `default_group` (`other` here) so nothing is dropped.
 
-Each destination name must match a poller's `GROUP=`. Adding a bucket is:
-copy a `ROLE=poll` sample, give it a unique `GROUP` + ports, add a rule
-whose `group:` matches that name, then `make generate && make split-devices`.
+Each destination name must match a poller's `GROUP=`. Adding a bucket:
+`make split-devices` provisions missing `groups/<name>.env` as `ROLE=poll`,
+or copy `groups/onboarding.env.sample`, set `GROUP=` / `ROLE=poll` / unique
+ports, add a rule whose `group:` matches that name, then `make generate &&
+make split-devices`.
 
 ### Operators (any field)
 
@@ -148,8 +147,9 @@ Destinations:
 
 ### Copy-paste recipes
 
-Swap `config/device-split.yaml` for one of these, or merge rules. Create the
-matching `ROLE=poll` groups first (or unmatched devices land in `other`).
+Swap `config/device-split.yaml` for one of these, or merge rules.
+`make split-devices` provisions missing `ROLE=poll` groups (unmatched
+devices land in `other` until that poller exists).
 
 | File | Boundary |
 |------|----------|
@@ -211,9 +211,10 @@ the UPS matches neither and lands in `other`.
 | `juniper` | ex1 |
 | `other` | ups1 |
 
-That is the layout `make discover GROUP=estate` produces when you copy the
-sample groups. Each poller is its own failure domain: a stuck Cisco walk does
-not take down the Palo or Juniper containers.
+That is the layout `make discover GROUP=estate` produces: the splitter
+provisions `groups/<vendor>.env` as `ROLE=poll`. Each poller is its own
+failure domain — a stuck Cisco walk does not take down the Palo or Juniper
+containers.
 
 ### 2. Split by site (management subnet)
 
@@ -237,8 +238,9 @@ Locations often show up as IP plan, not as a clean vendor CIDR.
 | `branch` | br-leaf | `10.20.1.5` |
 | `other` | core1, fw1, ex1, ups1 | `10.0.0.0/24` and `10.2.0.4` are not those sites |
 
-Copy `groups/other.env.sample` to `groups/hq.env` / `groups/branch.env`, change
-`GROUP=` and the ports, then point `config/device-split.yaml` at this recipe.
+Point `config/device-split.yaml` at this recipe and run `make split-devices`
+(it provisions `groups/hq.env` / `groups/branch.env` as `ROLE=poll`). Or copy
+`groups/onboarding.env.sample`, set `GROUP=` / `ROLE=poll` and unique ports.
 
 ### 3. Split by hostname (site prefix)
 

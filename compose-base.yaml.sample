@@ -105,10 +105,10 @@ services:
       # hostname via scripts/host-id.sh; set KTRANS_HOST in .env to override.
       - OTEL_RESOURCE_ATTRIBUTES=deployment.host=${KTRANS_HOST:-unset}
     volumes:
-      # Relative path — not /opt/Grafana/... or any host-specific absolute path.
-      # A hardcoded lab path leaves Alloy running without your config.alloy.
+      # Tracked sample — do not copy this file. Creds are GC_OTLP_* in .env.
+      # Fork Alloy: docs/architecture.md § Customizing Alloy and Compose.
       - type: bind
-        source: ./config.alloy
+        source: ./config.alloy.sample
         target: /config.alloy
     ports:
       - 4317:4317

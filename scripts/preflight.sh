@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Catch the common setup mistakes before the stack starts:
-#   - .env / config.alloy / compose-base.yaml haven't been copied from .sample
-#   - stale copies: Alloy bind-mount still /opt/Grafana/..., River single quotes
-#   - .env still contains the placeholder Grafana Cloud values / mixed-stack OTLP
+#   - .env hasn't been copied from .sample / still has placeholder OTLP values
+#   - optional local compose-base.yaml / config.alloy overrides are stale
 #   - more than one groups/*.env (generate/up start all of them)
 #   - empty KTRANS_HOST (raw compose can crash Alloy)
 #   - the generator hasn't been run (no compose-groups.generated.yaml, no rendered config/)
@@ -11,6 +10,12 @@
 # auto-seeds empty stubs for missing ones via the bootstrap target.
 
 set -uo pipefail
+
+QUIET=0
+if [[ "${1:-}" == "--quiet" ]]; then
+  QUIET=1
+  shift
+fi
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${REPO_ROOT}"
@@ -25,7 +30,12 @@ PASS=0
 FAIL=0
 WARN=0
 
-_ok()   { printf "[ OK ]  %s\n" "$1"; PASS=$((PASS+1)); }
+_ok() {
+  PASS=$((PASS+1))
+  if [[ "${QUIET}" -eq 0 ]]; then
+    printf "[ OK ]  %s\n" "$1"
+  fi
+}
 _fail() { printf "[FAIL]  %s\n" "$1"; FAIL=$((FAIL+1)); }
 _warn() { printf "[WARN]  %s\n" "$1"; WARN=$((WARN+1)); }
 
@@ -46,30 +56,32 @@ else
   _fail "yq is missing — install with: sudo apt install yq"
 fi
 
-# --- Base runtime files copied from .sample ---
-for f in .env config.alloy compose-base.yaml; do
-  if [[ -f "${f}" ]]; then
-    _ok "${f} exists"
-  else
-    _fail "${f} is missing — run: cp ${f}.sample ${f}"
-  fi
-done
+# --- .env (the only base file you copy) ---
+if [[ -f .env ]]; then
+  _ok ".env exists"
+else
+  _fail ".env is missing — run: cp .env.sample .env"
+fi
+if [[ -f compose-base.yaml.sample ]]; then
+  _ok "compose-base.yaml.sample present (runtime compose file)"
+else
+  _fail "compose-base.yaml.sample is missing (broken clone)"
+fi
+if [[ -f config.alloy.sample ]]; then
+  _ok "config.alloy.sample present (runtime Alloy config)"
+else
+  _fail "config.alloy.sample is missing (broken clone)"
+fi
 
-# --- Stale sample copies (paths/syntax from older clones) ---
+# Leftover copies from the old "cp *.sample" README — unused, and they stale.
 if [[ -f compose-base.yaml ]]; then
-  if grep -qE '/opt/Grafana' compose-base.yaml; then
-    _fail "compose-base.yaml still bind-mounts /opt/Grafana/... (a lab-specific path). Alloy will not see ./config.alloy. Re-copy: cp compose-base.yaml.sample compose-base.yaml"
-  elif grep -qE 'source:[[:space:]]*\./config\.alloy' compose-base.yaml; then
-    _ok "compose-base.yaml mounts ./config.alloy"
-  else
-    _warn "compose-base.yaml Alloy volume is not ./config.alloy — check the alloy: volumes: block"
-  fi
+  _warn "compose-base.yaml is unused (make up uses compose-base.yaml.sample). Delete it, or put customizations in compose.override.yaml — docs/architecture.md"
 fi
 if [[ -f config.alloy ]]; then
-  if grep -qE "'delete_matching_keys" config.alloy; then
-    _fail "config.alloy has a single-quoted delete_matching_keys line Alloy rejects. Re-copy: cp config.alloy.sample config.alloy"
+  if [[ -f compose.override.yaml ]]; then
+    _ok "config.alloy present; Compose will use it only if compose.override.yaml mounts ./config.alloy"
   else
-    _ok "config.alloy River quotes look valid"
+    _warn "config.alloy is ignored by Compose (Alloy mounts config.alloy.sample) until compose.override.yaml mounts it. Kubernetes generate-k8s uses config.alloy if present. See docs/architecture.md"
   fi
 fi
 
@@ -123,7 +135,7 @@ shopt -s nullglob
 GROUP_FILES=(groups/*.env)
 shopt -u nullglob
 if [[ ${#GROUP_FILES[@]} -eq 0 ]]; then
-  _fail "no group files in groups/*.env — copy groups/<name>.env.sample to groups/<name>.env"
+  _fail "no group files in groups/*.env — run: cp groups/onboarding.env.sample groups/onboarding.env"
 else
   _ok "found ${#GROUP_FILES[@]} group file(s) in groups/"
   if [[ ${#GROUP_FILES[@]} -gt 1 ]]; then
@@ -137,9 +149,6 @@ else
     else
       _warn "${#GROUP_FILES[@]} groups — make generate / make up start ALL of them. GROUP= only applies to make discover. Start with one *.env until data lands."
     fi
-  fi
-  if [[ -f groups/onboarding.env && -f groups/single.env ]]; then
-    _warn "both groups/onboarding.env and groups/single.env exist — two SNMP pollers. Remove one if you only meant to onboard a single device."
   fi
 fi
 
@@ -215,6 +224,8 @@ for dir in config state; do
   fi
 done
 
-echo
+if [[ "${QUIET}" -eq 0 ]]; then
+  echo
+fi
 printf "%d passed, %d failed, %d warnings\n" "${PASS}" "${FAIL}" "${WARN}"
 [[ "${FAIL}" -eq 0 ]]

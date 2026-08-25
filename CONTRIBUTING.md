@@ -5,8 +5,8 @@ written down here rather than left to memory.
 
 ## Docs: README is a thin index, depth lives in `docs/`
 
-The [README](README.md) is deliberately minimal — intro, prerequisites, a
-single-device quickstart, verification, and a "Going further" index. All depth
+The [README](README.md) is deliberately minimal — intro, prerequisites, an
+onboarding quickstart (a range, or one device as `TARGETS=<ip>/32`), verification, and a "Going further" index. All depth
 lives in `docs/` (`architecture.md`, `configuration.md`, `operations.md`,
 `grafana.md`) and `troubleshooting/` (`bring-up.md` for first-time hops,
 `snmp.md` for snmpwalk).
@@ -33,7 +33,7 @@ the Compose and k8s paths on the same group files. Limitation copy lives in
 When touching the generator or templates:
 
 - Keep the simple cases working — a plain single-credential `v2c` or `v3` group,
-  and a single-device `cidr` group, must render exactly as before.
+  and onboarding with one `TARGETS=<ip>/32`, must still render valid YAML.
 - Test every mode you touched actually renders **valid YAML**: copy the relevant
   `groups/*.env.sample` to `groups/<name>.env`, run `make generate`, and check
   the output with `yq -e '.' config/discovery-<name>.yaml` (and the poller).
@@ -55,10 +55,15 @@ space silently breaks sourcing and aborts the whole run.
 
 ## Samples are the source of truth
 
-The tracked files are the `*.sample` versions; the live copies (`.env`,
-`config.alloy`, `compose-base.yaml`, `groups/*.env`, `state/*.yaml`) are
-git-ignored. Edit the `.sample` when you want a change to ship. If you add a new
-runtime file, make sure `.gitignore` covers it.
+The tracked `*.sample` files are what ships. `.env` and `groups/*.env` are
+copied once (git-ignored) because they hold secrets and site-specific ranges.
+
+`config.alloy.sample` and `compose-base.yaml.sample` are **runtime files** —
+do not copy them. `make up` uses them directly so `git pull` updates Alloy and
+Compose. Customize with gitignored `compose.override.yaml` — walkthrough:
+[docs/architecture.md § Customizing Alloy and Compose](docs/architecture.md#customizing-alloy-and-compose).
+
+If you add a new secret/runtime file, make sure `.gitignore` covers it.
 
 ## One branch
 

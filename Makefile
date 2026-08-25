@@ -1,6 +1,6 @@
 .PHONY: up up-demo down logs preflight generate bootstrap limits limits-show discover discover-all split-devices split-vendors flow-dns detect-net host generate-k8s k8s-up k8s-down k8s-down-wipe k8s-discover help
 
-COMPOSE := docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-catalog.generated.yaml -f compose-limits.generated.yaml
+COMPOSE := docker compose $(shell bash scripts/compose-files.sh)
 
 # Resolve the per-host identifier that Alloy stamps onto all telemetry
 # (deployment.host) and that suffixes every container's service.name. Prefer an
@@ -19,11 +19,11 @@ help:
 	@echo "make bootstrap              Seed empty state/devices-<group>.yaml stubs so pollers can start"
 	@echo "make limits                 Compute per-container memory limits from host RAM"
 	@echo "make limits-show            Print the limits plan without writing the overlay"
-	@echo "make up                     Preflight + bootstrap + flow-dns + limits + compose up (all groups; GROUP= ignored)"
+	@echo "make up                     Start collectors (quiet step banners; VERBOSE=1 for full docker dump)"
 	@echo "make up-demo                Same as 'up' plus the host-sflow demo overlay (instant flow data)"
 	@echo "make down                   docker compose down"
 	@echo "make logs                   Tail logs from all containers"
-	@echo "make discover GROUP=cisco   Run a one-shot discovery for one group"
+	@echo "make discover GROUP=onboarding   Scan one group (ktranslate logs: state/discovery-<group>.log)"
 	@echo "make discover-all           Discover every ROLE=discover|both group; reload if any list changed"
 	@echo "make split-devices          Split the latest scan (dynamic vendor by default); provision pollers; SIGUSR2"
 	@echo "make split-vendors          Alias for split-devices"
@@ -41,6 +41,7 @@ preflight:
 
 generate:
 	@if [ -n "$(GROUP)" ]; then echo "NOTE: GROUP=$(GROUP) is ignored. make generate renders every groups/*.env. GROUP= only applies to make discover." >&2; fi
+	@echo "==> generating collector configs"
 	@bash scripts/generate-groups.sh
 
 bootstrap:
@@ -66,17 +67,13 @@ limits:
 limits-show:
 	@bash scripts/compute-limits.sh --dry-run
 
-up: preflight bootstrap flow-dns limits
-	@if [ -n "$(GROUP)" ]; then echo "NOTE: GROUP=$(GROUP) is ignored. make up starts every groups/*.env. GROUP= only applies to make discover." >&2; fi
-	@echo "deployment.host = $(KTRANS_HOST)"
-	$(COMPOSE) up -d
+up: 
+	@bash scripts/bring-up.sh
 
 # Same as `up` but layers in the optional host-sflow demo overlay so you get
 # flow data immediately without a real netflow/sflow source configured yet.
-up-demo: preflight bootstrap flow-dns limits
-	@if [ -n "$(GROUP)" ]; then echo "NOTE: GROUP=$(GROUP) is ignored. make up-demo starts every groups/*.env. GROUP= only applies to make discover." >&2; fi
-	@echo "deployment.host = $(KTRANS_HOST)"
-	$(COMPOSE) -f compose-sflow.yaml up -d
+up-demo:
+	@bash scripts/bring-up.sh --demo
 
 host:
 	@echo "$(KTRANS_HOST)"
@@ -88,7 +85,7 @@ logs:
 	$(COMPOSE) logs -f
 
 discover:
-	@test -n "$(GROUP)" || { echo "ERROR: pass GROUP=<name>, e.g. make discover GROUP=cisco" >&2; exit 1; }
+	@test -n "$(GROUP)" || { echo "ERROR: pass GROUP=<name>, e.g. make discover GROUP=onboarding" >&2; exit 1; }
 	@bash scripts/run-discovery.sh $(GROUP)
 
 discover-all:
@@ -124,5 +121,5 @@ k8s-down-wipe: k8s-down
 	@echo "deleted PVC ktrans-state"
 
 k8s-discover:
-	@test -n "$(GROUP)" || { echo "ERROR: pass GROUP=<name>, e.g. make k8s-discover GROUP=cisco" >&2; exit 1; }
+	@test -n "$(GROUP)" || { echo "ERROR: pass GROUP=<name>, e.g. make k8s-discover GROUP=onboarding" >&2; exit 1; }
 	@./scripts/k8s-discover.sh $(GROUP)

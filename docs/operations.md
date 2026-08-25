@@ -2,7 +2,7 @@
 
 [← back to README](../README.md)
 
-Day-2 concerns: permissions, memory, image pinning, scheduled discovery, the flow demo overlay, tagging multiple hosts, and the full Makefile reference.
+Day-2 concerns: permissions, memory, image pinning, scheduled discovery, the flow demo overlay, tagging multiple hosts, and the full Makefile reference. Alloy/Compose forks: [architecture.md § Customizing Alloy and Compose](architecture.md#customizing-alloy-and-compose).
 
 ## Make targets
 
@@ -12,11 +12,11 @@ make generate               # render configs and compose-groups.generated.yaml f
 make bootstrap              # seed empty state/devices-<group>.yaml so pollers can start
 make limits                 # compute per-container memory caps from host RAM
 make limits-show            # preview per-container memory caps from host RAM (dry-run)
-make up                     # runs preflight + bootstrap + limits, then docker compose up -d
+make up                     # start collectors (quiet step banners; VERBOSE=1 for full docker dump)
 make up-demo                # same as 'up' plus the host-sflow demo overlay (instant flow data)
 make logs                   # tail logs from all containers
 make down                   # stop and remove the stack
-make discover GROUP=cisco   # one-shot discovery for one group; populates state/devices-cisco.yaml
+make discover GROUP=onboarding   # one-shot discovery for one group; populates state/devices-onboarding.yaml
 make discover-all           # discover every ROLE=discover|both group; reload if any list changed
 make split-devices          # dynamic vendor split of the latest scan; provision pollers; collated traps/flow/syslog
 make split-vendors          # alias for split-devices
@@ -33,6 +33,8 @@ make k8s-discover GROUP=…   # one-shot in-cluster discovery Job
 Kubernetes discovery is a CronJob (default every 6 hours, staggered per group) plus `make k8s-discover`. An empty scan keeps the previous device list — same rule as `scripts/run-discovery.sh`. See [kubernetes.md](kubernetes.md) and [k8s/LIMITATIONS.md](../k8s/LIMITATIONS.md).
 
 `make up` is idempotent — it starts newly-added services without disturbing running ones. Pollers begin polling whatever devices are in their `state/devices-<group>.yaml`; until you've run discovery those are empty stubs (`{}`) and no SNMP traffic goes out. Run `make discover GROUP=<name>` for each group to populate them.
+
+By default `make up` / `make discover` print `==>` step banners and write Docker/ktranslate output to `state/last-compose-up.log` and `state/discovery-<group>.log`. Use `VERBOSE=1 make up` (or `VERBOSE=1 make discover GROUP=onboarding`) to stream that chatter. `make preflight` and `make logs` stay verbose.
 
 ## Permissions
 
@@ -70,8 +72,7 @@ How much RAM a poller or flow container *should* get is a capacity question, not
 Add cron entries on the host so new devices get picked up automatically. Stagger each group a few minutes apart so they don't all run at once:
 
 ```
-0  */6 * * * cd /path/to/KtransToGrafana && bash scripts/run-discovery.sh cisco >> /var/log/ktrans-discovery.log 2>&1
-5  */6 * * * cd /path/to/KtransToGrafana && bash scripts/run-discovery.sh palo  >> /var/log/ktrans-discovery.log 2>&1
+0  */6 * * * cd /path/to/KtransToGrafana && bash scripts/run-discovery.sh onboarding >> /var/log/ktrans-discovery.log 2>&1
 ```
 
 Each run scans the group's configured CIDRs (or queries NetBox, depending on its `DISCOVERY_SOURCE`), atomically publishes a fresh `state/devices-<group>.yaml`, refreshes `flow_dns` PTR records, and reloads ktranslate receivers that depend on the device catalog. Flow and syslog containers restart; SNMP pollers receive `SIGUSR2` (ktranslate's reload signal — `SIGHUP` has no handler and would terminate the container). If discovery returns zero devices (network blip, container crash) the script preserves the previous device list rather than wiping it. If the device list is unchanged, no reload is sent.
@@ -106,7 +107,7 @@ If you run this stack on more than one host (e.g. one per site or datacenter), e
 
 `KTRANS_HOST` does two things:
 
-1. **Labels every metric, log, and trace** with `deployment_host`, applied by Alloy to everything it forwards — SNMP, flow, syslog, discovery, and ktranslate's own health metrics. Filter or group any query by `deployment_host` to scope it to one host. (This metric label — a label on the metric — is added by the `otelcol.processor.transform "add_resource_attributes_as_metric_attributes"` block in `config.alloy`, a small Alloy rule that rewrites the data — make sure your live `config.alloy` matches the current `config.alloy.sample` if you deployed before this was added.)
+1. **Labels every metric, log, and trace** with `deployment_host`, applied by Alloy to everything it forwards — SNMP, flow, syslog, discovery, and ktranslate's own health metrics. Filter or group any query by `deployment_host` to scope it to one host. (Alloy adds this via `otelcol.processor.transform "add_resource_attributes_as_metric_attributes"` in `config.alloy.sample`.)
 2. **Suffixes each container's `service.name`** (a label identifying which collector produced the data), so the same workload on two hosts never shares a name — e.g. `ktranslate-snmp-cisco-site-a` vs `ktranslate-snmp-cisco-site-b`.
 
 Check what a host will report before starting:

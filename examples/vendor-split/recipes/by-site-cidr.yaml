@@ -1,0 +1,22 @@
+# Location from management IP. Copy over device-split.yaml (or merge rules).
+# Pair with ROLE=poll groups named hq / branch / other.
+#
+# Against testdata/devices-estate.yaml:
+#   hq     ← hq-leaf (10.10.1.5)
+#   branch ← br-leaf (10.20.1.5)
+#   other  ← core1, fw1, ex1, ups1
+
+source_group: estate
+default_group: other
+
+rules:
+  - group: hq
+    match:
+      - field: device_ip
+        cidr:
+          - 10.10.0.0/16
+          - 10.11.0.0/16
+  - group: branch
+    match:
+      - field: device_ip
+        cidr: 10.20.0.0/12

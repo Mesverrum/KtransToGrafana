@@ -8,7 +8,7 @@ The containers:
 
 - **`ktranslate_flow`** — receives netflow data (netflow 5/9, sflow, ipfix, nbar, pan, etc.) and converts it into metrics. Mounts the generated **device catalog** (`config/catalog.yaml`) so flow records get the same `device_name` and tags as SNMP.
 - **`ktranslate_snmp_<group>`** — one long-running SNMP poller per group (`ROLE=poll` or the default `both`). Each reads a settings file from `config/` plus a separately-managed device list from `state/`. The generated poller config sets `global.user_tags.snmp_group: <GROUP>` so every SNMP series from that poller carries credential-group metadata (exported as **`tags_snmp_group`** on OTLP series in Grafana Cloud).
-- **`discover_<group>`** — one short-lived discovery container per group that discovers (`ROLE=discover` or `both`). Runs on a schedule, finds devices, writes the list back to `state/`, and tells pollers to reload (`SIGUSR2`). A `ROLE=discover` group can feed several vendor pollers via [examples/vendor-split](../examples/vendor-split/README.md) instead of polling the mixed list itself.
+- **`discover_<group>`** — one short-lived discovery container per group that discovers (`ROLE=discover` or `both`). Runs on a schedule, finds devices, writes the list back to `state/`, and tells pollers to reload (`SIGUSR2`). A `ROLE=discover` group can feed several pollers via [examples/vendor-split](../examples/vendor-split/README.md) (split on vendor, site, hostname, firmware, …) instead of polling the mixed list itself.
 - **`ktranslate_syslog`** — collects syslog and forwards it as logs. Uses the same device catalog as flow for consistent naming/tags.
 - **`alloy`** — a small Grafana Alloy agent that forwards everything from the containers above to Grafana Cloud.
 

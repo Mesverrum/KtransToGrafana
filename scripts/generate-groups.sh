@@ -73,7 +73,7 @@ for env_file in "${GROUP_FILES[@]}"; do
     esac
 
     # ROLE=discover: scan only (no long-running poller). ROLE=poll: poll only
-    # (device list comes from split-devices-by-vendor.py). Default both = today.
+    # (device list comes from split-devices.py). Default both = today.
     required_vars=(GROUP SNMP_VERSION POLL_INTERVAL_SEC)
     if [[ "${ROLE}" != "poll" ]]; then
       required_vars+=(DISCOVERY_THREADS)

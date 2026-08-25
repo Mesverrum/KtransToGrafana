@@ -1,9 +1,20 @@
-# Route devices from one estate discovery run into per-vendor poller files.
+# Split a ROLE=discover device list into ROLE=poll files.
 #
-# Copy to config/vendor-split.yaml (gitignored with the rest of config/) or
-# leave this file in place — split-devices-by-vendor.py falls back to it.
+# Copy to config/device-split.yaml (preferred) or config/vendor-split.yaml.
+# First matching rule wins. If a rule's group has no poller, the device falls
+# through to the next rule (then default_group).
 #
-# First matching rule wins. Unmatched devices go to default_group.
+# Inspect what you can match (no extra scripts):
+#   python3 scripts/split-devices.py --list-fields
+#   python3 scripts/split-devices.py --list-values mib_profile
+#   python3 scripts/split-devices.py --explain --dry-run
+#
+# Operators on any field: equals, in, glob, contains, prefix, regex, cidr, exists.
+# Combine with any: (OR) / match: or all: (AND). Shorthand mib_profile / oid_prefix
+# / provider still work and OR together (this file).
+# Destinations: group: name | group: "site-{1}" (regex capture) | group_from: field
+#
+# More copy-paste recipes: recipes/
 
 source_group: estate
 default_group: other

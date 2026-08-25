@@ -133,7 +133,7 @@ else
       if [[ "${role}" == "discover" ]]; then has_discover=1; break; fi
     done
     if [[ "${has_discover}" -eq 1 ]]; then
-      _ok "${#GROUP_FILES[@]} groups include a ROLE=discover estate scan (vendor-split layout)"
+      _ok "${#GROUP_FILES[@]} groups include a ROLE=discover estate scan (device-split layout)"
     else
       _warn "${#GROUP_FILES[@]} groups — make generate / make up start ALL of them. GROUP= only applies to make discover. Start with one *.env until data lands."
     fi

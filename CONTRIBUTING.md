@@ -39,6 +39,13 @@ When touching the generator or templates:
   the output with `yq -e '.' config/discovery-<name>.yaml` (and the poller).
   Clean up the temp group + `config/` afterwards.
 
+## Device-list split is YAML, not a new script
+
+`scripts/split-devices.py` routes a `ROLE=discover` list into `ROLE=poll` files
+from `config/device-split.yaml` (recipes under `examples/vendor-split/recipes/`).
+When you add a matcher, add a `--self-test` case and a copy-paste recipe — do
+not grow a family of `split-devices-by-*.py` scripts.
+
 ## Group `.env` files are shell-sourced
 
 The generator `source`s each `groups/*.env`, so **quote any value containing

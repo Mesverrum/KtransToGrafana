@@ -57,8 +57,6 @@ cp config.alloy.sample config.alloy
 cp compose-base.yaml.sample compose-base.yaml
 ```
 
-`git pull` does **not** refresh those copies. If you cloned before the relative Alloy mount / River backticks landed, re-copy `compose-base.yaml.sample` and `config.alloy.sample` (keep `.env`). `make preflight` fails if the Alloy volume still points at `/opt/Grafana/...` or `config.alloy` still has a single-quoted `delete_matching_keys` line.
-
 **3. Add your Grafana Cloud OTLP credentials to `.env`.** In Grafana Cloud, go to **Add new connection → OpenTelemetry (OTLP)**, create/select a token, and skip the Alloy install steps. From **that same snippet**, copy all three values into `.env` (no quotes) — they must be one stack and one region:
 
 - `GC_OTLP_URL` ← the `endpoint` URL (`https://otlp-gateway-prod-<region>.grafana.net/otlp`)

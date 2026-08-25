@@ -67,9 +67,9 @@ cp compose-base.yaml.sample compose-base.yaml
 
 Do not open that URL in a browser (`GET /otlp` is a 404). OTLP is `POST /otlp/v1/metrics`. Leave `KTRANS_HOST` blank and use `make up` (do not start with raw `docker compose up` while it is blank).
 
-**4. List your devices and candidate credentials — copy one group, not every sample.**
+**4. List your devices and candidate credentials — copy the onboarding group.**
 
-`make generate` and `make up` start **every** `groups/*.env` file. `GROUP=` only applies to `make discover`. Copy **either** the onboarding sample **or** the single-device sample, not both:
+`make generate` and `make up` start **every** `groups/*.env` file. `GROUP=` only applies to `make discover`. Copy **one** onboarding file (not `single.env` as well):
 
 ```
 cp groups/onboarding.env.sample groups/onboarding.env
@@ -81,7 +81,7 @@ cp groups/onboarding.env.sample groups/onboarding.env
 
 Discovery tries every credential against every device in the range and records the one that works per device — so you don't need the mapping up front.
 
-> **Just one device?** Same flow, smaller: `cp groups/single.env.sample groups/single.env` (and **do not** also copy `onboarding.env`). Set `TARGETS` to one address with one credential, then use `GROUP=single` **only** on the discover command in step 7.
+> **Just one device?** Same file: set `TARGETS` to one address (`192.168.1.1/32`). There is no separate workflow.
 
 **5. Generate the per-group configs:**
 
@@ -103,6 +103,14 @@ make discover GROUP=onboarding   # scan the range, match credentials, hand devic
 ```
 
 `make up` prints the resolved `deployment.host` and brings everything up. Discovery writes `state/devices-onboarding.yaml` — each device stamped with the credential that worked — and reloads the poller.
+
+When Grafana has devices, optionally break polling apart by vendor (from `mib_profile`) without writing matchers. Flow, syslog, and traps stay on one catalog listener (`UDP/1620` for traps):
+
+```
+make split-devices
+```
+
+That writes `groups/cisco.env` (etc.) as `ROLE=poll`, sets onboarding to `ROLE=discover` so the mixed list is not polled twice, and starts the new containers. Re-scan with `make discover GROUP=onboarding` afterwards; new vendors get a poller automatically. Custom rules still go in `config/device-split.yaml` (recipes under `examples/vendor-split/`).
 
 If a script says `Permission denied`, Git on Windows (or a zip extract) dropped execute bits. `make` already runs `bash scripts/…`; to restore `./scripts/` / cron in one shot: `chmod a+x scripts/*.sh` (`make preflight` does this too).
 
@@ -140,7 +148,7 @@ See [docs/grafana.md](docs/grafana.md) for verification queries, `$snmp_group` f
 
 The quickstart is deliberately minimal. Deeper topics live in `docs/`:
 
-- **[docs/configuration.md](docs/configuration.md)** — multiple groups, `DISCOVERY_SOURCE=cidr|netbox` (including NetBox filters), [onboarding a pile of devices when you don't know which credential fits which](docs/configuration.md#multiple-candidate-credentials-unknown-mapping), adding/removing groups, generator outputs, running without the Makefile.
+- **[docs/configuration.md](docs/configuration.md)** — multiple groups, `DISCOVERY_SOURCE=cidr|netbox|split`, [onboarding a pile of devices when you don't know which credential fits which](docs/configuration.md#multiple-candidate-credentials-unknown-mapping), [one discovery scan split into pollers (dynamic vendor, or YAML rules)](docs/configuration.md#one-discovery-scan-many-pollers), adding/removing groups, generator outputs, running without the Makefile.
 - **[docs/secrets-aws.md](docs/secrets-aws.md)** — optional SNMPv3 via AWS Secrets Manager (`SNMP_V3_SECRET=aws.sm.…`) instead of inline passphrases.
 - **[docs/architecture.md](docs/architecture.md)** — what each container does, the discovery/polling split, [sizing](docs/architecture.md#sizing-rule-of-thumb) (≈500 devices or 1000 events/s per CPU+GiB), and how `.env` interpolation works.
 - **[docs/operations.md](docs/operations.md)** — permissions, memory limits, image pinning, scheduled (cron) discovery, the sflow demo overlay, tagging telemetry across multiple hosts (`KTRANS_HOST`), and the full `make` reference.

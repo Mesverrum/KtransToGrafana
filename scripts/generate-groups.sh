@@ -2,7 +2,8 @@
 # Generate per-group ktranslate configs and a Compose service fragment from
 # the declarative files in groups/*.env. Every groups/*.env is rendered —
 # there is no GROUP= filter (that flag is only for make discover). Copy only
-# the group files you intend to run.
+# the group files you intend to run. ROLE=discover emits only the discovery
+# service; ROLE=poll emits only the poller; default (both) emits both.
 # Run this:
 #   - once during initial setup
 #   - whenever you add, remove, or modify a group
@@ -52,11 +53,10 @@ fi
 
 # ---------- Pre-pass: validate every group file and detect collisions ----------
 declare -A USED_ML_PORTS
-declare -A USED_TRAP_PORTS
-# Ports used by the static services in compose-base.yaml. Any group claiming
-# one of these would fail at `docker compose up` time; catch it here instead.
-RESERVED_PORTS_TCP="9995 9996 9998 4317 12346"
-RESERVED_PORTS_UDP="1514"
+# Ports used by the static services in compose-base.yaml / catalog traps. Any
+# group claiming one of these would fail at `docker compose up`; catch it here.
+RESERVED_PORTS_TCP="9994 9995 9996 9998 4317 12346"
+RESERVED_PORTS_UDP="1514 1620"
 
 for env_file in "${GROUP_FILES[@]}"; do
   (
@@ -65,7 +65,22 @@ for env_file in "${GROUP_FILES[@]}"; do
     source "${env_file}"
     set +a
 
-    for var in GROUP SNMP_VERSION TRAP_COMMUNITY METALISTEN_PORT TRAP_PORT DISCOVERY_THREADS POLL_INTERVAL_SEC; do
+    ROLE="${ROLE:-both}"
+    case "${ROLE}" in
+      both|discover|poll) ;;
+      *) echo "ERROR: ${env_file}: ROLE must be both, discover, or poll, got '${ROLE}'" >&2; exit 1 ;;
+    esac
+
+    # ROLE=discover: scan only (no long-running poller). ROLE=poll: poll only
+    # (device list comes from split-devices.py). Default both = today.
+    required_vars=(GROUP SNMP_VERSION POLL_INTERVAL_SEC)
+    if [[ "${ROLE}" != "poll" ]]; then
+      required_vars+=(DISCOVERY_THREADS)
+    fi
+    if [[ "${ROLE}" != "discover" ]]; then
+      required_vars+=(TRAP_COMMUNITY METALISTEN_PORT TRAP_PORT)
+    fi
+    for var in "${required_vars[@]}"; do
       if [[ -z "${!var:-}" ]]; then
         echo "ERROR: ${env_file}: missing required variable ${var}" >&2
         exit 1
@@ -73,13 +88,26 @@ for env_file in "${GROUP_FILES[@]}"; do
     done
 
     # DISCOVERY_SOURCE selects how this group's device list is built.
-    case "${DISCOVERY_SOURCE:-cidr}" in
+    if [[ "${ROLE}" == "poll" ]]; then
+      DISCOVERY_SOURCE="${DISCOVERY_SOURCE:-split}"
+    else
+      DISCOVERY_SOURCE="${DISCOVERY_SOURCE:-cidr}"
+    fi
+    case "${DISCOVERY_SOURCE}" in
       cidr)
+        if [[ "${ROLE}" == "poll" ]]; then
+          echo "ERROR: ${env_file}: ROLE=poll groups use DISCOVERY_SOURCE=split (not cidr)" >&2
+          exit 1
+        fi
         if [[ -z "${TARGETS:-}" ]]; then
           echo "ERROR: ${env_file}: DISCOVERY_SOURCE=cidr requires TARGETS" >&2
           exit 1
         fi ;;
       netbox)
+        if [[ "${ROLE}" == "poll" ]]; then
+          echo "ERROR: ${env_file}: ROLE=poll groups use DISCOVERY_SOURCE=split (not netbox)" >&2
+          exit 1
+        fi
         if [[ -z "${NETBOX_IP_TO_PICK:-}" ]]; then
           echo "ERROR: ${env_file}: DISCOVERY_SOURCE=netbox requires NETBOX_IP_TO_PICK" >&2
           exit 1
@@ -89,7 +117,12 @@ for env_file in "${GROUP_FILES[@]}"; do
         if [[ -z "${NETBOX_TAG:-}${NETBOX_SITE:-}${NETBOX_LOCATION:-}${NETBOX_TENANT:-}${NETBOX_ROLE:-}${NETBOX_STATUS:-}" ]]; then
           echo "WARN:  ${env_file}: no NetBox filters set; this group will pull every device from NetBox" >&2
         fi ;;
-      *) echo "ERROR: ${env_file}: DISCOVERY_SOURCE must be cidr or netbox, got '${DISCOVERY_SOURCE:-}'" >&2; exit 1 ;;
+      split)
+        if [[ "${ROLE}" != "poll" ]]; then
+          echo "ERROR: ${env_file}: DISCOVERY_SOURCE=split requires ROLE=poll" >&2
+          exit 1
+        fi ;;
+      *) echo "ERROR: ${env_file}: DISCOVERY_SOURCE must be cidr, netbox, or split, got '${DISCOVERY_SOURCE}'" >&2; exit 1 ;;
     esac
 
     # Validate a full v3 credential set for a given suffix ("" = primary, "_2"..).
@@ -170,14 +203,14 @@ for env_file in "${GROUP_FILES[@]}"; do
   )
 
   GN=$(awk -F= '/^GROUP=/{print $2; exit}'           "${env_file}")
+  GR=$(awk -F= '/^ROLE=/{print $2; exit}'            "${env_file}")
+  GR="${GR:-both}"
+  if [[ "${GR}" == "discover" ]]; then
+    continue
+  fi
   ML=$(awk -F= '/^METALISTEN_PORT=/{print $2; exit}' "${env_file}")
-  TR=$(awk -F= '/^TRAP_PORT=/{print $2; exit}'       "${env_file}")
   if [[ -n "${USED_ML_PORTS[${ML}]:-}" ]]; then
     echo "ERROR: METALISTEN_PORT ${ML} used by both '${USED_ML_PORTS[${ML}]}' and '${GN}'" >&2
-    exit 1
-  fi
-  if [[ -n "${USED_TRAP_PORTS[${TR}]:-}" ]]; then
-    echo "ERROR: TRAP_PORT ${TR} used by both '${USED_TRAP_PORTS[${TR}]}' and '${GN}'" >&2
     exit 1
   fi
   for r in ${RESERVED_PORTS_TCP}; do
@@ -186,14 +219,7 @@ for env_file in "${GROUP_FILES[@]}"; do
       exit 1
     fi
   done
-  for r in ${RESERVED_PORTS_UDP}; do
-    if [[ "${TR}" == "${r}" ]]; then
-      echo "ERROR: TRAP_PORT ${TR} (group ${GN}) collides with a static service" >&2
-      exit 1
-    fi
-  done
   USED_ML_PORTS[${ML}]="${GN}"
-  USED_TRAP_PORTS[${TR}]="${GN}"
 done
 
 # ---------- Render pass ----------
@@ -211,13 +237,33 @@ for env_file in "${GROUP_FILES[@]}"; do
     source "${env_file}"
     set +a
 
+    ROLE="${ROLE:-both}"
+    DISCOVERY_THREADS="${DISCOVERY_THREADS:-4}"
+    POLL_INTERVAL_SEC="${POLL_INTERVAL_SEC:-60}"
+    export ROLE DISCOVERY_THREADS POLL_INTERVAL_SEC
+    # Discovery YAML still has a trap: block; keep it valid YAML when ROLE=discover
+    # omits host ports (the discover container does not listen).
+    if [[ "${ROLE}" == "discover" ]]; then
+      TRAP_PORT="${TRAP_PORT:-0}"
+      TRAP_COMMUNITY="${TRAP_COMMUNITY:-public}"
+      METALISTEN_PORT="${METALISTEN_PORT:-0}"
+      export TRAP_PORT TRAP_COMMUNITY METALISTEN_PORT
+    fi
     # Render the discovery-source block. cidr groups fill the `cidrs:` list;
     # netbox groups leave cidrs empty and add a `netbox:` block whose host/token
     # stay as ${NETBOX_HOST}/${NETBOX_TOKEN} literals for ktranslate to resolve
     # from the discover container's env at runtime. Both feed the same two
     # template placeholders (CIDRS_YAML slots after `cidrs:`, NETBOX_BLOCK_YAML
     # slots after `no_use_bulkwalkall:`), so there is only one discovery template.
-    DISCOVERY_SOURCE="${DISCOVERY_SOURCE:-cidr}"
+    # ROLE=poll / DISCOVERY_SOURCE=split skips this — those groups have no
+    # discovery YAML.
+    if [[ "${ROLE}" == "poll" ]]; then
+      DISCOVERY_SOURCE="${DISCOVERY_SOURCE:-split}"
+    else
+      DISCOVERY_SOURCE="${DISCOVERY_SOURCE:-cidr}"
+    fi
+    CIDRS_YAML=" []"
+    NETBOX_BLOCK_YAML=""
     if [[ "${DISCOVERY_SOURCE}" == "cidr" ]]; then
       CIDRS_YAML=$'\n'
       IFS=',' read -ra TGT_ARR <<< "${TARGETS}"
@@ -227,7 +273,7 @@ for env_file in "${GROUP_FILES[@]}"; do
       done
       CIDRS_YAML="${CIDRS_YAML%$'\n'}"
       NETBOX_BLOCK_YAML=""
-    else
+    elif [[ "${DISCOVERY_SOURCE}" == "netbox" ]]; then
       CIDRS_YAML=" []"
       # Each filter is omitted entirely when empty, so an unused filter doesn't
       # render as `tag: []` (which NetBox reads as "match the empty tag" rather
@@ -323,38 +369,101 @@ for env_file in "${GROUP_FILES[@]}"; do
 
     _sec_note=""
     [[ -n "${SNMP_V3_SECRET:-}" ]] && _sec_note=" secret=${SNMP_V3_SECRET}"
-    envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/discovery.yaml.tmpl" \
-      > "${CONFIG_DIR}/discovery-${GROUP}.yaml"
-    envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/poller.yaml.tmpl" \
-      > "${CONFIG_DIR}/poller-${GROUP}.yaml"
-    envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/compose-snippet.yaml.tmpl" \
-      >> "${COMPOSE_OUT}"
+    if [[ "${ROLE}" != "poll" ]]; then
+      envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/discovery.yaml.tmpl" \
+        > "${CONFIG_DIR}/discovery-${GROUP}.yaml"
+      envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/compose-discover.yaml.tmpl" \
+        >> "${COMPOSE_OUT}"
+    fi
+    if [[ "${ROLE}" != "discover" ]]; then
+      envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/poller.yaml.tmpl" \
+        > "${CONFIG_DIR}/poller-${GROUP}.yaml"
+      envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/compose-poller.yaml.tmpl" \
+        >> "${COMPOSE_OUT}"
+    fi
 
-    echo "  rendered ${GROUP}  (discovery=${DISCOVERY_SOURCE}  snmp=${SNMP_VERSION}${_sec_note}  ports=${METALISTEN_PORT}/${TRAP_PORT})"
+    echo "  rendered ${GROUP}  (role=${ROLE}  discovery=${DISCOVERY_SOURCE}  snmp=${SNMP_VERSION}${_sec_note}  ports=${METALISTEN_PORT:-none}/${TRAP_PORT:-none})"
   )
 done
 
 # ---------- Device catalog for flow / syslog receivers ----------
+# Discover-only groups are the raw scan output; pollers (and the catalog)
+# consume the split vendor files so flow/syslog do not double-count.
 declare -a CATALOG_GROUPS=()
 for env_file in "${GROUP_FILES[@]}"; do
   group="$(awk -F= '/^GROUP=/{print $2; exit}' "${env_file}")"
   [[ -z "${group}" ]] && continue
+  role="$(awk -F= '/^ROLE=/{print $2; exit}' "${env_file}")"
+  role="${role:-both}"
+  [[ "${role}" == "discover" ]] && continue
   CATALOG_GROUPS+=("${group}")
 done
 
 {
   echo "# GENERATED by scripts/generate-groups.sh — do not edit by hand."
-  echo "# Enrichment-only catalog: flow and syslog match device_ip → device_name"
+  echo "# Enrichment-only catalog: flow, syslog, and traps match device_ip → device_name"
   echo "# and apply global.user_tags without SNMP polling."
-  echo "devices:"
-  for group in "${CATALOG_GROUPS[@]}"; do
-    echo "  - \"@/state/devices-${group}.yaml\""
-  done
+  if [[ ${#CATALOG_GROUPS[@]} -eq 0 ]]; then
+    echo "devices: {}"
+  else
+    echo "devices:"
+    for group in "${CATALOG_GROUPS[@]}"; do
+      echo "  - \"@/state/devices-${group}.yaml\""
+    done
+  fi
   cat <<'EOF'
 global:
   user_tags: {}
 EOF
 } > "${CATALOG_OUT}"
+
+TRAPS_OUT="${CONFIG_DIR}/traps.yaml"
+{
+  echo "# GENERATED by scripts/generate-groups.sh — do not edit by hand."
+  echo "# Collated SNMP trap listener (host UDP/1620). Enrichment from the same"
+  echo "# device files as flow/syslog — pollers do not publish trap ports."
+  if [[ ${#CATALOG_GROUPS[@]} -eq 0 ]]; then
+    echo "devices: {}"
+  else
+    echo "devices:"
+    for group in "${CATALOG_GROUPS[@]}"; do
+      echo "  - \"@/state/devices-${group}.yaml\""
+    done
+  fi
+  cat <<'EOF'
+trap:
+    listen: 0.0.0.0:1620
+    community: public
+    version: ""
+    transport: ""
+    v3_config: null
+    trap_only: true
+    drop_undefined: false
+    endpoint: ""
+    endpoint_port: 0
+discovery:
+    cidrs: []
+    ignore_list: []
+    debug: false
+    ports:
+      - 161
+    default_communities: []
+    use_snmp_v1: false
+    default_v3: null
+    add_devices: false
+    add_mibs: false
+    threads: 1
+    replace_devices: false
+    kentik: null
+    no_use_bulkwalkall: false
+global:
+    poll_time_sec: 60
+    drop_if_outside_poll: false
+    mib_profile_dir: /etc/ktranslate/profiles
+    user_tags: {}
+    fast_poll: false
+EOF
+} > "${TRAPS_OUT}"
 
 {
   echo "# GENERATED by scripts/generate-groups.sh — do not edit by hand."
@@ -369,7 +478,35 @@ EOF
       echo "      - ${REPO_PATH}/state/devices-${group}.yaml:/state/devices-${group}.yaml:ro"
     done
   done
+  echo "  ktranslate_traps:"
+  echo "    image: \${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}"
+  echo "    restart: always"
+  echo "    pull_policy: always"
+  echo "    environment:"
+  echo "      - OTEL_SERVICE_NAME=ktranslate-traps\${KTRANS_HOST:+-}\${KTRANS_HOST}"
+  echo "      - OTEL_EXPORTER_OTLP_COMPRESSION=\${OTEL_EXPORTER_OTLP_COMPRESSION}"
+  echo "    depends_on:"
+  echo "      - alloy"
+  echo "    command:"
+  echo "      - --format=otel"
+  echo "      - --format_metric=otel"
+  echo "      - --otel.protocol=grpc"
+  echo "      - --otel.endpoint=http://alloy:4317/"
+  echo "      - --snmp=/snmp.yaml"
+  echo "      - --metalisten=0.0.0.0:9994"
+  echo "      - --sinks=otel"
+  echo "      - --metrics=jchf"
+  echo "      - --tee_logs=true"
+  echo "      - --service_name=traps"
+  echo "    ports:"
+  echo "      - 1620:1620/udp"
+  echo "      - 9994:9994"
+  echo "    volumes:"
+  echo "      - ${REPO_PATH}/config/traps.yaml:/snmp.yaml:ro"
+  for group in "${CATALOG_GROUPS[@]}"; do
+    echo "      - ${REPO_PATH}/state/devices-${group}.yaml:/state/devices-${group}.yaml:ro"
+  done
 } > "${CATALOG_COMPOSE_OUT}"
 
 echo
-echo "wrote $(ls "${CONFIG_DIR}"/discovery-*.yaml 2>/dev/null | wc -l) discovery configs, $(ls "${CONFIG_DIR}"/poller-*.yaml 2>/dev/null | wc -l) poller configs, ${CATALOG_OUT}, ${CATALOG_COMPOSE_OUT}, and ${COMPOSE_OUT}"
+echo "wrote $(ls "${CONFIG_DIR}"/discovery-*.yaml 2>/dev/null | wc -l) discovery configs, $(ls "${CONFIG_DIR}"/poller-*.yaml 2>/dev/null | wc -l) poller configs, ${CATALOG_OUT}, ${TRAPS_OUT}, ${CATALOG_COMPOSE_OUT}, and ${COMPOSE_OUT}"

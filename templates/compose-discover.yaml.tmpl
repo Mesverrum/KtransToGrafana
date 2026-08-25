@@ -1,0 +1,36 @@
+  discover_${GROUP}:
+    image: ${KTRANSLATE_IMAGE:-quay.io/kentik/ktranslate:latest}
+    pull_policy: always
+    profiles: ["discovery"]
+    environment:
+      - OTEL_SERVICE_NAME=ktranslate-discover-${GROUP}${KTRANS_HOST:+-}${KTRANS_HOST}
+      - OTEL_EXPORTER_OTLP_COMPRESSION=${OTEL_EXPORTER_OTLP_COMPRESSION}
+      # NetBox creds for DISCOVERY_SOURCE=netbox groups; ktranslate reads them at
+      # runtime. Harmless (blank, unused) for cidr groups.
+      - NETBOX_HOST=${NETBOX_HOST:-}
+      - NETBOX_TOKEN=${NETBOX_TOKEN:-}
+      # AWS Secrets Manager for SNMP_V3_SECRET=aws.sm.… (docs/secrets-aws.md).
+      - AWS_REGION=${AWS_REGION:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
+      # Discovery containers are short-lived; export internal metrics sooner than
+      # the default 60s so a quick scan still emits health data to Alloy.
+      - OTEL_METRIC_EXPORT_INTERVAL=10000
+    volumes:
+      - type: bind
+        source: ${REPO_PATH}/state/discovery-${GROUP}.runtime.yaml
+        target: /snmp.yaml
+    depends_on:
+      - alloy
+    command:
+      - --format=otel
+      - --format_metric=otel
+      - --otel.protocol=grpc
+      - --otel.endpoint=http://alloy:4317/
+      - --snmp=/snmp.yaml
+      - -snmp_discovery=true
+      - --sinks=otel
+      - --metrics=jchf
+      - --tee_logs=true
+      - --service_name=discover-${GROUP}

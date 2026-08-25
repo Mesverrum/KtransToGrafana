@@ -99,6 +99,22 @@ if [[ -f "${DEVICES_PREV}" ]] && cmp -s "${DEVICES_PREV}" "${DEVICES_OUT}"; then
   exit 2
 fi
 
+# ROLE=discover: re-split into pollers (dynamic vendors, or config/device-split.yaml).
+# ROLE=both (onboarding): leave the mixed poller until the operator runs make split-devices.
+ROLE="$(awk -F= '/^ROLE=/{print $2; exit}' "${REPO_ROOT}/groups/${GROUP}.env" 2>/dev/null || true)"
+ROLE="${ROLE:-both}"
+if [[ "${ROLE}" == "discover" ]]; then
+  python3 "${REPO_ROOT}/scripts/split-devices.py" --provision --source-group "${GROUP}" --from "${DEVICES_OUT}"
+  bash "${REPO_ROOT}/scripts/generate-groups.sh"
+  if [[ -f "${REPO_ROOT}/compose-base.yaml" ]]; then
+    docker compose \
+      -f "${REPO_ROOT}/compose-base.yaml" \
+      -f "${REPO_ROOT}/compose-groups.generated.yaml" \
+      -f "${REPO_ROOT}/compose-catalog.generated.yaml" \
+      up -d --remove-orphans
+  fi
+fi
+
 if [[ -n "${SKIP_RELOAD:-}" ]]; then
   echo "device list changed for ${GROUP}; reload deferred (SKIP_RELOAD)"
   exit 0

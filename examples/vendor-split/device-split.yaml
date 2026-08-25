@@ -1,0 +1,32 @@
+# Same as vendor-split.yaml — preferred name when you copy to config/.
+# See vendor-split.yaml and recipes/ for the matcher reference.
+
+source_group: estate
+default_group: other
+
+rules:
+  - group: cisco
+    mib_profile:
+      - "cisco*"
+      - "catalyst*"
+      - "nexus*"
+      - "meraki*"
+      - "iosxe*"
+      - "iosxr*"
+    oid_prefix:
+      - ".1.3.6.1.4.1.9"
+      - ".1.3.6.1.4.1.29671"
+  - group: palo
+    mib_profile:
+      - "palo*"
+      - "panos*"
+    oid_prefix:
+      - ".1.3.6.1.4.1.25461"
+  - group: juniper
+    mib_profile:
+      - "juniper*"
+      - "junos*"
+      - "pulse_secure*"
+    oid_prefix:
+      - ".1.3.6.1.4.1.2636"
+      - ".1.3.6.1.4.1.12532"

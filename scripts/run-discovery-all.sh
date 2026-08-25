@@ -22,6 +22,12 @@ fi
 for env_file in "${GROUP_FILES[@]}"; do
   group="$(awk -F= '/^GROUP=/{print $2; exit}' "${env_file}")"
   [[ -z "${group}" ]] && continue
+  role="$(awk -F= '/^ROLE=/{print $2; exit}' "${env_file}")"
+  role="${role:-both}"
+  if [[ "${role}" == "poll" ]]; then
+    echo "==> skipping ${group} (ROLE=poll; filled by device split)"
+    continue
+  fi
   echo "==> discovering group: ${group}"
   set +e
   SKIP_RELOAD=1 bash "${REPO_ROOT}/scripts/run-discovery.sh" "${group}"

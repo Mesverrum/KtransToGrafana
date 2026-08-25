@@ -1,0 +1,47 @@
+# Split a ROLE=discover device list into ROLE=poll files.
+#
+# Copy to config/device-split.yaml (preferred) or config/vendor-split.yaml.
+# First matching rule wins. If a rule's group has no poller, the device falls
+# through to the next rule (then default_group).
+#
+# Inspect what you can match (no extra scripts):
+#   python3 scripts/split-devices.py --list-fields
+#   python3 scripts/split-devices.py --list-values mib_profile
+#   python3 scripts/split-devices.py --explain --dry-run
+#
+# Operators on any field: equals, in, glob, contains, prefix, regex, cidr, exists.
+# Combine with any: (OR) / match: or all: (AND). Shorthand mib_profile / oid_prefix
+# / provider still work and OR together (this file).
+# Destinations: group: name | group: "site-{1}" (regex capture) | group_from: field
+#
+# More copy-paste recipes: recipes/
+
+source_group: estate
+default_group: other
+
+rules:
+  - group: cisco
+    mib_profile:
+      - "cisco*"
+      - "catalyst*"
+      - "nexus*"
+      - "meraki*"
+      - "iosxe*"
+      - "iosxr*"
+    oid_prefix:
+      - ".1.3.6.1.4.1.9"       # Cisco
+      - ".1.3.6.1.4.1.29671"   # Meraki
+  - group: palo
+    mib_profile:
+      - "palo*"
+      - "panos*"
+    oid_prefix:
+      - ".1.3.6.1.4.1.25461"
+  - group: juniper
+    mib_profile:
+      - "juniper*"
+      - "junos*"
+      - "pulse_secure*"
+    oid_prefix:
+      - ".1.3.6.1.4.1.2636"
+      - ".1.3.6.1.4.1.12532"

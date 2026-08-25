@@ -1,0 +1,13 @@
+# One poller per kentik profile stem (cisco-nexus.yml → group cisco-nexus).
+# Destination names must still exist as ROLE=poll groups/*.env or devices
+# fall through to default_group.
+#
+# Against testdata/devices-estate.yaml:
+#   cisco-nexus, paloalto, juniper-ex, apc_ups, cisco-catalyst, cisco-iosxe
+
+source_group: estate
+default_group: other
+
+rules:
+  - group_from: mib_profile
+    group_transform: stem

@@ -40,11 +40,26 @@ def load_dotenv(path: Path) -> dict[str, str]:
 
 def parse_group_env(path: Path) -> dict[str, str]:
     data = load_dotenv(path)
-    required = ("GROUP", "METALISTEN_PORT", "TRAP_PORT")
+    role = (data.get("ROLE") or "both").strip().lower() or "both"
+    required = ["GROUP"]
+    if role != "discover":
+        required.extend(("METALISTEN_PORT", "TRAP_PORT"))
     missing = [k for k in required if not data.get(k)]
     if missing:
         raise SystemExit(f"{path.name}: missing {', '.join(missing)}")
     return data
+
+
+def group_role(g: dict[str, str]) -> str:
+    return (g.get("ROLE") or "both").strip().lower() or "both"
+
+
+def is_poller(g: dict[str, str]) -> bool:
+    return group_role(g) in {"poll", "both"}
+
+
+def is_discoverer(g: dict[str, str]) -> bool:
+    return group_role(g) in {"discover", "both"}
 
 
 def run_generate_groups() -> None:
@@ -208,6 +223,8 @@ def identity_yaml(c: Ctx) -> str:
         "syslog=1514/udp+tcp",
     ]
     for g in c.groups:
+        if not is_poller(g):
+            continue
         ports.append(f"traps_{g['GROUP']}={g['TRAP_PORT']}/udp")
     dest = c.collector_ip or (
         f"<node IP of {c.node}>" if c.node else "<SET K8S_COLLECTOR_IP>"
@@ -334,12 +351,12 @@ def poller_cms(c: Ctx) -> str:
     docs = []
     for g in c.groups:
         name = g["GROUP"]
-        poller = REPO / "config" / f"poller-{name}.yaml"
-        disc = REPO / "config" / f"discovery-{name}.yaml"
-        if not poller.is_file() or not disc.is_file():
-            raise SystemExit(f"missing config/poller-{name}.yaml or discovery-{name}.yaml")
-        docs.append(
-            f"""apiVersion: v1
+        if is_poller(g):
+            poller = REPO / "config" / f"poller-{name}.yaml"
+            if not poller.is_file():
+                raise SystemExit(f"missing config/poller-{name}.yaml")
+            docs.append(
+                f"""apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ktranslate-poller-{name}
@@ -347,8 +364,14 @@ metadata:
 data:
   poller.yaml: |
 {indent(poller.read_text(encoding="utf-8"), 4)}
----
-apiVersion: v1
+"""
+            )
+        if is_discoverer(g):
+            disc = REPO / "config" / f"discovery-{name}.yaml"
+            if not disc.is_file():
+                raise SystemExit(f"missing config/discovery-{name}.yaml")
+            docs.append(
+                f"""apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ktranslate-discovery-{name}
@@ -357,7 +380,7 @@ data:
   discovery.yaml: |
 {indent(disc.read_text(encoding="utf-8"), 4)}
 """
-        )
+            )
     return "\n---\n".join(docs)
 
 
@@ -712,6 +735,8 @@ spec:
 def snmp_yaml(c: Ctx) -> str:
     docs = []
     for g in c.groups:
+        if not is_poller(g):
+            continue
         name = g["GROUP"]
         trap = g["TRAP_PORT"]
         meta = g["METALISTEN_PORT"]
@@ -829,7 +854,8 @@ def discover_env(c: Ctx) -> str:
 
 def discovery_yaml(c: Ctx) -> str:
     docs = []
-    for i, g in enumerate(c.groups):
+    discoverers = [g for g in c.groups if is_discoverer(g)]
+    for i, g in enumerate(discoverers):
         name = g["GROUP"]
         # Stagger cron minutes so groups do not scan at the same instant.
         sched = c.discover_sched
@@ -962,6 +988,8 @@ def inbound_svc_yaml(c: Ctx) -> str:
     ]
     seen = {"9995", "1514"}
     for g in c.groups:
+        if not is_poller(g):
+            continue
         trap = g["TRAP_PORT"]
         if trap in seen:
             continue
@@ -983,6 +1011,8 @@ def inbound_svc_yaml(c: Ctx) -> str:
         ("ktranslate-inbound-syslog", "ktranslate-syslog", "\n".join(ports[1:3])),
     ]
     for g in c.groups:
+        if not is_poller(g):
+            continue
         trap = g["TRAP_PORT"]
         selectors.append(
             (
@@ -1015,7 +1045,7 @@ spec:
 def pdb_yaml(c: Ctx) -> str:
     """Honest PDB: one replica, so a drain *will* drop UDP briefly."""
     names = ["alloy", "ktranslate-flow", "ktranslate-syslog", "flow-dns"]
-    names += [f"ktranslate-snmp-{g['GROUP']}" for g in c.groups]
+    names += [f"ktranslate-snmp-{g['GROUP']}" for g in c.groups if is_poller(g)]
     docs = []
     for name in names:
         docs.append(
@@ -1045,6 +1075,8 @@ def endpoints_md(c: Ctx) -> str:
         f"| Syslog | `{dest}:1514` UDP/TCP | Privileged port — needs NET_BIND_SERVICE. |",
     ]
     for g in c.groups:
+        if not is_poller(g):
+            continue
         rows.append(
             f"| SNMP traps (`{g['GROUP']}`) | `{dest}:{g['TRAP_PORT']}` UDP | Poller is also the trap sink. |"
         )
@@ -1128,16 +1160,23 @@ def main() -> int:
         ("02-pvc.yaml", pvc_yaml(c)),
         ("03-scripts.yaml", scripts_cm(c)),
         ("04-catalog.yaml", catalog_cm(c)),
-        ("05-pollers.yaml", poller_cms(c)),
         ("10-alloy.yaml", alloy_yaml(c)),
         ("20-flow-dns.yaml", flow_dns_yaml(c)),
         ("30-flow.yaml", flow_yaml(c)),
         ("40-syslog.yaml", syslog_yaml(c)),
-        ("50-snmp.yaml", snmp_yaml(c)),
-        ("60-discovery.yaml", discovery_yaml(c)),
         ("61-bootstrap.yaml", bootstrap_yaml(c)),
         ("80-pdb.yaml", pdb_yaml(c)),
     ]
+    pollers = poller_cms(c)
+    if pollers:
+        files.append(("05-pollers.yaml", pollers))
+    snmp = snmp_yaml(c)
+    if snmp:
+        files.append(("50-snmp.yaml", snmp))
+    disco = discovery_yaml(c)
+    if disco:
+        files.append(("60-discovery.yaml", disco))
+    files.sort(key=lambda t: t[0])
     inbound = inbound_svc_yaml(c)
     if inbound:
         files.append(("70-inbound-svc.yaml", inbound))

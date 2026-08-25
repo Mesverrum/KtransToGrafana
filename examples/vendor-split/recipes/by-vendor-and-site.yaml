@@ -1,0 +1,21 @@
+# Vendor (profile) AND site (subnet) — two dimensions in one rule.
+# Needs a poller named hq-cisco.
+#
+# Against testdata/devices-estate.yaml:
+#   hq-cisco ← hq-leaf
+#   cisco    ← core1, br-leaf
+#   other    ← fw1, ex1, ups1
+
+source_group: estate
+default_group: other
+
+rules:
+  - group: hq-cisco
+    match:
+      - field: mib_profile
+        glob: "cisco*"
+      - field: device_ip
+        cidr: 10.10.0.0/16
+  - group: cisco
+    mib_profile: ["cisco*"]
+    oid_prefix: [".1.3.6.1.4.1.9"]

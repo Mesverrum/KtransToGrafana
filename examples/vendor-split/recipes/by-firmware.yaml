@@ -1,0 +1,20 @@
+# Firmware / OS from sysDescr (ktranslate stores it as description).
+# Tweak the regex after: python3 scripts/split-devices.py --list-values description
+#
+# Against testdata/devices-estate.yaml:
+#   iosxe17 ← br-leaf (IOS-XE 17.9.4)
+#   nxos9   ← core1 (NX-OS 9.3)
+#   other   ← fw1, ex1, ups1, hq-leaf
+
+source_group: estate
+default_group: other
+
+rules:
+  - group: iosxe17
+    match:
+      - field: description
+        regex: 'IOS-XE.*17\.9'
+  - group: nxos9
+    match:
+      - field: description
+        contains: "NX-OS"

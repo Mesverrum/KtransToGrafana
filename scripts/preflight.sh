@@ -127,7 +127,16 @@ if [[ ${#GROUP_FILES[@]} -eq 0 ]]; then
 else
   _ok "found ${#GROUP_FILES[@]} group file(s) in groups/"
   if [[ ${#GROUP_FILES[@]} -gt 1 ]]; then
-    _warn "${#GROUP_FILES[@]} groups — make generate / make up start ALL of them. GROUP= only applies to make discover. Start with one *.env until data lands."
+    has_discover=0
+    for env_file in "${GROUP_FILES[@]}"; do
+      role=$(awk -F= '/^ROLE=/{print $2; exit}' "${env_file}")
+      if [[ "${role}" == "discover" ]]; then has_discover=1; break; fi
+    done
+    if [[ "${has_discover}" -eq 1 ]]; then
+      _ok "${#GROUP_FILES[@]} groups include a ROLE=discover estate scan (device-split layout)"
+    else
+      _warn "${#GROUP_FILES[@]} groups — make generate / make up start ALL of them. GROUP= only applies to make discover. Start with one *.env until data lands."
+    fi
   fi
   if [[ -f groups/onboarding.env && -f groups/single.env ]]; then
     _warn "both groups/onboarding.env and groups/single.env exist — two SNMP pollers. Remove one if you only meant to onboard a single device."
@@ -150,21 +159,32 @@ if [[ -f config/catalog.yaml ]]; then
 else
   _fail "config/catalog.yaml is missing — run: make generate"
 fi
+if [[ -f config/traps.yaml ]]; then
+  _ok "config/traps.yaml exists (collated trap listener)"
+else
+  _warn "config/traps.yaml is missing — run: make generate (traps UDP/1620)"
+fi
 
 # --- Per-group rendered configs ---
 for env_file in "${GROUP_FILES[@]}"; do
   group=$(awk -F= '/^GROUP=/{print $2; exit}' "${env_file}")
   [[ -z "${group}" ]] && continue
+  role=$(awk -F= '/^ROLE=/{print $2; exit}' "${env_file}")
+  role="${role:-both}"
 
-  if [[ -f "config/discovery-${group}.yaml" ]]; then
-    _ok "config/discovery-${group}.yaml exists"
-  else
-    _fail "config/discovery-${group}.yaml is missing — run: make generate"
+  if [[ "${role}" != "poll" ]]; then
+    if [[ -f "config/discovery-${group}.yaml" ]]; then
+      _ok "config/discovery-${group}.yaml exists"
+    else
+      _fail "config/discovery-${group}.yaml is missing — run: make generate"
+    fi
   fi
-  if [[ -f "config/poller-${group}.yaml" ]]; then
-    _ok "config/poller-${group}.yaml exists"
-  else
-    _fail "config/poller-${group}.yaml is missing — run: make generate"
+  if [[ "${role}" != "discover" ]]; then
+    if [[ -f "config/poller-${group}.yaml" ]]; then
+      _ok "config/poller-${group}.yaml exists"
+    else
+      _fail "config/poller-${group}.yaml is missing — run: make generate"
+    fi
   fi
   if [[ ! -f "state/devices-${group}.yaml" ]]; then
     _warn "state/devices-${group}.yaml is missing — bootstrap will seed an empty stub; run discovery to populate"

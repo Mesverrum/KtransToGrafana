@@ -1,0 +1,45 @@
+# Synthetic discovery output for scripts/split-devices.py --self-test
+core1:
+  device_name: dc1-core1
+  device_ip: 10.0.0.1
+  oid: .1.3.6.1.4.1.9.12.3.1.3.1497
+  mib_profile: cisco-nexus.yml
+  provider: kentik-switch
+  description: "Cisco NX-OS(tm) 9.3(10)"
+fw1:
+  device_name: fw1
+  device_ip: 10.0.0.2
+  oid: .1.3.6.1.4.1.25461.2.3.21
+  mib_profile: paloalto.yml
+  provider: kentik-firewall
+  description: "PA-3220 10.2.3"
+ex1:
+  device_name: dc2-ex1
+  device_ip: 10.2.0.4
+  oid: .1.3.6.1.4.1.2636.1.1.1.2.31
+  mib_profile: juniper-ex.yml
+  provider: kentik-switch
+  description: "Juniper Networks, Inc. ex4300"
+ups1:
+  device_name: ups1
+  device_ip: 10.0.0.3
+  oid: .1.3.6.1.4.1.318.1.3.27
+  mib_profile: apc_ups.yml
+  provider: kentik-ups
+  description: "APC Smart-UPS"
+hq-leaf:
+  device_name: hq-leaf-01
+  device_ip: 10.10.1.5
+  oid: .1.3.6.1.4.1.9.1.1733
+  mib_profile: cisco-catalyst.yml
+  provider: kentik-switch
+  description: "Cisco IOS Software, C9300"
+  user_tags:
+    site: hq
+br-leaf:
+  device_name: br1-leaf-01
+  device_ip: 10.20.1.5
+  oid: .1.3.6.1.4.1.9.1.1733
+  mib_profile: cisco-iosxe.yml
+  provider: kentik-switch
+  description: "Cisco IOS-XE Software, Version 17.9.4"

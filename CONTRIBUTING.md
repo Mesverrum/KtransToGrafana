@@ -20,7 +20,8 @@ add a new `docs/` file, add a bullet for it in the README index too.
 ## Config is generated — edit the inputs, not the outputs
 
 A deployment is `groups/*.env` rendered by `scripts/generate-groups.sh` through
-the files in `templates/`. **Never hand-edit the generated artifacts** (`config/`,
+the files in `templates/` (`poller.yaml.tmpl`, `discovery.yaml.tmpl`,
+`compose-poller.yaml.tmpl`, `compose-discover.yaml.tmpl`). **Never hand-edit the generated artifacts** (`config/`,
 `compose-groups.generated.yaml`, `compose-limits.generated.yaml`,
 `k8s/generated/`) — they're overwritten on every `make generate` /
 `make generate-k8s`. To change rendering, edit the templates or the generator.
@@ -37,6 +38,14 @@ When touching the generator or templates:
   `groups/*.env.sample` to `groups/<name>.env`, run `make generate`, and check
   the output with `yq -e '.' config/discovery-<name>.yaml` (and the poller).
   Clean up the temp group + `config/` afterwards.
+
+## Device-list split is YAML, not a new script
+
+`scripts/split-devices.py` routes a discovery list into `ROLE=poll` files.
+Default is **dynamic vendor** from `mib_profile` (provisions `groups/*.env`).
+Static matchers live under `examples/vendor-split/recipes/`. When you add a
+matcher, add a `--self-test` case — do not grow a family of `split-devices-by-*.py`
+scripts.
 
 ## Group `.env` files are shell-sourced
 

@@ -1,0 +1,19 @@
+# Site from a hostname prefix, e.g. dc1-core1 → poller group site-dc1.
+# Tighten the regex after: python3 scripts/split-devices.py --list-values device_name
+# Preview buckets before creating groups/*.env:
+#   python3 scripts/split-devices.py --mapping examples/vendor-split/recipes/by-hostname.yaml \
+#     --dry-run --explain --ignore-pollers
+#
+# Against testdata/devices-estate.yaml:
+#   site-dc1 ← core1 (dc1-core1)
+#   site-dc2 ← ex1 (dc2-ex1)
+#   other    ← fw1, ups1, hq-leaf, br-leaf
+
+source_group: estate
+default_group: other
+
+rules:
+  - group: "site-{1}"
+    match:
+      - field: device_name
+        regex: '^(dc\d+)-'

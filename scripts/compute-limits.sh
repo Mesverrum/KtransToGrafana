@@ -164,6 +164,9 @@ if (( ${#GROUP_FILES[@]} > 0 )); then
   for env_file in "${GROUP_FILES[@]}"; do
     group="$(awk -F= '/^GROUP=/{print $2; exit}' "${env_file}")"
     [[ -z "${group}" ]] && continue
+    role="$(awk -F= '/^ROLE=/{print $2; exit}' "${env_file}")"
+    role="${role:-both}"
+    [[ "${role}" == "discover" ]] && continue
     SNMP_SERVICES+=("ktranslate_snmp_${group}")
   done
 else
@@ -237,7 +240,7 @@ else
   fi
 fi
 
-TOTAL_CAP_MB=$(( BASE_MB + SNMP_EACH_MB * NUM_SNMP ))
+TOTAL_CAP_MB=$(( BASE_MB + SYSLOG_MB + SNMP_EACH_MB * NUM_SNMP ))
 
 # --- report ------------------------------------------------------------------
 
@@ -248,6 +251,7 @@ echo
 printf '  %-28s %s\n' "alloy" "$(fmt_mb "${ALLOY_MB}")"
 printf '  %-28s %s\n' "ktranslate_flow" "$(fmt_mb "${FLOW_MB}")"
 printf '  %-28s %s\n' "ktranslate_syslog" "$(fmt_mb "${SYSLOG_MB}")"
+printf '  %-28s %s\n' "ktranslate_traps" "$(fmt_mb "${SYSLOG_MB}")"
 for svc in "${SNMP_SERVICES[@]}"; do
   printf '  %-28s %s\n' "${svc}" "$(fmt_mb "${SNMP_EACH_MB}")"
 done
@@ -280,6 +284,7 @@ EOF
   emit_service_limit "alloy" "${ALLOY_MB}"
   emit_service_limit "ktranslate_flow" "${FLOW_MB}"
   emit_service_limit "ktranslate_syslog" "${SYSLOG_MB}"
+  emit_service_limit "ktranslate_traps" "${SYSLOG_MB}"
   for svc in "${SNMP_SERVICES[@]}"; do
     emit_service_limit "${svc}" "${SNMP_EACH_MB}"
   done

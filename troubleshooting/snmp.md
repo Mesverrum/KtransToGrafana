@@ -1,5 +1,8 @@
 # Collecting data for troubleshooting with the 'snmpwalk' utility
-## Problem 
+
+If discovery wrote devices but Grafana Explore is empty, start with [bring-up.md](bring-up.md) (devices YAML → Alloy `:12346` → PromQL `kentik_snmp_CPU`). Use this page when hop 1 failed — the device never answered SNMP from this host.
+
+## Problem
 You are having trouble collecting SNMP metrics from your device.
 
 ## Solution 

@@ -57,13 +57,19 @@ cp config.alloy.sample config.alloy
 cp compose-base.yaml.sample compose-base.yaml
 ```
 
-**3. Add your Grafana Cloud OTLP credentials to `.env`.** In Grafana Cloud, go to **Add new connection → OpenTelemetry (OTLP)**, create/select a token, and skip the Alloy install steps. From the config snippet it shows, copy the three values into `.env` (no quotes):
+`git pull` does **not** refresh those copies. If you cloned before the relative Alloy mount / River backticks landed, re-copy `compose-base.yaml.sample` and `config.alloy.sample` (keep `.env`). `make preflight` fails if the Alloy volume still points at `/opt/Grafana/...` or `config.alloy` still has a single-quoted `delete_matching_keys` line.
 
-- `GC_OTLP_URL` ← the `endpoint` URL
-- `GC_OTLP_ACCOUNT` ← the `username` (instance ID)
+**3. Add your Grafana Cloud OTLP credentials to `.env`.** In Grafana Cloud, go to **Add new connection → OpenTelemetry (OTLP)**, create/select a token, and skip the Alloy install steps. From **that same snippet**, copy all three values into `.env` (no quotes) — they must be one stack and one region:
+
+- `GC_OTLP_URL` ← the `endpoint` URL (`https://otlp-gateway-prod-<region>.grafana.net/otlp`)
+- `GC_OTLP_ACCOUNT` ← the `username` (numeric instance ID)
 - `GC_OTLP_KEY` ← the `password` (`glc_...` token)
 
-**4. List your devices and candidate credentials.**
+Do not open that URL in a browser (`GET /otlp` is a 404). OTLP is `POST /otlp/v1/metrics`. Leave `KTRANS_HOST` blank and use `make up` (do not start with raw `docker compose up` while it is blank).
+
+**4. List your devices and candidate credentials — copy one group, not every sample.**
+
+`make generate` and `make up` start **every** `groups/*.env` file. `GROUP=` only applies to `make discover`. Copy **either** the onboarding sample **or** the single-device sample, not both:
 
 ```
 cp groups/onboarding.env.sample groups/onboarding.env
@@ -75,7 +81,7 @@ cp groups/onboarding.env.sample groups/onboarding.env
 
 Discovery tries every credential against every device in the range and records the one that works per device — so you don't need the mapping up front.
 
-> **Just one device?** Same flow, smaller: `cp groups/single.env.sample groups/single.env` and set `TARGETS` to one address with one credential (then use `GROUP=single` in step 7).
+> **Just one device?** Same flow, smaller: `cp groups/single.env.sample groups/single.env` (and **do not** also copy `onboarding.env`). Set `TARGETS` to one address with one credential, then use `GROUP=single` **only** on the discover command in step 7.
 
 **5. Generate the per-group configs:**
 
@@ -98,15 +104,21 @@ make discover GROUP=onboarding   # scan the range, match credentials, hand devic
 
 `make up` prints the resolved `deployment.host` and brings everything up. Discovery writes `state/devices-onboarding.yaml` — each device stamped with the credential that worked — and reloads the poller.
 
+If a script says `Permission denied`, Git on Windows (or a zip extract) dropped execute bits. `make` already runs `bash scripts/…`; to restore `./scripts/` / cron in one shot: `chmod a+x scripts/*.sh` (`make preflight` does this too).
+
 ## See your data
+
+Walk the hops if Grafana is empty — [troubleshooting/bring-up.md](troubleshooting/bring-up.md). Do not treat `kentik_snmp_DeviceMetrics` as the check; that series is **not** on this OTLP path.
 
 In Grafana Cloud → **Explore** → your default Prometheus data source:
 
 ```
-count by (tags_snmp_group, device_name) (kentik_snmp_DeviceMetrics)
+count by (tags_snmp_group, device_name) (kentik_snmp_CPU)
 ```
 
-One row per polled device means it's working. `tags_snmp_group` matches the `GROUP=` name from your `groups/*.env` file. First check what discovery actually claimed — `state/devices-onboarding.yaml` lists each device it found and the credential that worked; anything that didn't answer simply isn't there (wrong creds, an ACL blocking the host, non-SNMP, or unreachable) and is your follow-up list. Still empty in Grafana after a couple minutes? Check `make logs` and confirm `snmpwalk` reaches a device from the host (`troubleshooting/snmp.md`).
+(`kentik_snmp_PollingHealth` is the same idea.) One row per polled device means it's working. `tags_snmp_group` matches the `GROUP=` name from your `groups/*.env` file. First check what discovery actually claimed — `state/devices-onboarding.yaml` lists each device it found and the credential that worked; anything that didn't answer simply isn't there (wrong creds, an ACL blocking the host, non-SNMP, or unreachable) and is your follow-up list.
+
+Still empty after a couple minutes? Confirm Alloy is receiving **on this host** (`curl -s http://localhost:12346/metrics | grep otelcol_receiver_accepted`) before chasing Grafana Cloud. Then `make logs` and `snmpwalk` from the host ([troubleshooting/snmp.md](troubleshooting/snmp.md)).
 
 Then import the bundled dashboards or push them to your stack:
 
@@ -134,7 +146,8 @@ The quickstart is deliberately minimal. Deeper topics live in `docs/`:
 - **[docs/operations.md](docs/operations.md)** — permissions, memory limits, image pinning, scheduled (cron) discovery, the sflow demo overlay, tagging telemetry across multiple hosts (`KTRANS_HOST`), and the full `make` reference.
 - **[docs/grafana.md](docs/grafana.md)** — verification queries, flow rollups & cardinality, the official netflow-integration compatibility, and the bundled dashboards/alerts/skills.
 - **[docs/dashboards.md](docs/dashboards.md)** — import the 00–10 set; why one Device Details board uses `has_*` hide logic; fleet Inventory / Risk / Capacity / Events / Environment / Adjacency.
-- **`troubleshooting/`** — common SNMP and connectivity problems.
+- **[troubleshooting/bring-up.md](troubleshooting/bring-up.md)** — devices YAML → local Alloy `:12346` → Grafana PromQL (empty Explore, wrong metric name, two groups, stale Alloy mount, blank `KTRANS_HOST`).
+- **[troubleshooting/snmp.md](troubleshooting/snmp.md)** — `snmpwalk` from the Docker host.
 
 Modifying the repo? See [CONTRIBUTING.md](CONTRIBUTING.md) for the conventions (the docs-index rule, the config generator, `.env` quoting).
 

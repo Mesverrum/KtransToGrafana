@@ -33,6 +33,12 @@ The discovery script writes files into `state/` that the containers (running as 
 sudo chown -R 1000:1000 config/ state/
 ```
 
+`make` runs scripts with `bash scripts/…`, so a clone that lost git executable bits still brings the stack up. Cron and any `./scripts/foo.sh` invocation still need `+x`. `make preflight` (and therefore `make up`) restores that in bulk. To do it yourself in one shot:
+
+```
+chmod a+x scripts/*.sh
+```
+
 ## Memory limits
 
 On each `make up`, `scripts/compute-limits.sh` reads the host's available memory and writes `compose-limits.generated.yaml` with per-container caps. Docker Compose has no project-wide memory budget — each service gets its own limit — but the script sizes caps so their sum stays within a configurable fraction of available RAM. SNMP pollers receive the largest share, capped at **4G each**, which matches a typical **4 vCPU / 8 GiB** trial host running one poller plus alloy, flow, and syslog. Preview the plan without restarting with `make limits-show`.
@@ -53,8 +59,8 @@ On each `make up`, `scripts/compute-limits.sh` reads the host's available memory
 Add cron entries on the host so new devices get picked up automatically. Stagger each group a few minutes apart so they don't all run at once:
 
 ```
-0  */6 * * * cd /opt/Grafana/KtransToGrafana && ./scripts/run-discovery.sh cisco >> /var/log/ktrans-discovery.log 2>&1
-5  */6 * * * cd /opt/Grafana/KtransToGrafana && ./scripts/run-discovery.sh palo  >> /var/log/ktrans-discovery.log 2>&1
+0  */6 * * * cd /path/to/KtransToGrafana && bash scripts/run-discovery.sh cisco >> /var/log/ktrans-discovery.log 2>&1
+5  */6 * * * cd /path/to/KtransToGrafana && bash scripts/run-discovery.sh palo  >> /var/log/ktrans-discovery.log 2>&1
 ```
 
 Each run scans the group's configured CIDRs (or queries NetBox, depending on its `DISCOVERY_SOURCE`), atomically publishes a fresh `state/devices-<group>.yaml`, refreshes `flow_dns` PTR records, and reloads ktranslate receivers that depend on the device catalog. Flow and syslog containers restart; SNMP pollers receive `SIGUSR2` (ktranslate's reload signal — `SIGHUP` has no handler and would terminate the container). If discovery returns zero devices (network blip, container crash) the script preserves the previous device list rather than wiping it. If the device list is unchanged, no reload is sent.
@@ -97,7 +103,7 @@ make host          # prints the resolved value
 make up            # also prints "deployment.host = <value>" as it starts
 ```
 
-The resolution logic lives in `scripts/host-id.sh` and is shared by `make` and the discovery cron job, so long-running and scheduled containers always agree. A raw `docker compose up` (bypassing `make`) reads `KTRANS_HOST` from `.env` verbatim and does **not** apply the hostname fallback — set the variable explicitly if you don't drive the stack through the Makefile.
+The resolution logic lives in `scripts/host-id.sh` and is shared by `make` and the discovery cron job, so long-running and scheduled containers always agree. A raw `docker compose up` (bypassing `make`) reads `KTRANS_HOST` from `.env` verbatim and does **not** apply the hostname fallback. **A blank value interpolates as `deployment.host=` and Alloy can refuse to start.** Always `make up`, or `export KTRANS_HOST=$(bash scripts/host-id.sh)` before Compose. See [troubleshooting/bring-up.md](../troubleshooting/bring-up.md).
 
 ## Credential groups on SNMP metrics (`tags_snmp_group`)
 
@@ -108,7 +114,7 @@ When Alloy forwards metrics to Grafana Cloud over OTLP, the label appears as **`
 Verify after discovery:
 
 ```
-count by (tags_snmp_group, device_name) (kentik_snmp_PollingHealth)
+count by (tags_snmp_group, device_name) (kentik_snmp_CPU)
 ```
 
 Use **`tags_snmp_group`** for fleet scoping; use **`deployment_host`** (from `KTRANS_HOST`) to distinguish multiple collector hosts; use **`service_name`** for the specific poller container. Flow and syslog receivers share a catalog with `user_tags: {}` — flow metrics are not tagged with `tags_snmp_group`. See [configuration.md § snmp_group on metrics](configuration.md#snmp_group-on-metrics).

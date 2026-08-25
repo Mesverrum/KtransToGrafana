@@ -4,15 +4,18 @@
 
 Each file in `groups/*.env` is one credential group. The [quickstart](../README.md#quickstart--onboard-your-devices-in-about-15-minutes) walks through onboarding a range with candidate credentials; this doc covers multiple groups, both discovery sources, and the credential options in depth.
 
-Three sample groups ship in the repo — copy whichever fit your environment:
+**Copy only the samples you will run.** `make generate` and `make up` start **every** `groups/*.env` — `GROUP=` is not a filter there (it only applies to `make discover`). Copying both `onboarding.env` and `single.env` (or every vendor sample) starts two or more SNMP pollers and leftover containers. Get one group into Grafana first, then add more.
+
+Sample files (copy whichever fit — not all of them):
 
 ```
-cp groups/single.env.sample groups/single.env   # minimal single-device CIDR group
-cp groups/cisco.env.sample  groups/cisco.env     # CIDR discovery, SNMP v3 example
-cp groups/palo.env.sample   groups/palo.env      # NetBox discovery, SNMP v2c example
+cp groups/onboarding.env.sample groups/onboarding.env  # mixed creds + CIDR range
+cp groups/single.env.sample     groups/single.env      # one IP, one credential
+cp groups/cisco.env.sample      groups/cisco.env       # CIDR discovery, SNMP v3 example
+cp groups/palo.env.sample       groups/palo.env        # NetBox discovery, SNMP v2c example
 ```
 
-Copy only the ones you need, and copy additional sample files to define more groups (e.g. `cp groups/cisco.env.sample groups/fortinet.env`). The generator picks up everything matching `groups/*.env`.
+Copy additional sample files to define more groups (e.g. `cp groups/cisco.env.sample groups/fortinet.env`). The generator picks up everything matching `groups/*.env`.
 
 ## Common fields
 
@@ -36,8 +39,10 @@ global:
 ktranslate copies `global.user_tags` onto every SNMP series from that poller. When metrics are exported via **OTLP** to Grafana Cloud (the default in this stack), the label appears as **`tags_snmp_group`** on series — the dashboard variable is still named `$snmp_group`, but PromQL filters use `tags_snmp_group=~"$snmp_group"`. After discovery, verify in Grafana Explore:
 
 ```
-count by (tags_snmp_group, device_name) (kentik_snmp_PollingHealth)
+count by (tags_snmp_group, device_name) (kentik_snmp_CPU)
 ```
+
+(`kentik_snmp_PollingHealth` is equivalent. Do not query `kentik_snmp_DeviceMetrics` — that series is not on this OTLP path.)
 
 You should see one `tags_snmp_group` value per credential group (`cisco`, `palo`, …). The bundled dashboards (`01`–`04`) expose a **`$snmp_group`** template variable. Flow and syslog receivers use a shared catalog with `user_tags: {}` — flow metrics are not tagged with `tags_snmp_group`; use `device_name` or flow attributes instead.
 
@@ -177,25 +182,29 @@ In production with corporate PTR records, point `--dns` at real DNS instead of `
 
 ## Multiple environments on one host
 
-Docker Compose reads `.env` from the current directory automatically. To maintain side-by-side environments (dev/staging/prod), keep additional files like `.env.prod` and select one at run time:
+Docker Compose reads `.env` from the current directory automatically. To maintain side-by-side environments (dev/staging/prod), keep additional files like `.env.prod` and select one at run time. Export `KTRANS_HOST` first if that file leaves it blank:
 
 ```
-docker compose --env-file .env.prod -f compose-base.yaml -f compose-groups.generated.yaml up -d
+export KTRANS_HOST=$(bash scripts/host-id.sh)
+docker compose --env-file .env.prod -f compose-base.yaml -f compose-groups.generated.yaml -f compose-catalog.generated.yaml up -d
 ```
 
 ## Running without the Makefile
 
-The equivalent raw commands are:
+Prefer `make up` — it fills `KTRANS_HOST` from hostname when `.env` leaves it blank. Raw Compose interpolates a blank `KTRANS_HOST` as `deployment.host=` and Alloy can crash.
 
 ```
-./scripts/preflight.sh
-./scripts/generate-groups.sh
+export KTRANS_HOST=$(bash scripts/host-id.sh)   # required if KTRANS_HOST= is blank in .env
+bash scripts/preflight.sh
+bash scripts/generate-groups.sh                 # renders ALL groups/*.env (no GROUP= filter)
 echo '{}' | tee state/devices-cisco.yaml state/devices-palo.yaml   # bootstrap
-./scripts/compute-limits.sh
+bash scripts/compute-limits.sh
 docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-catalog.generated.yaml -f compose-limits.generated.yaml up -d
-./scripts/run-discovery.sh cisco
+bash scripts/run-discovery.sh cisco
 # or discover every group in one shot:
 make discover-all
 ```
 
-The `discover_*` services are gated behind a Compose profile so `up` does not start them — they only run when invoked via `make discover` or `./scripts/run-discovery.sh`.
+Git on Windows / some zip extracts drop execute bits. Always invoke `bash scripts/…` (not `./scripts/foo.sh`) unless you have run `chmod a+x scripts/*.sh`.
+
+The `discover_*` services are gated behind a Compose profile so `up` does not start them — they only run when invoked via `make discover` or `bash scripts/run-discovery.sh`.

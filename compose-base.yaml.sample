@@ -100,10 +100,15 @@ services:
       - OTEL_METRIC_EXPORT_INTERVAL=1000
       # Read by Alloy's resourcedetection "env" detector and stamped onto every
       # signal passing through, so all telemetry from this host carries it.
-      - OTEL_RESOURCE_ATTRIBUTES=deployment.host=${KTRANS_HOST}
+      # ${KTRANS_HOST:-unset} so a blank .env never becomes "deployment.host="
+      # (empty OTEL resource attrs can crash Alloy). `make up` exports a real
+      # hostname via scripts/host-id.sh; set KTRANS_HOST in .env to override.
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.host=${KTRANS_HOST:-unset}
     volumes:
+      # Relative path — not /opt/Grafana/... or any host-specific absolute path.
+      # A hardcoded lab path leaves Alloy running without your config.alloy.
       - type: bind
-        source: /opt/Grafana/KtransToGrafana/config.alloy
+        source: ./config.alloy
         target: /config.alloy
     ports:
       - 4317:4317

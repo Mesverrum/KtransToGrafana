@@ -8,16 +8,18 @@ COMPOSE := docker compose -f compose-base.yaml -f compose-groups.generated.yaml 
 # each host self-identifies with no config. Exported so `docker compose` picks
 # it up — a value in the process environment overrides a blank one in .env.
 # scripts/host-id.sh holds the logic so the discovery cron job agrees with make.
-KTRANS_HOST := $(shell ./scripts/host-id.sh 2>/dev/null)
+# Invoke via bash so a clone without git executable bits still works (Windows
+# zip / some git configs drop +x; ./scripts/foo.sh then fails with Permission denied).
+KTRANS_HOST := $(shell bash scripts/host-id.sh 2>/dev/null)
 export KTRANS_HOST
 
 help:
 	@echo "make preflight              Check that .env / groups / generated configs are ready"
-	@echo "make generate               Render configs and compose-groups.generated.yaml from groups/*.env"
+	@echo "make generate               Render ALL groups/*.env (GROUP= is ignored — that is discover-only)"
 	@echo "make bootstrap              Seed empty state/devices-<group>.yaml stubs so pollers can start"
 	@echo "make limits                 Compute per-container memory limits from host RAM"
 	@echo "make limits-show            Print the limits plan without writing the overlay"
-	@echo "make up                     Run preflight + bootstrap + flow-dns + limits, then docker compose up -d"
+	@echo "make up                     Preflight + bootstrap + flow-dns + limits + compose up (all groups; GROUP= ignored)"
 	@echo "make up-demo                Same as 'up' plus the host-sflow demo overlay (instant flow data)"
 	@echo "make down                   docker compose down"
 	@echo "make logs                   Tail logs from all containers"
@@ -33,10 +35,11 @@ help:
 	@echo "make k8s-discover GROUP=…   One-shot in-cluster discovery Job"
 
 preflight:
-	@./scripts/preflight.sh
+	@bash scripts/preflight.sh
 
 generate:
-	@./scripts/generate-groups.sh
+	@if [ -n "$(GROUP)" ]; then echo "NOTE: GROUP=$(GROUP) is ignored. make generate renders every groups/*.env. GROUP= only applies to make discover." >&2; fi
+	@bash scripts/generate-groups.sh
 
 bootstrap:
 	@mkdir -p state dnsmasq
@@ -53,21 +56,23 @@ bootstrap:
 	@[ -f dnsmasq/upstream.conf ] || echo 'server=host.docker.internal' > dnsmasq/upstream.conf
 
 flow-dns:
-	@./scripts/refresh-flow-dns.sh
+	@bash scripts/refresh-flow-dns.sh
 
 limits:
-	@./scripts/compute-limits.sh
+	@bash scripts/compute-limits.sh
 
 limits-show:
-	@./scripts/compute-limits.sh --dry-run
+	@bash scripts/compute-limits.sh --dry-run
 
 up: preflight bootstrap flow-dns limits
+	@if [ -n "$(GROUP)" ]; then echo "NOTE: GROUP=$(GROUP) is ignored. make up starts every groups/*.env. GROUP= only applies to make discover." >&2; fi
 	@echo "deployment.host = $(KTRANS_HOST)"
 	$(COMPOSE) up -d
 
 # Same as `up` but layers in the optional host-sflow demo overlay so you get
 # flow data immediately without a real netflow/sflow source configured yet.
 up-demo: preflight bootstrap flow-dns limits
+	@if [ -n "$(GROUP)" ]; then echo "NOTE: GROUP=$(GROUP) is ignored. make up-demo starts every groups/*.env. GROUP= only applies to make discover." >&2; fi
 	@echo "deployment.host = $(KTRANS_HOST)"
 	$(COMPOSE) -f compose-sflow.yaml up -d
 
@@ -82,10 +87,10 @@ logs:
 
 discover:
 	@test -n "$(GROUP)" || { echo "ERROR: pass GROUP=<name>, e.g. make discover GROUP=cisco" >&2; exit 1; }
-	@./scripts/run-discovery.sh $(GROUP)
+	@bash scripts/run-discovery.sh $(GROUP)
 
 discover-all:
-	@./scripts/run-discovery-all.sh
+	@bash scripts/run-discovery-all.sh
 
 # Auto-detect the host's default interface and write it to .env as HOST_NET.
 # Only needed if you use the host-sflow demo overlay (make up-demo).

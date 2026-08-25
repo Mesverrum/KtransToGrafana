@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # Generate per-group ktranslate configs and a Compose service fragment from
-# the declarative files in groups/*.env. Run this:
+# the declarative files in groups/*.env. Every groups/*.env is rendered —
+# there is no GROUP= filter (that flag is only for make discover). Copy only
+# the group files you intend to run.
+# Run this:
 #   - once during initial setup
 #   - whenever you add, remove, or modify a group
 # Then bring the stack up:

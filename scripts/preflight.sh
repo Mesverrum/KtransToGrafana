@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Catch the common setup mistakes before the stack starts:
 #   - .env / config.alloy / compose-base.yaml haven't been copied from .sample
-#   - .env still contains the placeholder Grafana Cloud values
+#   - stale copies: Alloy bind-mount still /opt/Grafana/..., River single quotes
+#   - .env still contains the placeholder Grafana Cloud values / mixed-stack OTLP
+#   - more than one groups/*.env (generate/up start all of them)
+#   - empty KTRANS_HOST (raw compose can crash Alloy)
 #   - the generator hasn't been run (no compose-groups.generated.yaml, no rendered config/)
 #   - docker / envsubst / yq aren't installed or reachable
 # State files (state/devices-<group>.yaml) are only warned about — `make up`
@@ -11,6 +14,12 @@ set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${REPO_ROOT}"
+
+# Git on Windows (and some zip extracts) drop the executable bit. Make already
+# invokes scripts with `bash scripts/…`, but cron / `./scripts/foo.sh` still
+# need +x. Restore it in bulk on every preflight so operators never chmod one
+# file at a time.
+chmod a+x scripts/*.sh 2>/dev/null || true
 
 PASS=0
 FAIL=0
@@ -46,6 +55,24 @@ for f in .env config.alloy compose-base.yaml; do
   fi
 done
 
+# --- Stale sample copies (paths/syntax from older clones) ---
+if [[ -f compose-base.yaml ]]; then
+  if grep -qE '/opt/Grafana' compose-base.yaml; then
+    _fail "compose-base.yaml still bind-mounts /opt/Grafana/... (a lab-specific path). Alloy will not see ./config.alloy. Re-copy: cp compose-base.yaml.sample compose-base.yaml"
+  elif grep -qE 'source:[[:space:]]*\./config\.alloy' compose-base.yaml; then
+    _ok "compose-base.yaml mounts ./config.alloy"
+  else
+    _warn "compose-base.yaml Alloy volume is not ./config.alloy — check the alloy: volumes: block"
+  fi
+fi
+if [[ -f config.alloy ]]; then
+  if grep -qE "'delete_matching_keys" config.alloy; then
+    _fail "config.alloy has a single-quoted delete_matching_keys line Alloy rejects. Re-copy: cp config.alloy.sample config.alloy"
+  else
+    _ok "config.alloy River quotes look valid"
+  fi
+fi
+
 # --- .env doesn't still have the shipped placeholders ---
 if [[ -f .env ]]; then
   if grep -qE '^GC_OTLP_URL=https://foo' .env; then
@@ -63,11 +90,23 @@ if [[ -f .env ]]; then
   else
     _ok ".env GC_OTLP_KEY has been customized"
   fi
+  url="$(grep -E '^GC_OTLP_URL=' .env | tail -n1 | cut -d= -f2- | tr -d '\r')"
+  acct="$(grep -E '^GC_OTLP_ACCOUNT=' .env | tail -n1 | cut -d= -f2- | tr -d '\r')"
+  if [[ "${url}" == *"otlp-gateway"* && "${url}" == */otlp ]]; then
+    _ok "GC_OTLP_URL looks like a Grafana Cloud OTLP gateway (same stack as ACCOUNT + KEY)"
+  elif [[ "${url}" != https://foo/otlp ]]; then
+    _warn "GC_OTLP_URL should look like https://otlp-gateway-prod-<region>.grafana.net/otlp — all three GC_OTLP_* values must come from the same stack"
+  fi
+  if [[ "${acct}" =~ ^[0-9]+$ ]]; then
+    _ok "GC_OTLP_ACCOUNT is numeric (OTLP instance id, not a Grafana username)"
+  elif [[ "${acct}" != "0000000" && -n "${acct}" ]]; then
+    _warn "GC_OTLP_ACCOUNT is usually a number from the OpenTelemetry connection snippet"
+  fi
 fi
 
 # --- Host identity that tags all telemetry and suffixes service.name ---
-if [[ -x scripts/host-id.sh ]]; then
-  HOST_ID="$(./scripts/host-id.sh 2>/dev/null)"
+if [[ -f scripts/host-id.sh ]]; then
+  HOST_ID="$(bash scripts/host-id.sh 2>/dev/null)"
   if [[ -n "${HOST_ID}" ]]; then
     if grep -qE '^KTRANS_HOST=.+' .env 2>/dev/null; then
       _ok "deployment.host = ${HOST_ID} (explicit KTRANS_HOST in .env)"
@@ -75,7 +114,7 @@ if [[ -x scripts/host-id.sh ]]; then
       _ok "deployment.host = ${HOST_ID} (auto from hostname; set KTRANS_HOST in .env to override)"
     fi
   else
-    _warn "could not resolve a host identifier; telemetry won't be host-tagged"
+    _fail "could not resolve KTRANS_HOST (empty hostname). Set KTRANS_HOST= in .env to a short name — blank plus raw docker compose can crash Alloy"
   fi
 fi
 
@@ -87,6 +126,12 @@ if [[ ${#GROUP_FILES[@]} -eq 0 ]]; then
   _fail "no group files in groups/*.env — copy groups/<name>.env.sample to groups/<name>.env"
 else
   _ok "found ${#GROUP_FILES[@]} group file(s) in groups/"
+  if [[ ${#GROUP_FILES[@]} -gt 1 ]]; then
+    _warn "${#GROUP_FILES[@]} groups — make generate / make up start ALL of them. GROUP= only applies to make discover. Start with one *.env until data lands."
+  fi
+  if [[ -f groups/onboarding.env && -f groups/single.env ]]; then
+    _warn "both groups/onboarding.env and groups/single.env exist — two SNMP pollers. Remove one if you only meant to onboard a single device."
+  fi
 fi
 
 # --- Generator outputs exist ---

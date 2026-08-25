@@ -3,12 +3,12 @@
 # discovered device list to state/devices-${group}.yaml for the polling
 # container to read via its @-include.
 #
-# Usage: ./scripts/run-discovery.sh <group>
+# Usage: bash scripts/run-discovery.sh <group>
 #
 # Exit codes (when SKIP_RELOAD=1): 0 = device list changed, 2 = unchanged, 1 = error.
 #
 # Intended to be invoked from host cron, e.g.:
-#   0 */6 * * * cd /opt/Grafana/KtransToGrafana && ./scripts/run-discovery.sh cisco >> /var/log/ktrans-discovery.log 2>&1
+#   0 */6 * * * cd /path/to/KtransToGrafana && bash scripts/run-discovery.sh cisco >> /var/log/ktrans-discovery.log 2>&1
 #
 # Requires: docker, docker compose, yq (https://github.com/mikefarah/yq).
 
@@ -25,7 +25,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # Resolve the host identifier the same way `make up` does, so the discovery
 # container's service.name carries the host suffix even when this runs from cron
 # (where the Makefile's export isn't in scope).
-export KTRANS_HOST="$("${REPO_ROOT}/scripts/host-id.sh")"
+export KTRANS_HOST="$(bash "${REPO_ROOT}/scripts/host-id.sh")"
 
 SRC="${REPO_ROOT}/config/discovery-${GROUP}.yaml"
 RUNTIME="${REPO_ROOT}/state/discovery-${GROUP}.runtime.yaml"
@@ -60,11 +60,11 @@ COMPOSE_ARGS=(
 )
 
 if [[ ! -f "${REPO_ROOT}/compose-groups.generated.yaml" ]]; then
-  echo "missing generated compose file. Run ./scripts/generate-groups.sh first." >&2
+  echo "missing generated compose file. Run: bash scripts/generate-groups.sh (or make generate)" >&2
   exit 1
 fi
 if [[ ! -f "${REPO_ROOT}/compose-catalog.generated.yaml" ]]; then
-  echo "missing compose-catalog.generated.yaml. Run ./scripts/generate-groups.sh first." >&2
+  echo "missing compose-catalog.generated.yaml. Run: bash scripts/generate-groups.sh (or make generate)" >&2
   exit 1
 fi
 

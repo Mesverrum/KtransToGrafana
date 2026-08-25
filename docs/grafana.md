@@ -8,19 +8,29 @@ Each poller stamps its own `service.name` (a label identifying which collector p
 
 ## Quick verification
 
-Open Grafana Cloud → Explore → your default Prometheus data source, and paste this query (written in PromQL, Grafana's metrics query language):
+This path exports **per-metric** SNMP names over OTLP. There is **no** `kentik_snmp_DeviceMetrics` series here — that name is from Grafana Cloud AWS `integrations/snmp` dashboards. An empty DeviceMetrics query is not a collector failure.
+
+Open Grafana Cloud → Explore → your default Prometheus data source:
 
 ```
-count by (tags_snmp_group, device_name) (kentik_snmp_DeviceMetrics)
+count by (tags_snmp_group, device_name) (kentik_snmp_CPU)
+```
+
+or:
+
+```
+count by (tags_snmp_group, device_name) (kentik_snmp_PollingHealth)
 ```
 
 You should get one row per polled device, grouped by credential group (`tags_snmp_group`). To also see which collector instance produced the data:
 
 ```
-count by (tags_snmp_group, device_name, service_name) (kentik_snmp_DeviceMetrics)
+count by (tags_snmp_group, device_name, service_name) (kentik_snmp_CPU)
 ```
 
-If the table is empty after a couple minutes, check `make logs` for discovery activity and confirm `snmpwalk` works from the Docker host to one of your devices (see `troubleshooting/snmp.md`). After changing `groups/*.env`, run `make generate` and restart the affected SNMP poller so `tags_snmp_group` updates on new scrapes.
+If the table is empty after a couple minutes, walk [troubleshooting/bring-up.md](../troubleshooting/bring-up.md) (devices YAML → Alloy on `localhost:12346` → this query). Do not `GET` `GC_OTLP_URL` in a browser (404). Confirm `snmpwalk` from the Docker host ([troubleshooting/snmp.md](../troubleshooting/snmp.md)). After changing `groups/*.env`, run `make generate` and restart the affected SNMP poller so `tags_snmp_group` updates on new scrapes.
+
+`GC_OTLP_URL`, `GC_OTLP_ACCOUNT`, and `GC_OTLP_KEY` must come from the **same** OpenTelemetry connection snippet. Mixing stacks/regions looks like “Grafana is empty” while Alloy is healthy locally.
 
 Network gear cardinality — the number of distinct metric time series, which is what Grafana Cloud usage is measured in — is all over the place: a UPS might emit ~50 active series, a large core switch or load balancer might emit 10,000. Plan accordingly.
 
@@ -34,6 +44,8 @@ Two flags govern the cardinality ceiling for the flow metric:
 - **`--rollup_top_k=100`** — only emit the top 100 series (by aggregated value) in each batch.
 
 Active-series math: `max ≤ rollup_top_k × (active_series_window / rollup_interval)`. With Grafana Cloud's typical 20-minute active-series window: `100 × (1200 / 60) = 2,000 series` as the worst-case ceiling. In practice traffic patterns are sticky, so steady state is usually a fraction of that.
+
+ktranslate rollups are **gauges** emitted once per `--rollup_interval` (60s), not Prometheus counters. **Do not** `rate(network_io_by_flow_bytes[…])` — it under-reports. Throughput in bits/s is `sum(network_io_by_flow_bytes) * 8 / 60`. Dashboard timeseries use `max_over_time(network_io_by_flow_bytes[$__interval])`.
 
 ## Compatibility with the official Grafana Cloud netflow integration
 

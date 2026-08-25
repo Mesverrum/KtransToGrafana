@@ -8,7 +8,8 @@ written down here rather than left to memory.
 The [README](README.md) is deliberately minimal — intro, prerequisites, a
 single-device quickstart, verification, and a "Going further" index. All depth
 lives in `docs/` (`architecture.md`, `configuration.md`, `operations.md`,
-`grafana.md`).
+`grafana.md`) and `troubleshooting/` (`bring-up.md` for first-time hops,
+`snmp.md` for snmpwalk).
 
 **When you add a capability, update it in two places:** the relevant `docs/`
 file *and* the README "Going further" list (a one-line pointer, ideally deep-

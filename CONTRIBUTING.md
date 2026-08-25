@@ -21,9 +21,13 @@ add a new `docs/` file, add a bullet for it in the README index too.
 
 A deployment is `groups/*.env` rendered by `scripts/generate-groups.sh` through
 the files in `templates/`. **Never hand-edit the generated artifacts** (`config/`,
-`compose-groups.generated.yaml`, `compose-limits.generated.yaml`) — they're
-overwritten on every `make generate`. To change rendering, edit the templates or
-the generator. Run `make generate` after any template/group/generator change.
+`compose-groups.generated.yaml`, `compose-limits.generated.yaml`,
+`k8s/generated/`) — they're overwritten on every `make generate` /
+`make generate-k8s`. To change rendering, edit the templates or the generator.
+Run `make generate` after any template/group/generator change. Kubernetes is
+another apply target (`scripts/generate-k8s.py`), not a second product — keep
+the Compose and k8s paths on the same group files. Limitation copy lives in
+`k8s/LIMITATIONS.md`; don't bury those in a comment in the YAML.
 
 When touching the generator or templates:
 

@@ -142,7 +142,7 @@ The quickstart is deliberately minimal. Deeper topics live in `docs/`:
 
 - **[docs/configuration.md](docs/configuration.md)** — multiple groups, `DISCOVERY_SOURCE=cidr|netbox` (including NetBox filters), [onboarding a pile of devices when you don't know which credential fits which](docs/configuration.md#multiple-candidate-credentials-unknown-mapping), adding/removing groups, generator outputs, running without the Makefile.
 - **[docs/secrets-aws.md](docs/secrets-aws.md)** — optional SNMPv3 via AWS Secrets Manager (`SNMP_V3_SECRET=aws.sm.…`) instead of inline passphrases.
-- **[docs/architecture.md](docs/architecture.md)** — what each container does, the discovery/polling split, and how `.env` interpolation works.
+- **[docs/architecture.md](docs/architecture.md)** — what each container does, the discovery/polling split, [sizing](docs/architecture.md#sizing-rule-of-thumb) (≈500 devices or 1000 events/s per CPU+GiB), and how `.env` interpolation works.
 - **[docs/operations.md](docs/operations.md)** — permissions, memory limits, image pinning, scheduled (cron) discovery, the sflow demo overlay, tagging telemetry across multiple hosts (`KTRANS_HOST`), and the full `make` reference.
 - **[docs/kubernetes.md](docs/kubernetes.md)** — same workflow on Kubernetes (`make k8s-up`). Not a fork. **Read [k8s/LIMITATIONS.md](k8s/LIMITATIONS.md) first** (ephemeral destination IPs, devices-file state, scale-up vs wide, HA).
 - **[docs/grafana.md](docs/grafana.md)** — verification queries, flow rollups & cardinality, the official netflow-integration compatibility, and the bundled dashboards/alerts/skills.

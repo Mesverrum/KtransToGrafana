@@ -50,6 +50,8 @@ chmod a+x scripts/*.sh
 
 On each `make up`, `scripts/compute-limits.sh` reads the host's available memory and writes `compose-limits.generated.yaml` with per-container caps. Docker Compose has no project-wide memory budget — each service gets its own limit — but the script sizes caps so their sum stays within a configurable fraction of available RAM. SNMP pollers receive the largest share, capped at **4G each**, which matches a typical **4 vCPU / 8 GiB** trial host running one poller plus alloy, flow, and syslog. Preview the plan without restarting with `make limits-show`.
 
+How much RAM a poller or flow container *should* get is a capacity question, not just a Compose cap: see [architecture.md — Sizing](architecture.md#sizing-rule-of-thumb) (about **1 CPU + 1 GiB per 500 average SNMP devices**, or **per 1000 events/s** of flow, traps, or syslog).
+
 `.env` knobs (see `.env.sample`):
 
 - `MEM_BUDGET_FRACTION=0.80` — fraction of `MemAvailable` allocated across the stack

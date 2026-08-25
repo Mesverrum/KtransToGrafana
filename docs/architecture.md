@@ -47,6 +47,34 @@ A deployment is **N credential groups**, one declarative file each under `groups
 
 Each group picks its own **`DISCOVERY_SOURCE`** (`cidr` or `netbox`), so one deployment can mix a CIDR-scanned vendor and a NetBox-sourced vendor side by side. See [configuration.md](configuration.md) for the group reference.
 
+## Sizing (rule of thumb)
+
+These are **field planning numbers**, not SLAs. They assume a current `kentik/ktranslate` image, default-ish poll intervals, and “average” campus/access switches — not a chassis with tens of thousands of interfaces, not 15-second polls, and not devices that sit at SNMP timeout. Size for **peak** CPU in a poll cycle (ktranslate spikes at the start of each walk); an average of 60% can hide a container that is already hitting 100%.
+
+Budget **each ktranslate process** on its own. In this repo SNMP, flow, and syslog are already separate containers — do not spend the same 1 CPU on 500 polled devices *and* 1000 events/s.
+
+| Workload | Starting budget | What “1 unit” covers |
+| --- | --- | --- |
+| SNMP polling | **1 CPU + 1 GiB RAM** | about **500** average switches / similar network devices |
+| NetFlow / sFlow / IPFIX, traps, or syslog | **1 CPU + 1 GiB RAM** | about **1000 events per second** of that signal |
+
+Worked examples:
+
+- 1 200 access switches, SNMP only → about **3 CPU / 3 GiB** on the poller (or two groups if you want a smaller blast radius).
+- 4 000 flow records/s → about **4 CPU / 4 GiB** on `ktranslate_flow`.
+- Traps *and* syslog are each their own 1000 events/s column if they share a host.
+
+What eats the SNMP budget faster than “500 devices”:
+
+- Large interface tables (core / DC / wireless controllers)
+- Short `poll_time_sec`, high `timeout_ms` / `retries`
+- Extra MIBs in `mibs_enabled` (BGP, entity sensors, vendor tables)
+- Devices that never answer (walks sit on timeout)
+
+The upstream [ktranslate CPU notes](https://github.com/kentik/ktranslate/wiki/Understanding-KTranslate-CPU-Usage) quote a bit more headroom on flow/syslog (~2000 events/s per core, traps ~1000/s) and do not call out RAM. The table above is the **conservative** plan: 1000 events/s per CPU **and** 1 GiB, so you have room for OTLP export and a noisy day.
+
+Leave **Alloy + the host OS** outside this math. Compose memory caps (`MEM_SNMP_MAX`, etc.) are documented in [operations.md](operations.md#memory-limits). On Kubernetes, raise `resources` on that one poller or add groups — do not `replicas: 2` the same listener ([k8s/LIMITATIONS.md](../k8s/LIMITATIONS.md#3-scale-up-vs-scale-wide)).
+
 > This repo previously used separate branches for these shapes (`main` = single poller, `multicontainer_example` = per-group CIDR discovery, `multicontainer_netbox` = per-group NetBox discovery). They have all been consolidated into this one model on `main`; the old branch tips are preserved as `archive/*` tags.
 
 ## Why discovery and polling are split

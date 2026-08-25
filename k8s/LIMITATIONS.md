@@ -68,7 +68,7 @@ A failed discovery that publishes `devices: {}` wipes the poller. A poller that 
 
 - Every collector Deployment is **`replicas: 1`** with **`strategy: Recreate`**. We will not generate an HPA.
 - **Scale wide** = more `groups/*.env` files (credential domain, vendor, or blast-radius). Each group is one poller Deployment and one trap port. That is the same model as Compose.
-- **Scale up** = raise CPU/memory on that one poller (`resources.limits` in the generated YAML, or edit after generate if you must). ktranslate is a process, not a stateless replica set.
+- **Scale up** = raise CPU/memory on that one poller (`resources.limits` in the generated YAML, or edit after generate if you must). ktranslate is a process, not a stateless replica set. Starting numbers: [architecture.md — Sizing](../docs/architecture.md#sizing-rule-of-thumb) (about **1 CPU + 1 GiB per 500 average SNMP devices**, or **per 1000 events/s** of flow, traps, or syslog).
 - Split a group when poll duration exceeds `POLL_INTERVAL_SEC`, when you want a smaller blast radius, or when credentials differ. Do not split “for Kubernetes.”
 
 **What still hurts.**

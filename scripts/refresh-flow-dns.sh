@@ -12,6 +12,12 @@
 
 set -euo pipefail
 
+QUIET=0
+if [[ "${1:-}" == "--quiet" ]]; then
+  QUIET=1
+  shift
+fi
+
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DNSMASQ_DIR="${REPO_ROOT}/dnsmasq"
 HOSTS_OUT="${DNSMASQ_DIR}/hosts.generated.conf"
@@ -19,7 +25,7 @@ UPSTREAM_OUT="${DNSMASQ_DIR}/upstream.conf"
 FLOW_DNS_SERVICE="${FLOW_DNS_SERVICE:-flow_dns}"
 
 die()  { echo "ERROR: $*" >&2; exit 1; }
-info() { echo "==> $*"; }
+info() { if [[ "${QUIET}" -eq 0 ]]; then echo "==> $*"; fi; }
 
 # Load .env when present (FLOW_DNS_* knobs).
 if [[ -f "${REPO_ROOT}/.env" ]]; then

@@ -4,18 +4,15 @@
 
 Each file in `groups/*.env` is one credential group. The [quickstart](../README.md#quickstart--onboard-your-devices-in-about-15-minutes) walks through onboarding a range with candidate credentials; this doc covers multiple groups, both discovery sources, and the credential options in depth.
 
-**Copy only the samples you will run.** `make generate` and `make up` start **every** `groups/*.env` — `GROUP=` is not a filter there (it only applies to `make discover`). Copying both `onboarding.env` and `single.env` (or every vendor sample) starts two or more SNMP pollers and leftover containers. Get one group into Grafana first, then add more.
-
-Sample files (copy whichever fit — not all of them):
+**Copy only the samples you will run.** `make generate` and `make up` start **every** `groups/*.env` — `GROUP=` is not a filter there (it only applies to `make discover`). Start with onboarding until data lands; `make split-devices` adds vendor pollers from the device list.
 
 ```
-cp groups/onboarding.env.sample groups/onboarding.env  # mixed creds + CIDR range
-cp groups/single.env.sample     groups/single.env      # one IP, one credential
-cp groups/cisco.env.sample      groups/cisco.env       # CIDR discovery, SNMP v3 example
-cp groups/palo.env.sample       groups/palo.env        # NetBox discovery, SNMP v2c example
+cp groups/onboarding.env.sample groups/onboarding.env
+# edit TARGETS + candidate credentials
+# optional: SNMPv3-in-AWS — groups/secure-aws.env.sample (docs/secrets-aws.md)
 ```
 
-Copy additional sample files to define more groups (e.g. `cp groups/cisco.env.sample groups/fortinet.env`). The generator picks up everything matching `groups/*.env`.
+The generator picks up everything matching `groups/*.env`. One device is the same onboarding file with `TARGETS=<ip>/32`. NetBox is `DISCOVERY_SOURCE=netbox` plus `NETBOX_*` on that group (and `NETBOX_HOST` / `NETBOX_TOKEN` in `.env`).
 
 ## Common fields
 
@@ -231,11 +228,11 @@ When **any** group's device list changes, `scripts/run-discovery.sh` (or `make d
 
 ## Adding, removing, or modifying a group
 
-Adding `groups/fortinet.env` is the whole change — no compose file edits, no script edits:
+Adding another credential group is a copy of onboarding (or `make split-devices` for vendor pollers). No compose file edits:
 
 ```
-cp groups/cisco.env.sample groups/fortinet.env
-# edit groups/fortinet.env: set GROUP=fortinet, fill creds, assign unique ports
+cp groups/onboarding.env.sample groups/fortinet.env
+# edit groups/fortinet.env: set GROUP=fortinet, fill creds, assign unique METALISTEN_PORT
 make generate
 make up
 make discover GROUP=fortinet
@@ -277,7 +274,7 @@ Docker Compose reads `.env` from the current directory automatically. To maintai
 
 ```
 export KTRANS_HOST=$(bash scripts/host-id.sh)
-docker compose --env-file .env.prod -f compose-base.yaml -f compose-groups.generated.yaml -f compose-catalog.generated.yaml up -d
+docker compose --env-file .env.prod $(bash scripts/compose-files.sh) up -d
 ```
 
 ## Running without the Makefile
@@ -288,10 +285,10 @@ Prefer `make up` — it fills `KTRANS_HOST` from hostname when `.env` leaves it 
 export KTRANS_HOST=$(bash scripts/host-id.sh)   # required if KTRANS_HOST= is blank in .env
 bash scripts/preflight.sh
 bash scripts/generate-groups.sh                 # renders ALL groups/*.env (no GROUP= filter)
-echo '{}' | tee state/devices-cisco.yaml state/devices-palo.yaml   # bootstrap
+echo '{}' | tee state/devices-onboarding.yaml   # bootstrap
 bash scripts/compute-limits.sh
-docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-catalog.generated.yaml -f compose-limits.generated.yaml up -d
-bash scripts/run-discovery.sh cisco
+docker compose $(bash scripts/compose-files.sh) up -d
+bash scripts/run-discovery.sh onboarding
 # or discover every group in one shot:
 make discover-all
 ```

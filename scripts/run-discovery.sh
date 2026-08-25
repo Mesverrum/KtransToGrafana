@@ -8,7 +8,7 @@
 # Exit codes (when SKIP_RELOAD=1): 0 = device list changed, 2 = unchanged, 1 = error.
 #
 # Intended to be invoked from host cron, e.g.:
-#   0 */6 * * * cd /path/to/KtransToGrafana && bash scripts/run-discovery.sh cisco >> /var/log/ktrans-discovery.log 2>&1
+#   0 */6 * * * cd /path/to/KtransToGrafana && bash scripts/run-discovery.sh onboarding >> /var/log/ktrans-discovery.log 2>&1
 #
 # Requires: docker, docker compose, yq (https://github.com/mikefarah/yq).
 
@@ -16,7 +16,7 @@ set -euo pipefail
 
 GROUP="${1:-}"
 if [[ -z "${GROUP}" ]]; then
-  echo "usage: $0 <group>   (e.g. cisco, palo)" >&2
+  echo "usage: $0 <group>   (e.g. onboarding)" >&2
   exit 2
 fi
 
@@ -53,11 +53,12 @@ if [[ -f "${DEVICES_OUT}" ]]; then
   cp "${DEVICES_OUT}" "${DEVICES_PREV}"
 fi
 
-COMPOSE_ARGS=(
-  -f "${REPO_ROOT}/compose-base.yaml"
-  -f "${REPO_ROOT}/compose-groups.generated.yaml"
-  -f "${REPO_ROOT}/compose-catalog.generated.yaml"
-)
+# shellcheck disable=SC1091
+source "${REPO_ROOT}/scripts/progress.sh"
+# shellcheck disable=SC1091
+source "${REPO_ROOT}/scripts/compose-files.sh"
+ktrans_compose_files "${REPO_ROOT}"
+COMPOSE_ARGS=("${KTRANS_COMPOSE_FILES[@]}")
 
 if [[ ! -f "${REPO_ROOT}/compose-groups.generated.yaml" ]]; then
   echo "missing generated compose file. Run: bash scripts/generate-groups.sh (or make generate)" >&2
@@ -70,9 +71,15 @@ fi
 
 # Run the one-shot discovery container. The compose service is gated by
 # the "discovery" profile so it never starts as part of `docker compose up`.
-docker compose "${COMPOSE_ARGS[@]}" \
-  --profile discovery \
-  run --rm "discover_${GROUP}"
+# -T: no TTY so we can capture ktranslate's chatty SNMP logs.
+ktrans_step "scanning ${GROUP} (SNMP discovery can take several minutes)"
+ktrans_capture "${REPO_ROOT}/state/discovery-${GROUP}.log" \
+  docker compose "${COMPOSE_ARGS[@]}" \
+    --profile discovery \
+    run --rm -T "discover_${GROUP}"
+if [[ "${VERBOSE:-0}" != "1" ]]; then
+  ktrans_ok "log: state/discovery-${GROUP}.log"
+fi
 
 # Extract just the devices block from the post-discovery runtime file.
 # If discovery found nothing (or failed in a way that left an empty map),
@@ -106,13 +113,9 @@ ROLE="${ROLE:-both}"
 if [[ "${ROLE}" == "discover" ]]; then
   python3 "${REPO_ROOT}/scripts/split-devices.py" --provision --source-group "${GROUP}" --from "${DEVICES_OUT}"
   bash "${REPO_ROOT}/scripts/generate-groups.sh"
-  if [[ -f "${REPO_ROOT}/compose-base.yaml" ]]; then
-    docker compose \
-      -f "${REPO_ROOT}/compose-base.yaml" \
-      -f "${REPO_ROOT}/compose-groups.generated.yaml" \
-      -f "${REPO_ROOT}/compose-catalog.generated.yaml" \
-      up -d --remove-orphans
-  fi
+  ktrans_step "starting new pollers after split"
+  ktrans_capture "${REPO_ROOT}/state/last-compose-up.log" \
+    docker compose "${COMPOSE_ARGS[@]}" up -d --remove-orphans
 fi
 
 if [[ -n "${SKIP_RELOAD:-}" ]]; then

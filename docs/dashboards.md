@@ -22,7 +22,7 @@ Rebuild 05–07: `python3 scripts/build-fleet-usecase-dashboards.py`
 Rebuild 08–10: `python3 scripts/build-fleet-usecase-dashboards-ext.py`  
 (add `--push` to publish).
 
-**Push (preferred):** add `GRAFANA_URL` + `GRAFANA_TOKEN` to `.env`, then:
+**Quickstart:** Grafana Cloud → **Dashboards → New → Import**, paste or upload each JSON in [`dashboards/`](../dashboards/). The push script below is optional (CI / many stacks).
 
 ```bash
 python3 scripts/push-dashboards.py

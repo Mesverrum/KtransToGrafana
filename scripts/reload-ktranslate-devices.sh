@@ -8,11 +8,10 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-COMPOSE_ARGS=(
-  -f "${REPO_ROOT}/compose-base.yaml"
-  -f "${REPO_ROOT}/compose-groups.generated.yaml"
-  -f "${REPO_ROOT}/compose-catalog.generated.yaml"
-)
+# shellcheck disable=SC1091
+source "${REPO_ROOT}/scripts/compose-files.sh"
+ktrans_compose_files "${REPO_ROOT}"
+COMPOSE_ARGS=("${KTRANS_COMPOSE_FILES[@]}")
 
 if [[ ! -f "${REPO_ROOT}/compose-groups.generated.yaml" ]]; then
   echo "missing compose-groups.generated.yaml — run: make generate" >&2

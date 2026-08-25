@@ -3,7 +3,7 @@
 # Creates a Job from the generated CronJob (same containers as the schedule).
 #
 # Usage: ./scripts/k8s-discover.sh <group>
-#    or: make k8s-discover GROUP=cisco
+#    or: make k8s-discover GROUP=onboarding
 
 set -euo pipefail
 
@@ -11,7 +11,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GROUP="${1:-}"
 
 if [[ -z "${GROUP}" ]]; then
-  echo "usage: $0 <group>   (e.g. cisco, onboarding)" >&2
+  echo "usage: $0 <group>   (e.g. onboarding)" >&2
   exit 2
 fi
 

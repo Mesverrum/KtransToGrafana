@@ -12,7 +12,7 @@
 #   - otherwise             -> main branch single service (ktranslate_snmp)
 #
 # Usage:
-#   ./scripts/compute-limits.sh           # write compose-limits.generated.yaml
+#   ./scripts/compute-limits.sh --quiet   # write overlay, skip the table
 #   ./scripts/compute-limits.sh --dry-run # print plan only
 #
 # Environment (optional, typically set in .env):
@@ -32,10 +32,12 @@ cd "${REPO_ROOT}"
 
 OUT="${REPO_ROOT}/compose-limits.generated.yaml"
 DRY_RUN=0
+QUIET=0
 
 for arg in "$@"; do
   case "${arg}" in
     --dry-run) DRY_RUN=1 ;;
+    --quiet) QUIET=1 ;;
     -h|--help)
       sed -n '2,28p' "$0" | sed 's/^# \?//'
       exit 0
@@ -244,6 +246,7 @@ TOTAL_CAP_MB=$(( BASE_MB + SYSLOG_MB + SNMP_EACH_MB * NUM_SNMP ))
 
 # --- report ------------------------------------------------------------------
 
+if [[ "${QUIET}" -eq 0 || "${DRY_RUN}" -eq 1 ]]; then
 printf 'Host MemAvailable: ~%s\n' "$(fmt_mb "${AVAIL_MB}")"
 printf 'Stack budget:      ~%s (%s of available)\n' "$(fmt_mb "${BUDGET_MB}")" "${BUDGET_FRACTION}"
 printf 'SNMP pollers:      %d (max %s each)\n' "${NUM_SNMP}" "$(fmt_mb "${SNMP_MAX_MB}")"
@@ -257,13 +260,14 @@ for svc in "${SNMP_SERVICES[@]}"; do
 done
 echo
 printf '  Total container caps:     ~%s\n' "$(fmt_mb "${TOTAL_CAP_MB}")"
+fi
 
 if (( NUM_SNMP > 0 && SNMP_EACH_MB < SNMP_MIN_MB )); then
   echo
   echo "WARN: per-poller limit ($(fmt_mb "${SNMP_EACH_MB}")) is below minimum ($(fmt_mb "${SNMP_MIN_MB}")) -- host may be undersized" >&2
 fi
 
-if (( NUM_SNMP == 1 && SNMP_EACH_MB >= 3584 )); then
+if [[ "${QUIET}" -eq 0 || "${DRY_RUN}" -eq 1 ]] && (( NUM_SNMP == 1 && SNMP_EACH_MB >= 3584 )); then
   echo "  (single-poller trial sizing -- SNMP poller near the 4G ceiling)"
 fi
 
@@ -290,5 +294,7 @@ EOF
   done
 } > "${OUT}"
 
-echo
-echo "wrote ${OUT}"
+if [[ "${QUIET}" -eq 0 ]]; then
+  echo
+  echo "wrote ${OUT}"
+fi

@@ -44,9 +44,9 @@ The older hand-drawn diagrams below show the same flow in more detail:
 
 ## The deployment model
 
-A deployment is **N credential groups**, one declarative file each under `groups/<name>.env`. A generator script (`scripts/generate-groups.sh`) reads those files and renders the per-group config yamls plus a compose service fragment. Adding a credential group is a one-file operation followed by a re-run of the generator — no compose or script edits. A **single device** is just the degenerate case: one `cidr` group with one target.
+A deployment is **N credential groups**, one declarative file each under `groups/<name>.env`. A generator script (`scripts/generate-groups.sh`) reads those files and renders the per-group config yamls plus a compose service fragment. Adding a credential group is a one-file operation followed by a re-run of the generator — no compose or script edits. One device is the same onboarding file with `TARGETS=<ip>/32`.
 
-Each group picks its own **`DISCOVERY_SOURCE`** (`cidr` or `netbox`), so one deployment can mix a CIDR-scanned vendor and a NetBox-sourced vendor side by side. See [configuration.md](configuration.md) for the group reference.
+Each group picks its own **`DISCOVERY_SOURCE`** (`cidr` or `netbox`), so one deployment can mix a CIDR scan and a NetBox query side by side. See [configuration.md](configuration.md) for the group reference.
 
 ## Sizing (rule of thumb)
 
@@ -76,8 +76,6 @@ The upstream [ktranslate CPU notes](https://github.com/kentik/ktranslate/wiki/Un
 
 Leave **Alloy + the host OS** outside this math. Compose memory caps (`MEM_SNMP_MAX`, etc.) are documented in [operations.md](operations.md#memory-limits). On Kubernetes, raise `resources` on that one poller or add groups — do not `replicas: 2` the same listener ([k8s/LIMITATIONS.md](../k8s/LIMITATIONS.md#3-scale-up-vs-scale-wide)).
 
-> This repo previously used separate branches for these shapes (`main` = single poller, `multicontainer_example` = per-group CIDR discovery, `multicontainer_netbox` = per-group NetBox discovery). They have all been consolidated into this one model on `main`; the old branch tips are preserved as `archive/*` tags.
-
 ## Why discovery and polling are split
 
 The split between discovery and polling lets **git stay the source of truth** for credentials, scan ranges, and polling rules, while letting **the network itself be the source of truth** for which devices currently exist. Discovery writes are atomic and reversible; polling configs are mounted read-only and never mutated.
@@ -89,7 +87,75 @@ There are two distinct mechanisms in Docker Compose for "loading variables from 
 - **Compose-level interpolation (what this repo uses)** — variables in `.env` are substituted into the compose file *at parse time*, before any container is created. They become whatever you reference them as (`environment:`, `command:`, ports, image tags, etc.). The container itself never sees `.env`; it only sees what you explicitly hand it via the `environment:` block.
 - **Per-service `env_file:`** — adding `env_file: [.env]` to a service block injects the file's contents *into that container's environment* at runtime. Use this when a container expects to read a variable it wasn't explicitly given via `environment:` — for example, a third-party image that auto-reads `MY_API_KEY` from `os.environ`. None of the containers in this repo need that, so we rely on interpolation alone.
 
-The `config.alloy` file is already wired to the `GC_OTLP_*` env vars; you should not need to touch it unless you have non-ktranslate changes to make. Keep the live `compose-base.yaml` Alloy volume as `source: ./config.alloy` (not a host-specific absolute path). If Grafana Explore is empty, walk the hops in [troubleshooting/bring-up.md](../troubleshooting/bring-up.md): discovery YAML → Alloy metrics on host `:12346` → PromQL `kentik_snmp_CPU` (not `kentik_snmp_DeviceMetrics`).
+The `config.alloy.sample` file is already wired to the `GC_OTLP_*` env vars — do not copy or edit it for Grafana Cloud. `make up` runs `compose-base.yaml.sample` (`bash scripts/compose-files.sh`). To change Alloy or Compose, see [Customizing Alloy and Compose](#customizing-alloy-and-compose). If Grafana Explore is empty, walk the hops in [troubleshooting/bring-up.md](../troubleshooting/bring-up.md): discovery YAML → Alloy metrics on host `:12346` → PromQL `kentik_snmp_CPU` (not `kentik_snmp_DeviceMetrics`).
+
+## Customizing Alloy and Compose
+
+Do **not** copy `compose-base.yaml.sample` or `config.alloy.sample`, and do **not** edit those tracked files in place — `git pull` owns them. Site-specific changes go in gitignored files so they survive pulls without blocking sample updates.
+
+`make up` / `make discover` / `make split-devices` already layer `compose.override.yaml` when that file exists (`scripts/compose-files.sh`). Docker Compose merges it on top of the sample.
+
+### Extra port, extra network, extra volume
+
+Create `compose.override.yaml` in the repo root (already gitignored):
+
+```yaml
+services:
+  ktranslate_flow:
+    ports:
+      - "9997:9997/udp"          # additional listener; 9995 from the sample stays
+  alloy:
+    networks:
+      - labnet
+
+networks:
+  labnet:
+    external: true
+```
+
+Then `make up` again. You only list the keys you are adding or replacing.
+
+### Fork Alloy (OSS exporter, extra processors)
+
+1. `cp config.alloy.sample config.alloy` (gitignored).
+2. Edit `config.alloy` — for Grafana OSS, keep the pipeline through `otelcol.processor.batch` and replace `otelcol.exporter.otlphttp "grafana_cloud"` / `otelcol.auth.basic "grafana_cloud"` with your Prometheus (and Loki) exporters.
+3. Point Compose at the fork with `compose.override.yaml`:
+
+```yaml
+services:
+  alloy:
+    volumes:
+      - type: bind
+        source: ./config.alloy
+        target: /config.alloy
+```
+
+4. `make up`. Kubernetes: `make generate-k8s` embeds `config.alloy` when that file exists, otherwise `config.alloy.sample`.
+
+You now own freshness of `config.alloy`. After a `git pull` that changes `config.alloy.sample`, diff them and merge what you still want.
+
+### Join an Alloy you already run
+
+The bundled `alloy` service is what ktranslate talks to (`--otel.endpoint=http://alloy:4317/`). To send to another Alloy instead:
+
+1. In `compose.override.yaml`, attach `ktranslate_flow`, `ktranslate_syslog`, `ktranslate_traps`, and each `ktranslate_snmp_*` to that Alloy's Docker network.
+2. Replace each service's `command:` `--otel.endpoint=…` with the other Alloy's address. `command:` in an override **replaces** the whole list — copy it from `compose-base.yaml.sample` (flow / syslog / traps) or `compose-groups.generated.yaml` (pollers) and change only the endpoint.
+3. Optionally stop the bundled Alloy by giving it a profile the default `up` does not enable:
+
+```yaml
+services:
+  alloy:
+    profiles:
+      - bundled-alloy
+```
+
+### What not to do
+
+| Don't | Do |
+|---|---|
+| `cp compose-base.yaml.sample compose-base.yaml` | `compose.override.yaml` (the copy is unused) |
+| Edit `config.alloy.sample` / `compose-base.yaml.sample` | Fork `config.alloy` + override volume, or override Compose keys |
+| Expect a leftover `config.alloy` to be mounted automatically on Compose | Mount it explicitly in `compose.override.yaml` |
 
 ## Kubernetes is another runtime, not another model
 

@@ -99,17 +99,19 @@ if [[ -f "${DEVICES_PREV}" ]] && cmp -s "${DEVICES_PREV}" "${DEVICES_OUT}"; then
   exit 2
 fi
 
-# ROLE=discover groups feed pollers via the device-split mapping instead of polling themselves.
+# ROLE=discover: re-split into pollers (dynamic vendors, or config/device-split.yaml).
+# ROLE=both (onboarding): leave the mixed poller until the operator runs make split-devices.
 ROLE="$(awk -F= '/^ROLE=/{print $2; exit}' "${REPO_ROOT}/groups/${GROUP}.env" 2>/dev/null || true)"
 ROLE="${ROLE:-both}"
 if [[ "${ROLE}" == "discover" ]]; then
-  if [[ -f "${REPO_ROOT}/config/device-split.yaml" \
-     || -f "${REPO_ROOT}/config/vendor-split.yaml" \
-     || -f "${REPO_ROOT}/examples/vendor-split/device-split.yaml" \
-     || -f "${REPO_ROOT}/examples/vendor-split/vendor-split.yaml" ]]; then
-    python3 "${REPO_ROOT}/scripts/split-devices.py"
-  else
-    echo "ROLE=discover but no device-split.yaml; pollers will not receive devices" >&2
+  python3 "${REPO_ROOT}/scripts/split-devices.py" --provision --source-group "${GROUP}" --from "${DEVICES_OUT}"
+  bash "${REPO_ROOT}/scripts/generate-groups.sh"
+  if [[ -f "${REPO_ROOT}/compose-base.yaml" ]]; then
+    docker compose \
+      -f "${REPO_ROOT}/compose-base.yaml" \
+      -f "${REPO_ROOT}/compose-groups.generated.yaml" \
+      -f "${REPO_ROOT}/compose-catalog.generated.yaml" \
+      up -d --remove-orphans
   fi
 fi
 

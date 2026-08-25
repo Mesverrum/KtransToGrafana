@@ -1,0 +1,14 @@
+# Default split: derive poller names from mib_profile (cisco-nexus.yml → cisco).
+# make split-devices uses this logic when config/device-split.yaml is absent.
+# Copy to config/device-split.yaml only if you want to pin it (or change min_devices).
+
+source_group: onboarding
+default_group: other
+provision_pollers: true
+promote_source_to_discover: true
+
+dynamic:
+  field: mib_profile
+  as: vendor          # also: stem (one poller per profile file)
+  min_devices: 1
+  max_groups: 24

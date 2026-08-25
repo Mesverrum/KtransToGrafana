@@ -9,14 +9,16 @@ edit the YAML, do not write a new script.
     python3 scripts/split-devices.py
     python3 scripts/split-devices.py --dry-run --explain
     python3 scripts/split-devices.py --dry-run --explain --ignore-pollers
+    python3 scripts/split-devices.py --dynamic vendor --from state/devices-onboarding.yaml
     python3 scripts/split-devices.py --list-fields
     python3 scripts/split-devices.py --list-values mib_profile
     python3 scripts/split-devices.py --self-test
 
 Mapping lookup (first file that exists):
+  --mapping PATH
   config/device-split.yaml
   config/vendor-split.yaml
-  examples/vendor-split/device-split.yaml
+  otherwise: dynamic vendor buckets from the onboarding (or estate) device list
 """
 from __future__ import annotations
 
@@ -49,8 +51,6 @@ FIELD_ALIASES = {
 MAPPING_CANDIDATES = (
     REPO / "config" / "device-split.yaml",
     REPO / "config" / "vendor-split.yaml",
-    REPO / "examples" / "vendor-split" / "device-split.yaml",
-    REPO / "examples" / "vendor-split" / "vendor-split.yaml",
 )
 
 
@@ -251,6 +251,41 @@ class RuleHit:
     index: int = 0
 
 
+# Longest prefix wins. Unknown profiles become the first stem token (apc_ups → apc).
+VENDOR_FAMILIES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("cisco", ("cisco", "catalyst", "nexus", "meraki", "iosxe", "iosxr", "ios-xe", "asa", "nxos")),
+    ("palo", ("paloalto", "palo", "panos", "pan-os")),
+    ("juniper", ("juniper", "junos", "pulse_secure", "pulse-secure")),
+    ("arista", ("arista", "eos")),
+    ("fortinet", ("fortinet", "forti")),
+    ("aruba", ("aruba", "arubaos")),
+    ("checkpoint", ("checkpoint", "check_point", "gaia")),
+    ("f5", ("f5", "bigip", "big-ip")),
+    ("nokia", ("nokia", "srlinux", "sros", "timos")),
+    ("huawei", ("huawei", "vrp")),
+    ("dell", ("dell", "force10", "os10")),
+    ("hp", ("procurve", "comware", "h3c")),
+)
+
+
+def vendor_family(profile: str) -> str:
+    stem = Path(stringify(profile)).stem.casefold()
+    if not stem:
+        return "other"
+    pairs: list[tuple[int, str, str]] = []
+    for vendor, prefixes in VENDOR_FAMILIES:
+        for prefix in prefixes:
+            pairs.append((len(prefix), prefix, vendor))
+    for _, prefix, vendor in sorted(pairs, reverse=True):
+        if stem == prefix:
+            return vendor
+        rest = stem[len(prefix) :]
+        if stem.startswith(prefix) and (not rest or rest[0] in "-_"):
+            return vendor
+    token = re.split(r"[-_]", stem)[0]
+    return slug_group(token).casefold() or "other"
+
+
 def slug_group(name: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9._-]+", "-", name.strip())
     cleaned = cleaned.strip("-._")
@@ -271,6 +306,8 @@ def transform_value(value: str, how: str) -> str:
             text = Path(text).stem
         elif p == "slug":
             text = slug_group(text).casefold()
+        elif p in {"vendor", "family"}:
+            text = vendor_family(text)
     return text
 
 
@@ -346,6 +383,155 @@ def known_poller_map(groups_dir: Path) -> dict[str, str]:
         if group and role != "discover":
             out[group.casefold()] = group
     return out
+
+
+def default_dynamic_mapping() -> dict:
+    return {
+        "dynamic": {"field": "mib_profile", "as": "vendor"},
+        "default_group": "other",
+        "provision_pollers": True,
+        "promote_source_to_discover": True,
+    }
+
+
+def split_dynamic(devices: dict, mapping: dict) -> tuple[dict[str, dict], list[tuple[str, str, str]]]:
+    dyn = mapping.get("dynamic") if isinstance(mapping.get("dynamic"), dict) else {}
+    field = str(dyn.get("field") or dyn.get("group_from") or "mib_profile")
+    as_how = str(dyn.get("as") or dyn.get("transform") or "vendor").lower()
+    overflow = slug_group(str(mapping.get("default_group") or "other"))
+    min_n = int(dyn.get("min_devices") or 1)
+    max_g = int(dyn.get("max_groups") or 24)
+    buckets: dict[str, dict] = {}
+    explain: list[tuple[str, str, str]] = []
+
+    for key, device in devices.items():
+        if not isinstance(device, dict):
+            buckets.setdefault(overflow, {})[key] = device
+            explain.append((str(key), overflow, "not a device map"))
+            continue
+        val = stringify(field_value(device, field))
+        if not val:
+            dest = overflow
+            reason = f"{field} empty → {overflow}"
+        elif as_how in {"vendor", "family"}:
+            dest = vendor_family(val)
+            reason = f"dynamic vendor {field}={val} → {dest}"
+        elif as_how in {"stem", "profile"}:
+            dest = slug_group(Path(val).stem).casefold() or overflow
+            reason = f"dynamic stem {field}={val} → {dest}"
+        else:
+            dest = slug_group(transform_value(val, as_how)).casefold() or overflow
+            reason = f"dynamic {as_how} {field}={val} → {dest}"
+        buckets.setdefault(dest, {})[key] = device
+        explain.append((str(key), dest, reason))
+
+    moved: set[str] = set()
+    if min_n > 1:
+        for group, bucket in list(buckets.items()):
+            if group != overflow and len(bucket) < min_n:
+                buckets.setdefault(overflow, {}).update(bucket)
+                del buckets[group]
+                moved.add(group)
+    named = [g for g in buckets if g != overflow]
+    if len(named) > max_g:
+        keep = set(sorted(named, key=lambda g: (-len(buckets[g]), g))[:max_g])
+        for group in named:
+            if group not in keep:
+                buckets.setdefault(overflow, {}).update(buckets.pop(group))
+                moved.add(group)
+    if moved:
+        explain = [
+            (k, overflow if d in moved else d, r if d not in moved else f"{r}; overflow {overflow}")
+            for k, d, r in explain
+        ]
+    buckets.setdefault(overflow, buckets.get(overflow, {}))
+    return buckets, explain
+
+
+RESERVED_METALISTEN = {4317, 9994, 9995, 9996, 9998, 12346}
+
+
+def used_metalisten_ports(groups_dir: Path) -> set[int]:
+    used: set[int] = set()
+    if not groups_dir.is_dir():
+        return used
+    for env_file in groups_dir.glob("*.env"):
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            if line.startswith("METALISTEN_PORT="):
+                try:
+                    used.add(int(line.split("=", 1)[1].strip()))
+                except ValueError:
+                    pass
+    return used
+
+
+def next_metalisten(used: set[int]) -> int:
+    for port in range(9989, 9799, -1):
+        if port not in used and port not in RESERVED_METALISTEN:
+            return port
+    raise SystemExit("no free METALISTEN_PORT in 9989–9800")
+
+
+def find_group_env(groups_dir: Path, group: str) -> Path | None:
+    want = group.casefold()
+    if not groups_dir.is_dir():
+        return None
+    for env_file in groups_dir.glob("*.env"):
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            if line.startswith("GROUP=") and line.split("=", 1)[1].strip().casefold() == want:
+                return env_file
+    return None
+
+
+def provision_poller_env(groups_dir: Path, group: str, used: set[int]) -> tuple[Path, int]:
+    """Write groups/<group>.env as ROLE=poll. Returns (path, metalisten port)."""
+    port = next_metalisten(used)
+    used.add(port)
+    path = groups_dir / f"{group}.env"
+    path.write_text(
+        (
+            f"# GENERATED by scripts/split-devices.py — ROLE=poll for split inventory.\n"
+            f"# Safe to edit ports. Devices live in state/devices-{group}.yaml.\n"
+            f"GROUP={group}\n"
+            f"ROLE=poll\n"
+            f"DISCOVERY_SOURCE=split\n"
+            f"SNMP_VERSION=v2c\n"
+            f"SNMP_V2_COMMUNITY=public\n"
+            f"TRAP_COMMUNITY=public\n"
+            f"METALISTEN_PORT={port}\n"
+            f"TRAP_PORT=1620\n"
+            f"POLL_INTERVAL_SEC=60\n"
+            f"DISCOVERY_THREADS=4\n"
+        ),
+        encoding="utf-8",
+    )
+    return path, port
+
+
+def promote_source_to_discover(groups_dir: Path, source_group: str) -> str | None:
+    """Stop the source group from polling so split pollers are the only walkers."""
+    path = find_group_env(groups_dir, source_group)
+    if path is None:
+        return None
+    lines = path.read_text(encoding="utf-8").splitlines()
+    role = "both"
+    had_role = False
+    out: list[str] = []
+    for line in lines:
+        if line.startswith("ROLE="):
+            role = line.split("=", 1)[1].strip() or "both"
+            had_role = True
+            out.append("ROLE=discover")
+        else:
+            out.append(line)
+    if role == "discover":
+        return None
+    if role == "poll":
+        return None
+    if not had_role:
+        out.insert(1 if out and out[0].startswith("GROUP=") else 0, "ROLE=discover")
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+    return str(path)
 
 
 def split_devices(
@@ -589,6 +775,29 @@ def self_test() -> int:
         },
     )
 
+    buckets, _ = split_dynamic(
+        devices,
+        {"dynamic": {"field": "mib_profile", "as": "vendor"}, "default_group": "other"},
+    )
+    expect_dyn = {
+        "cisco": {"core1", "hq-leaf", "br-leaf"},
+        "palo": {"fw1"},
+        "juniper": {"ex1"},
+        "apc": {"ups1"},
+    }
+    for group, names in expect_dyn.items():
+        got = set(buckets.get(group, {}))
+        if got != names:
+            print(f"FAIL dynamic vendor / {group}: expected {names}, got {got}", file=sys.stderr)
+            failed += 1
+        else:
+            print(f"ok   dynamic vendor / {group}: {sorted(got)}")
+    if vendor_family("cisco-nexus.yml") != "cisco" or vendor_family("paloalto.yml") != "palo":
+        print("FAIL vendor_family helpers", file=sys.stderr)
+        failed += 1
+    else:
+        print("ok   vendor_family")
+
     generic = {
         "field": "mib_profile",
         "glob": "cisco*",
@@ -607,6 +816,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--mapping", type=Path, help="device-split YAML (default: config/ then examples/)")
     ap.add_argument("--from", dest="source", type=Path, help="override source devices YAML")
+    ap.add_argument("--source-group", help="GROUP= of the scan (default: onboarding if present, else estate)")
     ap.add_argument("--state-dir", type=Path, default=REPO / "state")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--explain", action="store_true", help="print which rule caught each device")
@@ -615,6 +825,26 @@ def main() -> int:
         action="store_true",
         help="do not require groups/<name>.env (preview buckets before creating pollers)",
     )
+    ap.add_argument(
+        "--dynamic",
+        metavar="MODE",
+        choices=("vendor", "stem"),
+        help="split from the device list (vendor family or profile stem); default when no mapping file",
+    )
+    ap.add_argument(
+        "--provision",
+        action="store_true",
+        default=None,
+        help="write missing ROLE=poll groups/*.env (default on unless --dry-run)",
+    )
+    ap.add_argument("--no-provision", action="store_true", help="never write groups/*.env")
+    ap.add_argument(
+        "--promote-discover",
+        action="store_true",
+        default=None,
+        help="set the source group's ROLE=discover so it stops polling (default with --provision)",
+    )
+    ap.add_argument("--no-promote", action="store_true", help="leave the source group's ROLE alone")
     ap.add_argument("--list-fields", action="store_true", help="show fields present on the source list")
     ap.add_argument("--list-values", metavar="FIELD", help="count distinct values of FIELD")
     ap.add_argument("--self-test", action="store_true")
@@ -624,20 +854,31 @@ def main() -> int:
         return self_test()
 
     mpath = mapping_path(args.mapping)
-    source_group = "estate"
     mapping: dict = {}
-    if mpath and mpath.is_file():
+    if mpath and mpath.is_file() and not args.dynamic:
         loaded = load_yaml(mpath)
         if isinstance(loaded, dict):
             mapping = loaded
-            source_group = mapping.get("source_group") or source_group
         elif not (args.list_fields or args.list_values):
             print(f"{mpath}: expected a YAML mapping", file=sys.stderr)
             return 1
-    elif not (args.list_fields or args.list_values):
-        print("no device-split mapping found. Copy examples/vendor-split/device-split.yaml", file=sys.stderr)
-        print("  → config/device-split.yaml  (or --mapping PATH)", file=sys.stderr)
-        return 1
+
+    if args.dynamic:
+        mapping = default_dynamic_mapping()
+        mapping["dynamic"]["as"] = args.dynamic
+        mpath = None
+    elif not mapping and not (args.list_fields or args.list_values):
+        mapping = default_dynamic_mapping()
+        mpath = None
+
+    source_group = str(mapping.get("source_group") or "")
+    if args.source_group:
+        source_group = args.source_group
+    if not source_group:
+        if (args.state_dir / "devices-onboarding.yaml").is_file():
+            source_group = "onboarding"
+        else:
+            source_group = "estate"
 
     src = args.source or (args.state_dir / f"devices-{source_group}.yaml")
     if args.list_fields or args.list_values:
@@ -656,25 +897,91 @@ def main() -> int:
     if args.list_values:
         return cmd_list_values(devices, args.list_values)
 
-    pollers = None if args.ignore_pollers else known_poller_map(REPO / "groups")
-    buckets, explain = split_devices(devices, mapping, pollers or None)
+    use_dynamic = bool(mapping.get("dynamic")) and not mapping.get("rules")
+    if args.dynamic:
+        use_dynamic = True
 
-    print(f"split {len(devices)} devices from {src.name} using {mpath}")
+    provision = False if args.no_provision or args.dry_run else (
+        True if args.provision else bool(mapping.get("provision_pollers", True))
+    )
+    if use_dynamic and not args.no_provision and not args.dry_run:
+        provision = True if args.provision is None else args.provision or provision
+    # Default: provision on for dynamic/no-mapping unless dry-run / --no-provision
+    if mapping.get("provision_pollers") is False:
+        provision = False
+    if args.provision:
+        provision = True
+    if args.no_provision or args.dry_run:
+        provision = False
+
+    promote = False if args.no_promote or args.dry_run else (
+        True if args.promote_discover else bool(mapping.get("promote_source_to_discover", provision))
+    )
+    if args.promote_discover:
+        promote = True
+    if args.no_promote or args.dry_run:
+        promote = False
+
+    pollers = None
+    if not args.ignore_pollers and not provision and not use_dynamic:
+        pollers = known_poller_map(REPO / "groups") or None
+
+    if use_dynamic:
+        buckets, explain = split_dynamic(devices, mapping)
+        how = f"dynamic {mapping.get('dynamic', {}).get('as', 'vendor')}"
+    else:
+        buckets, explain = split_devices(devices, mapping, pollers or None)
+        how = str(mpath) if mpath else "rules"
+
+    print(f"split {len(devices)} devices from {src.name} using {how}")
     if args.explain:
         width = max((len(k) for k, _, _ in explain), default=8)
         for key, group, reason in explain:
             print(f"  {key:<{width}} → {group}  ({reason})")
 
+    groups_dir = REPO / "groups"
+    used_ports = used_metalisten_ports(groups_dir)
+    existing = known_poller_map(groups_dir)
+    # Discover-only groups should not receive inventory files as pollers.
+    discover_names = set()
+    if groups_dir.is_dir():
+        for env_file in groups_dir.glob("*.env"):
+            role, group = "both", ""
+            for line in env_file.read_text(encoding="utf-8").splitlines():
+                if line.startswith("GROUP="):
+                    group = line.split("=", 1)[1].strip()
+                elif line.startswith("ROLE="):
+                    role = line.split("=", 1)[1].strip() or "both"
+            if group and role == "discover":
+                discover_names.add(group.casefold())
+
     for group, bucket in sorted(buckets.items()):
+        if not bucket and group.casefold() not in existing:
+            continue
         dest = args.state_dir / f"devices-{group}.yaml"
+        if group.casefold() in discover_names:
+            print(f"  skip {group} ({len(bucket)} devices) — ROLE=discover (source scan)")
+            continue
         if pollers and group.casefold() not in pollers:
             print(f"  skip {group} ({len(bucket)} devices) — no groups/{group}.env poller")
             continue
+        if provision and group.casefold() not in existing and group.casefold() not in discover_names:
+            if args.dry_run:
+                print(f"  {group}: would provision groups/{group}.env")
+            else:
+                path, port = provision_poller_env(groups_dir, group, used_ports)
+                existing[group.casefold()] = group
+                print(f"  provisioned {path.name} (METALISTEN_PORT={port})")
         if args.dry_run:
             print(f"  {group}: {len(bucket)} devices → {dest.name} (dry-run)")
             continue
         write_yaml(bucket if bucket else {}, dest)
         print(f"  {group}: {len(bucket)} devices → {dest.name}")
+
+    if promote and not args.dry_run:
+        changed = promote_source_to_discover(groups_dir, source_group)
+        if changed:
+            print(f"  set ROLE=discover on {changed} (stops mixed-list polling)")
 
     return 0
 

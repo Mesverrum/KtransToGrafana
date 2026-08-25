@@ -41,10 +41,11 @@ When touching the generator or templates:
 
 ## Device-list split is YAML, not a new script
 
-`scripts/split-devices.py` routes a `ROLE=discover` list into `ROLE=poll` files
-from `config/device-split.yaml` (recipes under `examples/vendor-split/recipes/`).
-When you add a matcher, add a `--self-test` case and a copy-paste recipe — do
-not grow a family of `split-devices-by-*.py` scripts.
+`scripts/split-devices.py` routes a discovery list into `ROLE=poll` files.
+Default is **dynamic vendor** from `mib_profile` (provisions `groups/*.env`).
+Static matchers live under `examples/vendor-split/recipes/`. When you add a
+matcher, add a `--self-test` case — do not grow a family of `split-devices-by-*.py`
+scripts.
 
 ## Group `.env` files are shell-sourced
 

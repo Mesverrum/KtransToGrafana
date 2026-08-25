@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Reload ktranslate receivers that read state/devices-*.yaml (catalog + pollers).
-# Called after any group's device list changes so flow/syslog and all SNMP
+# Called after any group's device list changes so flow/syslog/traps and all SNMP
 # pollers pick up the latest @-included device maps.
 #
 # Usage: ./scripts/reload-ktranslate-devices.sh
@@ -23,7 +23,7 @@ if [[ ! -f "${REPO_ROOT}/compose-catalog.generated.yaml" ]]; then
   exit 1
 fi
 
-RESTART_SERVICES=(ktranslate_flow ktranslate_syslog)
+RESTART_SERVICES=(ktranslate_flow ktranslate_syslog ktranslate_traps)
 RELOAD_POLLERS=()
 
 shopt -s nullglob
@@ -68,4 +68,4 @@ for svc in "${RUNNING_POLLERS[@]}"; do
   docker compose "${COMPOSE_ARGS[@]}" kill -s USR2 "${svc}"
 done
 
-echo "reloaded flow/syslog: ${RUNNING_RESTART[*]:-none}; SIGUSR2 pollers: ${RUNNING_POLLERS[*]:-none}"
+echo "reloaded flow/syslog/traps: ${RUNNING_RESTART[*]:-none}; SIGUSR2 pollers: ${RUNNING_POLLERS[*]:-none}"

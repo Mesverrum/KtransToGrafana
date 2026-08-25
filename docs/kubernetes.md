@@ -68,7 +68,7 @@ make k8s-up                # secrets + kubectl apply -k k8s/generated
 make k8s-discover GROUP=onboarding
 ```
 
-`make k8s-up` prints the identity ConfigMap (`stamp_on_gear`). Copy those **IPs and ports** into trap-groups, flow exporters, and syslog remote-servers. Do not use Kubernetes DNS names on the device.
+`make k8s-up` prints the identity ConfigMap (`stamp_on_gear`). Copy those **IPs and ports** into trap-groups, flow exporters, and syslog remote-servers. Do not use Kubernetes DNS names on the device. On Compose, traps are collated on host **UDP/1620** (`ktranslate_traps` + catalog); the k8s generator still lists a trap port per poller — prefer one stable UDP/1620 on the LoadBalancer when you align that path.
 
 One-shot discovery is `make k8s-discover GROUP=<name>` (a Job cloned from the CronJob). Scheduled discovery uses the same containers.
 

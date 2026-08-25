@@ -1,5 +1,20 @@
 # One discovery scan, many pollers
 
+The **default path** is onboarding, then an optional dynamic split — you do not
+copy these sample groups first:
+
+```
+make discover GROUP=onboarding
+make split-devices          # vendor family from mib_profile; provisions pollers
+```
+
+Traps, syslog, and flow stay on the catalog listener (`UDP/1620` for traps).
+This directory is the **override** path: static YAML matchers (site CIDR,
+hostname, firmware) and a worked vendor bring-up if you want named buckets
+before the first scan.
+
+---
+
 Subnets are rarely clean by vendor, site, or role. This example keeps
 **discovery as its own layer** (one mixed-CIDR scan) and **polling as
 failure domains** (one long-running ktranslate per bucket). You chop the
@@ -138,7 +153,8 @@ matching `ROLE=poll` groups first (or unmatched devices land in `other`).
 
 | File | Boundary |
 |------|----------|
-| [device-split.yaml](device-split.yaml) / [vendor-split.yaml](vendor-split.yaml) | vendor (`mib_profile` + sysObjectID) |
+| [recipes/by-dynamic-vendor.yaml](recipes/by-dynamic-vendor.yaml) | **default** — vendor family from `mib_profile` |
+| [device-split.yaml](device-split.yaml) / [vendor-split.yaml](vendor-split.yaml) | static vendor globs + sysObjectID |
 | [recipes/by-site-cidr.yaml](recipes/by-site-cidr.yaml) | management IP subnet |
 | [recipes/by-hostname.yaml](recipes/by-hostname.yaml) | hostname regex → `site-{1}` |
 | [recipes/by-firmware.yaml](recipes/by-firmware.yaml) | OS / version in `description` |
@@ -168,7 +184,15 @@ result. Every recipe below is first-match-wins against that file.
 | `hq-leaf` | `hq-leaf-01` | `10.10.1.5` | `cisco-catalyst.yml` | IOS C9300; `user_tags.site: hq` |
 | `br-leaf` | `br1-leaf-01` | `10.20.1.5` | `cisco-iosxe.yml` | IOS-XE 17.9.4 |
 
-### 1. Split by vendor (the bring-up)
+### 1. Split by vendor (dynamic — default)
+
+No mapping file. `mib_profile` → vendor family (`cisco-nexus.yml` and
+`cisco-iosxe.yml` both become `cisco`). `make split-devices` provisions the
+poller env files.
+
+[recipes/by-dynamic-vendor.yaml](recipes/by-dynamic-vendor.yaml) pins that
+behaviour if you want it in git. The static glob file below is only if you
+need OID prefixes or different bucket names.
 
 [device-split.yaml](device-split.yaml) ORs a profile glob with a sysObjectID
 prefix. `cisco-nexus.yml` matches `cisco*`; Palo's OID is `.1.3.6.1.4.1.25461`;

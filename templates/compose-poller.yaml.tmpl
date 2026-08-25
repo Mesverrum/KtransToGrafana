@@ -41,4 +41,4 @@
       - --max_flows_per_message=100
     ports:
       - ${METALISTEN_PORT}:${METALISTEN_PORT}
-      - ${TRAP_PORT}:${TRAP_PORT}/udp
+    # Traps are collated on ktranslate_traps (UDP/1620 + catalog), not per poller.

@@ -25,7 +25,7 @@ for env_file in "${GROUP_FILES[@]}"; do
   role="$(awk -F= '/^ROLE=/{print $2; exit}' "${env_file}")"
   role="${role:-both}"
   if [[ "${role}" == "poll" ]]; then
-    echo "==> skipping ${group} (ROLE=poll; filled by vendor split)"
+    echo "==> skipping ${group} (ROLE=poll; filled by device split)"
     continue
   fi
   echo "==> discovering group: ${group}"

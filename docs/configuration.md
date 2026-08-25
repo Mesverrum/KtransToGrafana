@@ -25,7 +25,7 @@ Every variable is documented inline in the sample. The important ones:
 - **`SNMP_VERSION`** — `v2c`, `v3`, or `mixed`. The other credential fields are only required for the matching version; `mixed` lets one group carry both v2c and v3 candidates (see [Multiple candidate credentials](#multiple-candidate-credentials-unknown-mapping)).
 - **`DISCOVERY_SOURCE`** — where this group's device list comes from: `cidr`, `netbox`, or `split` (defaults to `cidr` if unset, or `split` when `ROLE=poll`).
 - **`ROLE`** — `both` (default: discover + poll), `discover` (scan only), or `poll` (poller only; inventory comes from another group's scan). See [One discovery scan, many pollers](#one-discovery-scan-many-pollers).
-- **`METALISTEN_PORT` / `TRAP_PORT`** — host ports for this group. Required on pollers (`ROLE=poll` or `both`). Must be unique across groups and must not collide with the static services (9995, 9996, 9998, 4317, 12346, 1514). The generator refuses to run if it finds a collision.
+- **`METALISTEN_PORT` / `TRAP_PORT`** — `METALISTEN_PORT` is the poller's debug port and must be unique. **Traps are collated**: devices send SNMP traps to the host **UDP/1620** (`ktranslate_traps` + the device catalog), same idea as syslog `:1514` and flow `:9995`. Per-poller `TRAP_PORT` is only inside the container YAML (not published). Must not collide with static TCP ports (9994, 9995, 9996, 9998, 4317, 12346).
 
 ### `snmp_group` on metrics
 
@@ -68,24 +68,35 @@ NetBox groups also need shared credentials in `.env`: **`NETBOX_HOST`** and **`N
 
 ## One discovery scan, many pollers
 
-When CIDRs mix vendors, sites, or roles, a combined discover+poll group puts every device in one failure domain. The alternative is:
-
-1. One **`ROLE=discover`** group scans the mixed ranges (or NetBox).
-2. `scripts/split-devices.py` copies each device into `state/devices-<group>.yaml` using **`config/device-split.yaml`**. Match on any field the device list already holds — `mib_profile`, sysObjectID, hostname regex, IP CIDR, firmware in `description`, nested `user_tags`, or AND/OR of those. Inspect first with `--list-fields` / `--list-values` / `--explain`; copy a recipe from `examples/vendor-split/recipes/` rather than writing a new script.
-3. Each **`ROLE=poll`** group (`DISCOVERY_SOURCE=split`) `@`-includes only its file. Destination names must match a poller's `GROUP=`; unknown destinations fall through to `default_group` so nothing is dropped. New devices are picked up with **SIGUSR2** — not a container restart, and **not SIGHUP** (that would stop the process).
-
-Worked samples (vendor buckets), mapping file, recipes, and bring-up: **[examples/vendor-split/README.md](../examples/vendor-split/README.md)**. The splitter needs PyYAML (`sudo apt install python3-yaml`).
+Start with **onboarding** (`ROLE=both`): one scan, mixed credentials, one poller. When you want failure domains, split that list — you do **not** pre-create `cisco.env` / `palo.env`.
 
 ```
-cp examples/vendor-split/groups/*.env.sample groups/
-# strip .sample from each copy; edit groups/estate.env TARGETS + creds
-cp examples/vendor-split/device-split.yaml config/device-split.yaml
-make generate && make up && make discover GROUP=estate
+make discover GROUP=onboarding
+make split-devices
 ```
 
-`make discover GROUP=estate` publishes the raw list, splits it, then reloads pollers plus flow/syslog (catalog). After you edit the mapping only: `make split-devices` (`make split-vendors` is an alias).
+`make split-devices` (default, no mapping file):
 
-The catalog `@`-includes poller files only (not the raw estate list), so flow/syslog still map source IPs to `device_name` without double-counting.
+1. Reads `state/devices-onboarding.yaml` (or `estate`).
+2. **Dynamically** buckets devices by vendor family derived from `mib_profile` (`cisco-nexus.yml` → `cisco`, `paloalto.yml` → `palo`, unknown stems → first token).
+3. **Provisions** missing `groups/<vendor>.env` as `ROLE=poll` (unique `METALISTEN_PORT`).
+4. Sets the source group to **`ROLE=discover`** so the mixed list is not polled twice.
+5. Regenerates compose, `up -d --remove-orphans`, SIGUSR2s pollers.
+
+Traps, syslog, and flow stay on **one catalog listener** (`ktranslate_traps` UDP/1620, syslog 1514, flow 9995). They `@`-include every poller device file so enrichment does not depend on which poller walks the box.
+
+Later discovers on a `ROLE=discover` group re-run the split, so a new vendor in the estate gets a new poller without a new matcher.
+
+Override the default with `config/device-split.yaml` (static rules, CIDR, hostname, firmware — [examples/vendor-split](../examples/vendor-split/README.md)). Preview:
+
+```
+python3 scripts/split-devices.py --dynamic vendor --dry-run --explain \
+  --from examples/vendor-split/testdata/devices-estate.yaml
+```
+
+Needs PyYAML (`sudo apt install python3-yaml`).
+
+The catalog `@`-includes poller files only (not the raw scan list), so flow/syslog/traps map source IPs to `device_name` without double-counting.
 
 ### Examples of split rules
 
@@ -95,8 +106,7 @@ rule into `config/device-split.yaml`. Against the six-device fixture in
 those recipes land as follows (full walkthrough:
 [examples/vendor-split/README.md](../examples/vendor-split/README.md#worked-examples-same-six-devices)).
 
-**Vendor** (profile glob or sysObjectID) — `core1` / `hq-leaf` / `br-leaf` →
-`cisco`, `fw1` → `palo`, `ex1` → `juniper`, `ups1` → `other`.
+**Vendor** (default, no YAML) — `core1` / `hq-leaf` / `br-leaf` → `cisco`, `fw1` → `palo`, `ex1` → `juniper`, `ups1` → `apc` (first token of `apc_ups.yml`). Static glob files send unknown profiles to `other` instead.
 
 **Site from IP plan:**
 

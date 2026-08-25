@@ -159,6 +159,11 @@ if [[ -f config/catalog.yaml ]]; then
 else
   _fail "config/catalog.yaml is missing — run: make generate"
 fi
+if [[ -f config/traps.yaml ]]; then
+  _ok "config/traps.yaml exists (collated trap listener)"
+else
+  _warn "config/traps.yaml is missing — run: make generate (traps UDP/1620)"
+fi
 
 # --- Per-group rendered configs ---
 for env_file in "${GROUP_FILES[@]}"; do

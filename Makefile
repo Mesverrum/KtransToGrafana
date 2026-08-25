@@ -25,7 +25,7 @@ help:
 	@echo "make logs                   Tail logs from all containers"
 	@echo "make discover GROUP=cisco   Run a one-shot discovery for one group"
 	@echo "make discover-all           Discover every ROLE=discover|both group; reload if any list changed"
-	@echo "make split-devices          Route estate discovery into poller files (device-split.yaml); SIGUSR2 pollers"
+	@echo "make split-devices          Split the latest scan (dynamic vendor by default); provision pollers; SIGUSR2"
 	@echo "make split-vendors          Alias for split-devices"
 	@echo "make flow-dns               Regenerate flow_dns PTR records from device catalog"
 	@echo "make detect-net             Auto-fill HOST_NET in .env (only needed for the sflow overlay)"
@@ -95,8 +95,7 @@ discover-all:
 	@bash scripts/run-discovery-all.sh
 
 split-devices split-vendors:
-	@python3 scripts/split-devices.py
-	@bash scripts/reload-ktranslate-devices.sh
+	@bash scripts/apply-device-split.sh
 
 # Auto-detect the host's default interface and write it to .env as HOST_NET.
 # Only needed if you use the host-sflow demo overlay (make up-demo).

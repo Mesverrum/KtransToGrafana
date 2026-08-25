@@ -18,7 +18,7 @@ make logs                   # tail logs from all containers
 make down                   # stop and remove the stack
 make discover GROUP=cisco   # one-shot discovery for one group; populates state/devices-cisco.yaml
 make discover-all           # discover every ROLE=discover|both group; reload if any list changed
-make split-devices          # route estate discovery into poller files (config/device-split.yaml); SIGUSR2 pollers
+make split-devices          # dynamic vendor split of the latest scan; provision pollers; collated traps/flow/syslog
 make split-vendors          # alias for split-devices
 make flow-dns               # regenerate flow_dns PTR records from device catalog
 make detect-net             # auto-fill HOST_NET in .env (only needed for the sflow demo overlay)
@@ -84,7 +84,7 @@ make discover-all
 
 Or keep separate cron lines per group — each changed run still reloads flow, syslog, and all pollers so the shared catalog stays current.
 
-A `ROLE=discover` estate group also runs `scripts/split-devices.py` after the scan so poller files update from `config/device-split.yaml`. Mapping-only edits (no rescan): `make split-devices`.
+A `ROLE=discover` group re-splits after each changed scan (dynamic vendors, or `config/device-split.yaml`). Mapping-only edits: `make split-devices`. Onboarding (`ROLE=both`) does not auto-split until you run that target.
 
 ## Instant flow data with the sflow demo overlay
 

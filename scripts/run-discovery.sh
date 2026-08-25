@@ -99,6 +99,17 @@ if [[ -f "${DEVICES_PREV}" ]] && cmp -s "${DEVICES_PREV}" "${DEVICES_OUT}"; then
   exit 2
 fi
 
+# ROLE=discover groups feed per-vendor pollers instead of polling themselves.
+ROLE="$(awk -F= '/^ROLE=/{print $2; exit}' "${REPO_ROOT}/groups/${GROUP}.env" 2>/dev/null || true)"
+ROLE="${ROLE:-both}"
+if [[ "${ROLE}" == "discover" ]]; then
+  if [[ -f "${REPO_ROOT}/config/vendor-split.yaml" || -f "${REPO_ROOT}/examples/vendor-split/vendor-split.yaml" ]]; then
+    python3 "${REPO_ROOT}/scripts/split-devices-by-vendor.py"
+  else
+    echo "ROLE=discover but no vendor-split.yaml; pollers will not receive devices" >&2
+  fi
+fi
+
 if [[ -n "${SKIP_RELOAD:-}" ]]; then
   echo "device list changed for ${GROUP}; reload deferred (SKIP_RELOAD)"
   exit 0

@@ -164,6 +164,9 @@ if (( ${#GROUP_FILES[@]} > 0 )); then
   for env_file in "${GROUP_FILES[@]}"; do
     group="$(awk -F= '/^GROUP=/{print $2; exit}' "${env_file}")"
     [[ -z "${group}" ]] && continue
+    role="$(awk -F= '/^ROLE=/{print $2; exit}' "${env_file}")"
+    role="${role:-both}"
+    [[ "${role}" == "discover" ]] && continue
     SNMP_SERVICES+=("ktranslate_snmp_${group}")
   done
 else

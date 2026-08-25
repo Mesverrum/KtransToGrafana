@@ -1,4 +1,4 @@
-.PHONY: up up-demo down logs preflight generate bootstrap limits limits-show discover discover-all flow-dns detect-net host generate-k8s k8s-up k8s-down k8s-down-wipe k8s-discover help
+.PHONY: up up-demo down logs preflight generate bootstrap limits limits-show discover discover-all split-vendors flow-dns detect-net host generate-k8s k8s-up k8s-down k8s-down-wipe k8s-discover help
 
 COMPOSE := docker compose -f compose-base.yaml -f compose-groups.generated.yaml -f compose-catalog.generated.yaml -f compose-limits.generated.yaml
 
@@ -24,7 +24,8 @@ help:
 	@echo "make down                   docker compose down"
 	@echo "make logs                   Tail logs from all containers"
 	@echo "make discover GROUP=cisco   Run a one-shot discovery for one group"
-	@echo "make discover-all           Discover every group; reload catalog consumers if any list changed"
+	@echo "make discover-all           Discover every ROLE=discover|both group; reload if any list changed"
+	@echo "make split-vendors          Route estate discovery into per-vendor poller files; SIGUSR2 pollers"
 	@echo "make flow-dns               Regenerate flow_dns PTR records from device catalog"
 	@echo "make detect-net             Auto-fill HOST_NET in .env (only needed for the sflow overlay)"
 	@echo "make host                   Print the deployment.host value this stack will use"
@@ -91,6 +92,10 @@ discover:
 
 discover-all:
 	@bash scripts/run-discovery-all.sh
+
+split-vendors:
+	@python3 scripts/split-devices-by-vendor.py
+	@bash scripts/reload-ktranslate-devices.sh
 
 # Auto-detect the host's default interface and write it to .env as HOST_NET.
 # Only needed if you use the host-sflow demo overlay (make up-demo).

@@ -23,8 +23,9 @@ Every variable is documented inline in the sample. The important ones:
 
 - **`GROUP`** — short identifier (`cisco`, `palo`, etc.). Used in container names, file paths, the OTEL `service.name` (a label identifying which collector produced the data), and stamped on every SNMP metric via `global.user_tags.snmp_group` in the generated poller config. In Grafana Explore the label appears as **`tags_snmp_group`** (OTLP export); dashboard variable **`$snmp_group`** filters with `tags_snmp_group=~"$snmp_group"`. Prefer that over `service_name` when filtering fleet dashboards by credential group — `service_name` also varies with `KTRANS_HOST` when you run multiple deployments.
 - **`SNMP_VERSION`** — `v2c`, `v3`, or `mixed`. The other credential fields are only required for the matching version; `mixed` lets one group carry both v2c and v3 candidates (see [Multiple candidate credentials](#multiple-candidate-credentials-unknown-mapping)).
-- **`DISCOVERY_SOURCE`** — where this group's device list comes from: `cidr` or `netbox` (defaults to `cidr` if unset).
-- **`METALISTEN_PORT` / `TRAP_PORT`** — host ports for this group. Must be unique across groups and must not collide with the static services (9995, 9996, 9998, 4317, 12346, 1514). The generator refuses to run if it finds a collision.
+- **`DISCOVERY_SOURCE`** — where this group's device list comes from: `cidr`, `netbox`, or `split` (defaults to `cidr` if unset, or `split` when `ROLE=poll`).
+- **`ROLE`** — `both` (default: discover + poll), `discover` (scan only), or `poll` (poller only; inventory comes from another group's scan). See [One discovery scan, many vendor pollers](#one-discovery-scan-many-vendor-pollers).
+- **`METALISTEN_PORT` / `TRAP_PORT`** — host ports for this group. Required on pollers (`ROLE=poll` or `both`). Must be unique across groups and must not collide with the static services (9995, 9996, 9998, 4317, 12346, 1514). The generator refuses to run if it finds a collision.
 
 ### `snmp_group` on metrics
 
@@ -64,6 +65,27 @@ ktranslate queries NetBox and polls the devices that match your filters:
 - **`NETBOX_IP_TO_PICK`** — which IP to poll on each matched device: `primary` (the device's primary IP) or `oob` (out-of-band IP).
 
 NetBox groups also need shared credentials in `.env`: **`NETBOX_HOST`** and **`NETBOX_TOKEN`**. They're shared by every netbox group and only required if at least one group uses `DISCOVERY_SOURCE=netbox` — `preflight` fails if a netbox group exists but they're unset. Leave them blank for CIDR-only deployments.
+
+## One discovery scan, many vendor pollers
+
+When CIDRs mix vendors, a combined discover+poll group puts every device in one failure domain. The alternative is:
+
+1. One **`ROLE=discover`** group scans the mixed ranges (or NetBox).
+2. `scripts/split-devices-by-vendor.py` copies each device into `state/devices-<vendor>.yaml` using `mib_profile` / sysObjectID rules.
+3. Each **`ROLE=poll`** group (`DISCOVERY_SOURCE=split`) `@`-includes only its vendor file. New devices are picked up with **SIGUSR2** — not a container restart, and **not SIGHUP** (that would stop the process).
+
+Worked samples, mapping file, and bring-up: **[examples/vendor-split/README.md](../examples/vendor-split/README.md)**. The splitter needs PyYAML (`sudo apt install python3-yaml`).
+
+```
+cp examples/vendor-split/groups/*.env.sample groups/
+# strip .sample from each copy; edit groups/estate.env TARGETS + creds
+cp examples/vendor-split/vendor-split.yaml config/vendor-split.yaml
+make generate && make up && make discover GROUP=estate
+```
+
+`make discover GROUP=estate` publishes the raw list, splits it, then reloads vendor pollers plus flow/syslog (catalog). After you edit the mapping only: `make split-vendors`.
+
+The catalog `@`-includes poller files only (not the raw estate list), so flow/syslog still map source IPs to `device_name` without double-counting.
 
 ## Multiple candidate credentials (unknown mapping)
 

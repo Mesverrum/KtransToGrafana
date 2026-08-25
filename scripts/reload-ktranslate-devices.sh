@@ -30,6 +30,9 @@ shopt -s nullglob
 for env_file in "${REPO_ROOT}/groups"/*.env; do
   group="$(awk -F= '/^GROUP=/{print $2; exit}' "${env_file}")"
   [[ -z "${group}" ]] && continue
+  role="$(awk -F= '/^ROLE=/{print $2; exit}' "${env_file}")"
+  role="${role:-both}"
+  [[ "${role}" == "discover" ]] && continue
   RELOAD_POLLERS+=("ktranslate_snmp_${group}")
 done
 shopt -u nullglob

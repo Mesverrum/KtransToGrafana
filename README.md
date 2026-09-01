@@ -116,7 +116,7 @@ make discover GROUP=onboarding   # scan the range, match credentials, hand devic
 
 `make up` and `make discover` print a short `==>` line per step and keep Docker/ktranslate chatter in `state/*.log`. `VERBOSE=1 make up` restores the full dump. `make logs` still tails containers live.
 
-`make up` prints the resolved `deployment.host` and brings everything up. Discovery writes `state/devices-onboarding.yaml` — each device stamped with the credential that worked — and reloads the poller. Devices that did not answer are simply missing from that file (wrong creds, ACL, non-SNMP, or unreachable).
+`make up` prints the resolved `deployment.host` and brings everything up. Discovery writes `state/devices-onboarding.yaml` — each device stamped with the credential that worked — unions that device's `discovered_mibs` into the poller's `global.mibs_enabled` (so vendor tables are collected without editing YAML), and reloads the poller. Devices that did not answer are simply missing from that file (wrong creds, ACL, non-SNMP, or unreachable).
 
 If a script says `Permission denied`, Git on Windows (or a zip extract) dropped execute bits. `make` already runs `bash scripts/…`; one-shot: `chmod a+x scripts/*.sh` (`make preflight` does this too).
 

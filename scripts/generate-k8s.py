@@ -283,10 +283,14 @@ spec:
 
 
 def scripts_cm(c: Ctx) -> str:
+    apply_mibs = REPO / "scripts" / "apply-discovered-mibs.sh"
+    if not apply_mibs.is_file():
+        raise SystemExit(f"missing {apply_mibs}")
     files = {
         "state-watch.sh": read_script("state-watch.sh"),
         "publish-devices.sh": read_script("publish-devices.sh"),
         "seed-state.sh": read_script("seed-state.sh"),
+        "apply-discovered-mibs.sh": apply_mibs.read_text(encoding="utf-8"),
     }
     data = ""
     for name, body in files.items():
@@ -384,18 +388,41 @@ data:
     return "\n---\n".join(docs)
 
 
-def watch_sidecar(c: Ctx, watch_file: str, mode: str) -> str:
+def watch_sidecar(
+    c: Ctx,
+    watch_file: str,
+    mode: str,
+    *,
+    apply_mibs_group: str = "",
+) -> str:
+    if apply_mibs_group:
+        image = c.yq
+        cmd = (
+            f'["/bin/sh", "/scripts/state-watch.sh", "{watch_file}", "{mode}", '
+            f'"/config/poller.yaml", "/state/poller-{apply_mibs_group}.runtime.yaml", '
+            f'"/state/devices-{apply_mibs_group}.yaml"]'
+        )
+        extra_mounts = """            - name: poller
+              mountPath: /config
+              readOnly: true
+"""
+        state_ro = "false"
+    else:
+        image = c.busybox
+        cmd = f'["/bin/sh", "/scripts/state-watch.sh", "{watch_file}", "{mode}"]'
+        extra_mounts = ""
+        state_ro = "true"
     return f"""        - name: state-watch
-          image: {c.busybox}
-          command: ["/bin/sh", "/scripts/state-watch.sh", "{watch_file}", "{mode}"]
+          image: {image}
+          command: {cmd}
           volumeMounts:
             - name: state
               mountPath: /state
-              readOnly: true
+              readOnly: {state_ro}
             - name: scripts
               mountPath: /scripts
               readOnly: true
-"""
+{extra_mounts}"""
 
 
 def volumes_common(c: Ctx, extra: str = "") -> str:
@@ -763,7 +790,30 @@ spec:
         app: ktranslate-snmp-{name}
     spec:
       shareProcessNamespace: true
-{c.host_net_spec(6)}      containers:
+{c.host_net_spec(6)}      initContainers:
+        - name: apply-mibs
+          image: {c.yq}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              rc=0
+              /bin/sh /scripts/apply-discovered-mibs.sh /config/poller.yaml /state/devices-{name}.yaml /state/poller-{name}.runtime.yaml || rc=$?
+              case "$rc" in
+                0|2|3) exit 0 ;;
+                *) exit "$rc" ;;
+              esac
+          volumeMounts:
+            - name: poller
+              mountPath: /config
+              readOnly: true
+            - name: state
+              mountPath: /state
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+      containers:
         - name: ktranslate
           image: {c.ktranslate}
 {c.ktrans_env(f"ktranslate-snmp-{name}")}
@@ -772,7 +822,7 @@ spec:
             - --format_metric=otel
             - --otel.protocol=grpc
             - --otel.endpoint={c.otel}
-            - --snmp=/snmp.yaml
+            - --snmp=/state/poller-{name}.runtime.yaml
             - --metalisten=0.0.0.0:{meta}
             - --sinks=otel
             - --metrics=jchf
@@ -790,10 +840,6 @@ spec:
             capabilities:
               add: ["NET_RAW", "NET_BIND_SERVICE"]
           volumeMounts:
-            - name: poller
-              mountPath: /snmp.yaml
-              subPath: poller.yaml
-              readOnly: true
             - name: state
               mountPath: /state
               readOnly: true
@@ -804,7 +850,7 @@ spec:
             limits:
               cpu: "2"
               memory: 4Gi
-{watch_sidecar(c, f"/state/devices-{name}.yaml", "usr2")}{volumes_common(c, extra)}
+{watch_sidecar(c, f"/state/devices-{name}.yaml", "usr2", apply_mibs_group=name)}{volumes_common(c, extra)}
 """
         )
     return "\n---\n".join(docs)

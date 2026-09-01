@@ -45,7 +45,7 @@ A failed discovery that publishes `devices: {}` wipes the poller. A poller that 
   1. Copies the generated discovery config onto the PVC (git remains source of truth for *how* to scan).
   2. Runs ktranslate `-snmp_discovery=true`.
   3. Publishes with the same rules as `scripts/run-discovery.sh`: **empty scan keeps the previous list**; write is atomic (`mv`).
-- Pollers mount the PVC **read-only**. A `state-watch` sidecar (shared process namespace) sends **SIGUSR2** when that group’s file changes — no `kubectl exec`, no extra RBAC.
+- Pollers mount the PVC **read-only**. An init container (and the `state-watch` sidecar) unions each device's `discovered_mibs` into `/state/poller-<group>.runtime.yaml` so vendor tables are polled without editing the ConfigMap. `state-watch` then sends **SIGUSR2** when that group's device file changes — no `kubectl exec`, no extra RBAC.
 - Flow and syslog watch a `devices-changed.flag` and **restart** (they need a full re-read of the catalog), same as Compose `restart`.
 - A bootstrap Job seeds empty `{}` stubs so pollers can start before the first scan.
 
@@ -56,7 +56,7 @@ A failed discovery that publishes `devices: {}` wipes the poller. A poller that 
 - **Do not kubectl-edit** `devices-*.yaml` as the long-term process. If you must hotfix one device, treat it like editing `state/` on the Compose host: you now own that file until the next discovery run (`replace_devices: true` on the discovery config will overwrite it).
 - **ConfigMaps for device lists** were considered and rejected. Size, reload, and “empty publish wipes production” are worse there than on a filesystem.
 
-**Customer phrasing that works:** “Git owns credentials and CIDRs. The network owns the current device list. The PVC is the network’s notebook. Discovery is allowed to update it; a blank page is not an update.”
+**Customer phrasing that works:** “Git owns credentials and CIDRs. The network owns the current device list and which MIBs those devices speak. The PVC is the network’s notebook. Discovery is allowed to update it; a blank page is not an update.”
 
 ---
 

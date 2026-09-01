@@ -69,7 +69,7 @@ What eats the SNMP budget faster than “500 devices”:
 
 - Large interface tables (core / DC / wireless controllers)
 - Short `poll_time_sec`, high `timeout_ms` / `retries`
-- Extra MIBs in `mibs_enabled` (BGP, entity sensors, vendor tables)
+- Extra MIBs in `mibs_enabled` (BGP, entity sensors, vendor tables — discovery unions these in automatically; pin with `MIBS_ENABLED=` if you need a shorter list)
 - Devices that never answer (walks sit on timeout)
 
 The upstream [ktranslate CPU notes](https://github.com/kentik/ktranslate/wiki/Understanding-KTranslate-CPU-Usage) quote a bit more headroom on flow/syslog (~2000 events/s per core, traps ~1000/s) and do not call out RAM. The table above is the **conservative** plan: 1000 events/s per CPU **and** 1 GiB, so you have room for OTLP export and a noisy day.
@@ -78,7 +78,7 @@ Leave **Alloy + the host OS** outside this math. Compose memory caps (`MEM_SNMP_
 
 ## Why discovery and polling are split
 
-The split between discovery and polling lets **git stay the source of truth** for credentials, scan ranges, and polling rules, while letting **the network itself be the source of truth** for which devices currently exist. Discovery writes are atomic and reversible; polling configs are mounted read-only and never mutated.
+The split between discovery and polling lets **git stay the source of truth** for credentials, scan ranges, and polling rules, while letting **the network itself be the source of truth** for which devices currently exist **and which MIBs they expose**. Discovery writes the device list (and each device's `discovered_mibs`) atomically; the generator copies that MIB union into the poller's `global.mibs_enabled` so vendor tables (CPU, BGP, Infoblox, NetApp, …) are polled without a hand-edit. ktranslate itself never mutates the poller YAML (it is generated, then mounted read-only). Override the union with `MIBS_ENABLED=` or `ADD_DISCOVERED_MIBS=0` on the group file — see [configuration.md](configuration.md#mibs_enabled).
 
 ## Compose interpolation vs. per-service `env_file:`
 

@@ -23,6 +23,25 @@ Every variable is documented inline in the sample. The important ones:
 - **`DISCOVERY_SOURCE`** — where this group's device list comes from: `cidr`, `netbox`, or `split` (defaults to `cidr` if unset, or `split` when `ROLE=poll`).
 - **`ROLE`** — `both` (default: discover + poll), `discover` (scan only), or `poll` (poller only; inventory comes from another group's scan). See [One discovery scan, many pollers](#one-discovery-scan-many-pollers).
 - **`METALISTEN_PORT` / `TRAP_PORT`** — `METALISTEN_PORT` is the poller's debug port and must be unique. **Traps are collated**: devices send SNMP traps to the host **UDP/1620** (`ktranslate_traps` + the device catalog), same idea as syslog `:1514` and flow `:9995`. Per-poller `TRAP_PORT` is only inside the container YAML (not published). Must not collide with static TCP ports (9994, 9995, 9996, 9998, 4317, 12346).
+- **`MIBS_ENABLED` / `ADD_DISCOVERED_MIBS`** — see [`mibs_enabled`](#mibs_enabled). Default is to poll every MIB discovery recorded on the group's devices.
+
+### `mibs_enabled`
+
+ktranslate only walks MIBs listed on the **poller** under `global.mibs_enabled`. Discovery already records the full profile set on each device as `discovered_mibs`; `make generate` and `make discover` union that list into the poller so CPU, BGP, vendor tables, and so on show up without editing YAML.
+
+The generated poller starts with `IF-MIB` only (interfaces + ping). After the first successful discover, `config/poller-<group>.yaml` lists every MIB found on that group's devices.
+
+To pin a shorter allowlist (series control), set a comma-separated override on the group file and re-run `make generate`:
+
+```
+MIBS_ENABLED=IF-MIB,BGP4-MIB
+```
+
+To keep the template seed and ignore `discovered_mibs`:
+
+```
+ADD_DISCOVERED_MIBS=0
+```
 
 ### `snmp_group` on metrics
 
@@ -205,7 +224,7 @@ make generate
 This produces (all git-ignored, derived artifacts — files the generator writes for you — **don't hand-edit them**; edit the templates in `templates/` instead):
 
 - `config/discovery-<group>.yaml` — the canonical discovery config the discovery script feeds to ktranslate
-- `config/poller-<group>.yaml` — the polling config, with the `devices:` block pointing at `state/devices-<group>.yaml` via an `@`-include (a reference that pulls in another file's contents)
+- `config/poller-<group>.yaml` — the polling config, with the `devices:` block pointing at `state/devices-<group>.yaml` via an `@`-include (a reference that pulls in another file's contents). `global.mibs_enabled` starts as `IF-MIB` and is filled from each device's `discovered_mibs` on `make generate` / `make discover`
 - `config/catalog.yaml` — enrichment-only SNMP config for **flow** and **syslog** receivers; `@`-includes every group's `state/devices-<group>.yaml` so `device_name` and `user_tags` stay consistent across traffic types
 - `compose-groups.generated.yaml` — service definitions for every group's poller and discovery container
 - `compose-catalog.generated.yaml` — volume mounts for `ktranslate_flow` and `ktranslate_syslog` (catalog + all device files)

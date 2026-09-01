@@ -37,6 +37,34 @@ fi
 
 mkdir -p "${CONFIG_DIR}" "${STATE_DIR}"
 
+# After envsubst, merge each device's discovered_mibs into poller
+# global.mibs_enabled (ktranslate only polls that list). Pin with
+# MIBS_ENABLED=IF-MIB,BGP4-MIB or disable with ADD_DISCOVERED_MIBS=0.
+apply_poller_mibs() {
+  local poller="$1" devices="$2" rc=0
+  if [[ -n "${MIBS_ENABLED:-}" ]]; then
+    if ! command -v python3 >/dev/null 2>&1; then
+      echo "ERROR: MIBS_ENABLED= requires python3" >&2
+      exit 1
+    fi
+    rc=0
+    python3 "${REPO_ROOT}/scripts/apply-discovered-mibs.py" --pin "${MIBS_ENABLED}" "${poller}" || rc=$?
+    case "${rc}" in
+      0|3) echo "  pinned mibs_enabled from MIBS_ENABLED=${MIBS_ENABLED}"; return 0 ;;
+      *) return "${rc}" ;;
+    esac
+  fi
+  if [[ "${ADD_DISCOVERED_MIBS:-1}" == "0" ]]; then
+    echo "  ADD_DISCOVERED_MIBS=0 — seed mibs_enabled only"
+    return 0
+  fi
+  bash "${REPO_ROOT}/scripts/apply-discovered-mibs.sh" "${poller}" "${devices}" || rc=$?
+  case "${rc}" in
+    0|2|3) return 0 ;;
+    *) return "${rc}" ;;
+  esac
+}
+
 # Only the placeholders listed here get substituted. Everything else
 # (notably docker compose's own ${OTEL_SERVICE_NAME}, ${NF_SOURCE}, ${GC_*})
 # stays literal so docker compose can resolve it from .env at runtime.
@@ -377,6 +405,8 @@ for env_file in "${GROUP_FILES[@]}"; do
     if [[ "${ROLE}" != "discover" ]]; then
       envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/poller.yaml.tmpl" \
         > "${CONFIG_DIR}/poller-${GROUP}.yaml"
+      apply_poller_mibs "${CONFIG_DIR}/poller-${GROUP}.yaml" \
+        "${STATE_DIR}/devices-${GROUP}.yaml"
       envsubst "${SUBST_VARS}" < "${TEMPLATES_DIR}/compose-poller.yaml.tmpl" \
         >> "${COMPOSE_OUT}"
     fi

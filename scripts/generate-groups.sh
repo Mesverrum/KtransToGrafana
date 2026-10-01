@@ -79,12 +79,63 @@ if [[ ${#GROUP_FILES[@]} -eq 0 ]]; then
   exit 1
 fi
 
+# Oldest file first. When two groups share METALISTEN_PORT, the one that was
+# already there keeps it. A group file copied later is the one rewritten.
+sorted_groups=()
+while IFS= read -r line; do
+  sorted_groups+=("${line#* }")
+done < <(stat -c '%Y %n' "${GROUP_FILES[@]}" | sort -n -s)
+GROUP_FILES=("${sorted_groups[@]}")
+
 # ---------- Pre-pass: validate every group file and detect collisions ----------
 declare -A USED_ML_PORTS
 # Ports used by the static services in compose-base.yaml / catalog traps. Any
 # group claiming one of these would fail at `docker compose up`; catch it here.
 RESERVED_PORTS_TCP="9994 9995 9996 9998 4317 12346"
 RESERVED_PORTS_UDP="1514 1620"
+
+# Next free poller debug port. Same walk as scripts/split-devices.py
+# next_metalisten: 9989 down to 9800, skipping ports already taken and the
+# static service ports.
+next_metalisten() {
+  local p r taken
+  for ((p=9989; p>=9800; p--)); do
+    if [[ -n "${USED_ML_PORTS[$p]:-}" ]]; then
+      continue
+    fi
+    taken=0
+    for r in ${RESERVED_PORTS_TCP}; do
+      if [[ "${p}" == "${r}" ]]; then
+        taken=1
+        break
+      fi
+    done
+    if [[ "${taken}" -eq 0 ]]; then
+      echo "${p}"
+      return 0
+    fi
+  done
+  echo "ERROR: no free METALISTEN_PORT in 9989-9800" >&2
+  return 1
+}
+
+# Replace an existing METALISTEN_PORT= line, or append one. Other lines stay.
+write_metalisten() {
+  local file="$1" port="$2" tmp found=0 line
+  tmp="$(mktemp)"
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if [[ "${line}" == METALISTEN_PORT=* ]]; then
+      printf 'METALISTEN_PORT=%s\n' "${port}"
+      found=1
+    else
+      printf '%s\n' "${line}"
+    fi
+  done < "${file}" > "${tmp}"
+  if [[ "${found}" -eq 0 ]]; then
+    printf 'METALISTEN_PORT=%s\n' "${port}" >> "${tmp}"
+  fi
+  mv "${tmp}" "${file}"
+}
 
 for env_file in "${GROUP_FILES[@]}"; do
   (
@@ -105,8 +156,10 @@ for env_file in "${GROUP_FILES[@]}"; do
     if [[ "${ROLE}" != "poll" ]]; then
       required_vars+=(DISCOVERY_THREADS)
     fi
+    # METALISTEN_PORT is not required. A missing or duplicate port is assigned
+    # below and written back into the group file.
     if [[ "${ROLE}" != "discover" ]]; then
-      required_vars+=(TRAP_COMMUNITY METALISTEN_PORT TRAP_PORT)
+      required_vars+=(TRAP_COMMUNITY TRAP_PORT)
     fi
     for var in "${required_vars[@]}"; do
       if [[ -z "${!var:-}" ]]; then
@@ -237,16 +290,34 @@ for env_file in "${GROUP_FILES[@]}"; do
     continue
   fi
   ML=$(awk -F= '/^METALISTEN_PORT=/{print $2; exit}' "${env_file}")
-  if [[ -n "${USED_ML_PORTS[${ML}]:-}" ]]; then
-    echo "ERROR: METALISTEN_PORT ${ML} used by both '${USED_ML_PORTS[${ML}]}' and '${GN}'" >&2
+  ML="${ML//$'\r'/}"
+  ML="${ML%\"}"
+  ML="${ML#\"}"
+  if [[ -n "${ML}" && ! "${ML}" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: ${env_file}: METALISTEN_PORT '${ML}' is not a port number" >&2
     exit 1
   fi
-  for r in ${RESERVED_PORTS_TCP}; do
-    if [[ "${ML}" == "${r}" ]]; then
-      echo "ERROR: METALISTEN_PORT ${ML} (group ${GN}) collides with a static service" >&2
-      exit 1
-    fi
-  done
+  # Missing, 0, or already taken by an earlier group: pick a free port and
+  # write it back. A port set on purpose that hits a static service still errors.
+  reason=""
+  if [[ -z "${ML}" || "${ML}" == "0" ]]; then
+    reason="it was not set"
+  elif [[ -n "${USED_ML_PORTS[${ML}]:-}" ]]; then
+    reason="it is already used by '${USED_ML_PORTS[${ML}]}'"
+  fi
+  if [[ -n "${reason}" ]]; then
+    ML="$(next_metalisten)" || exit 1
+    write_metalisten "${env_file}" "${ML}"
+    echo "  ${GN}: METALISTEN_PORT=${ML} (${reason}; wrote groups/$(basename "${env_file}"))"
+  else
+    for r in ${RESERVED_PORTS_TCP}; do
+      if [[ "${ML}" == "${r}" ]]; then
+        echo "ERROR: METALISTEN_PORT ${ML} (group ${GN}) collides with a static service" >&2
+        echo "       Delete the METALISTEN_PORT line and re-run make generate. A free port will be written back." >&2
+        exit 1
+      fi
+    done
+  fi
   USED_ML_PORTS[${ML}]="${GN}"
 done
 

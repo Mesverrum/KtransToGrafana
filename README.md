@@ -93,7 +93,7 @@ SNMP_V3_PRIV_PASS=your-privacy-passphrase
 
 **Both** (estate with mixed v2c and v3 — the sample default). Keep `SNMP_VERSION=mixed`, fill `SNMP_V2_COMMUNITY` and the `SNMP_V3_*` block. A second v3 user is `SNMP_V3_USER_2` / `SNMP_V3_AUTH_PASS_2` / … (same five fields).
 
-Leave `METALISTEN_PORT` / `TRAP_PORT` as they are. Copy only this one file for the first run.
+Leave `METALISTEN_PORT` / `TRAP_PORT` as they are. Copy only this one file for the first run. A later group can be another copy of the sample. `make generate` writes that copy its own `METALISTEN_PORT`.
 
 **4. Generate configs:**
 

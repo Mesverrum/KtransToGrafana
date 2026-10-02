@@ -22,7 +22,7 @@ Every variable is documented inline in the sample. The important ones:
 - **`SNMP_VERSION`** — `v2c`, `v3`, or `mixed`. The other credential fields are only required for the matching version; `mixed` lets one group carry both v2c and v3 candidates (see [Multiple candidate credentials](#multiple-candidate-credentials-unknown-mapping)).
 - **`DISCOVERY_SOURCE`** — where this group's device list comes from: `cidr`, `netbox`, or `split` (defaults to `cidr` if unset, or `split` when `ROLE=poll`).
 - **`ROLE`** — `both` (default: discover + poll), `discover` (scan only), or `poll` (poller only; inventory comes from another group's scan). See [One discovery scan, many pollers](#one-discovery-scan-many-pollers).
-- **`METALISTEN_PORT` / `TRAP_PORT`** — `METALISTEN_PORT` is the poller's debug port and must be unique. **Traps are collated**: devices send SNMP traps to the host **UDP/1620** (`ktranslate_traps` + the device catalog), same idea as syslog `:1514` and flow `:9995`. Per-poller `TRAP_PORT` is only inside the container YAML (not published). Must not collide with static TCP ports (9994, 9995, 9996, 9998, 4317, 12346).
+- **`METALISTEN_PORT` / `TRAP_PORT`** — `METALISTEN_PORT` is the poller's debug port. `make generate` keeps the first group's port and, when a later group is missing one or repeats one, writes a free port back into that group file (9989 down, skipping ports already used). **Traps are collated**: devices send SNMP traps to the host **UDP/1620** (`ktranslate_traps` + the device catalog), same idea as syslog `:1514` and flow `:9995`. Per-poller `TRAP_PORT` is only inside the container YAML (not published). A port you set yourself that hits a static TCP port (9994, 9995, 9996, 9998, 4317, 12346) is still an error. Delete the line and re-run `make generate` to get a free one.
 - **`MIBS_ENABLED` / `ADD_DISCOVERED_MIBS`** — see [`mibs_enabled`](#mibs_enabled). Default is to poll every MIB discovery recorded on the group's devices.
 
 ### `mibs_enabled`
@@ -251,7 +251,7 @@ Adding another credential group is a copy of onboarding (or `make split-devices`
 
 ```
 cp groups/onboarding.env.sample groups/fortinet.env
-# edit groups/fortinet.env: set GROUP=fortinet, fill creds, assign unique METALISTEN_PORT
+# edit groups/fortinet.env: set GROUP=fortinet and fill creds. Leave METALISTEN_PORT; make generate rewrites a duplicate.
 make generate
 make up
 make discover GROUP=fortinet
